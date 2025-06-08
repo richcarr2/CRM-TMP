@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-prod"
+        },
+        "ISEName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the target ISE for this environment"
+            },
+            "allowedValues": [
+                "eis-dev-southwest-ise",
+                "eis-nprod-southwest-ise",
+                "eis-prod-east-ise",
+                "eis-prod-southwest-ise"
+            ],
+            "defaultValue": "eis-prod-southwest-ise"
+        },
+        "ServiceBusNamespace":{
+            "defaultValue": "vaeistmpservicebuspreprod",
+            "type": "String"
+        },
+        "connections_servicebus_name": {
+            "defaultValue": "[concat('va-eis-tmp-servicebus-conn-ext', parameters('Target-Env'))]",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_servicebus_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "kind": "V1",
+            "properties": {
+                "displayName": "[parameters('connections_servicebus_name')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/servicebus')]"
+                },
+                "parameterValues": {
+                    "connectionString": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('ServiceBusNamespace'), 'RootManageSharedAccessKey'), '2017-04-01').primaryConnectionString]"
+                }
+            }
+        }
+    ]
+}

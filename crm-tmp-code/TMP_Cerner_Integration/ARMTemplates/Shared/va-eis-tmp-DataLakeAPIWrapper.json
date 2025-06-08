@@ -1,0 +1,802 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-prod"
+        },
+        "ISEResourceGroup": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "ISEName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Name of the target ISE for this environment"
+            },
+            "allowedValues": [
+                "eis-dev-southwest-ise",
+                "eis-nprod-southwest-ise",
+                "eis-prod-east-ise",
+                "eis-prod-southwest-ise"
+            ],
+            "defaultValue": "eis-prod-southwest-ise"
+        },
+        "DataLakeURL-arm": {
+            "type": "string",
+            "defaultValue": "https://vaeistmpdatalakenprod.dfs.core.usgovcloudapi.net"
+        },
+        "LogicAppName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat('va-eis-tmp-DataLakeAPIWrapper', parameters('Target-Env'))]"
+        },
+        "Keyvault-Conn-Name": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the target Connection for Key Vault"
+            },
+            "defaultValue": "[concat('va-eis-tmp-keyvault-conn', parameters('Target-Env'))]"
+        },
+        "ConnBase": {
+            "type": "string",
+            "defaultValue": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]"
+        },
+        "workflows_AzureManagementAPIWrapper_externalid": {
+            "defaultValue": "[concat('/subscriptions/', subscription().subscriptionId ,'/resourceGroups/', resourceGroup().name ,'/providers/Microsoft.Logic/workflows/va-eis-tmp-AzureManagementAPIWrapper', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "connections_keyvault_externalid": {
+            "defaultValue": "[concat( parameters('ConnBase'), '/providers/Microsoft.Web/connections/', parameters('Keyvault-Conn-Name'))]",
+            "type": "String"
+        },
+        "workflows_OAuthAuthenticator_externalid": {
+            "defaultValue": "[concat(parameters('ConnBase') ,'/providers/Microsoft.Logic/workflows/va-eis-tmp-OAuthAuthenticator', parameters('Target-Env'))]",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicAppName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "LogicApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISEName')]",
+                    "id": "[resourceId(parameters('ISEResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISEName'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "Azure Mgmt RG": {
+                            "type": "String"
+                        },
+                        "DL Url": {
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "relativePath": "DataLakeAPIWrapper",
+                                "schema": {
+                                    "properties": {
+                                        "Data": {
+                                            "properties": {
+                                                "FileContent": {
+                                                    "type": "string"
+                                                },
+                                                "FileName": {
+                                                    "type": "string"
+                                                },
+                                                "FolderName": {
+                                                    "type": "string"
+                                                },
+                                                "FolderPath": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "Operation": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Catch": {
+                            "actions": {
+                                "Set_ErrorFlag": {
+                                    "runAfter": {},
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "ErrorFlag",
+                                        "value": true
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Try": [
+                                    "Failed",
+                                    "Skipped",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Scope"
+                        },
+                        "Check_error_conditions": {
+                            "actions": {
+                                "AzureManagementAPIWrapper": {
+                                    "runAfter": {
+                                        "Get_secret_-_Azure_Mgmt_Client_Secret": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Workflow",
+                                    "inputs": {
+                                        "body": {
+                                            "ClientId": "@body('Get_secret_-_Azure_Mgmt_Client_Id')?['value']",
+                                            "ClientSecret": "@body('Get_secret_-_Azure_Mgmt_Client_Secret')?['value']",
+                                            "Data": {
+                                                "ResourceGroup": "@parameters('Azure Mgmt RG')",
+                                                "WorkflowId": "@{workflow().run.name}",
+                                                "WorkflowName": "@{workflow().name}"
+                                            },
+                                            "GrantType": "client_credentials",
+                                            "Operation": "GetWorkflowActions",
+                                            "Scope": "https://management.usgovcloudapi.net/.default"
+                                        },
+                                        "host": {
+                                            "triggerName": "manual",
+                                            "workflow": {
+                                                "id": "[parameters('workflows_AzureManagementAPIWrapper_externalid')]"
+                                            }
+                                        }
+                                    }
+                                },
+                                "Get_secret_-_Azure_Mgmt_Client_Id": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/secrets/@{encodeURIComponent('azure-mgmt-client-id')}/value"
+                                    }
+                                },
+                                "Get_secret_-_Azure_Mgmt_Client_Secret": {
+                                    "runAfter": {
+                                        "Get_secret_-_Azure_Mgmt_Client_Id": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/secrets/@{encodeURIComponent('azure-mgmt-client-secret')}/value"
+                                    }
+                                },
+                                "Set_ResponseBody_1": {
+                                    "runAfter": {
+                                        "AzureManagementAPIWrapper": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "ResponseBody",
+                                        "value": "@{body('AzureManagementAPIWrapper')}"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Catch": [
+                                    "Failed",
+                                    "Skipped",
+                                    "TimedOut",
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@variables('ErrorFlag')",
+                                            true
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Get_secret_-_DL_Client_Id": {
+                            "runAfter": {
+                                "Initialize_HeaderVariable_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/secrets/@{encodeURIComponent('datalake-client-id')}/value"
+                            }
+                        },
+                        "Get_secret_-_DL_Client_Secret": {
+                            "runAfter": {
+                                "Get_secret_-_DL_Client_Id": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/secrets/@{encodeURIComponent('datalake-client-secret')}/value"
+                            }
+                        },
+                        "Initialize_BearerToken_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "BearerToken",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_ErrorFlag_variable": {
+                            "runAfter": {
+                                "Initialize_BearerToken_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorFlag",
+                                        "type": "boolean",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_HeaderVariable_variable": {
+                            "runAfter": {
+                                "Initialize_ResponseBody_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "HeaderVariable",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_ResponseBody_variable": {
+                            "runAfter": {
+                                "Initialize_WarningFlag_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ResponseBody",
+                                        "type": "string",
+                                        "value": "Success"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_WarningFlag_variable": {
+                            "runAfter": {
+                                "Initialize_ErrorFlag_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "WarningFlag",
+                                        "type": "boolean",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        },
+                        "Response_to_client": {
+                            "runAfter": {
+                                "Set_HeaderVariable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@variables('ResponseBody')",
+                                "headers": "@if(contains(variables('HeaderVariable'),'{'),json(variables('HeaderVariable')),null)",
+                                "statusCode": "@if(variables('ErrorFlag'),400,200)"
+                            }
+                        },
+                        "Set_HeaderVariable": {
+                            "runAfter": {
+                                "Check_error_conditions": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "HeaderVariable",
+                                "value": "@{if(or(variables('WarningFlag'), variables('ErrorFlag')),'{','')}\n@{if(variables('WarningFlag'),'\"Warning\":\"199 - \\\"Some logic app steps were skipped or timed out. See outputs in body.\\\"\"','')}\n@{concat(if(variables('WarningFlag'),',',''),if(variables('ErrorFlag'),'\"Warning\":\"199 - \\\"Some logic app steps failed. See outputs in body.\\\"\"',''))}\n@{if(or(variables('WarningFlag'), variables('ErrorFlag')),'}','')}"
+                            }
+                        },
+                        "Try": {
+                            "actions": {
+                                "OAuthAuthenticator": {
+                                    "runAfter": {},
+                                    "type": "Workflow",
+                                    "inputs": {
+                                        "body": {
+                                            "ClientId": "@body('Get_secret_-_DL_Client_Id')?['value']",
+                                            "ClientSecret": "@body('Get_secret_-_DL_Client_Secret')?['value']",
+                                            "GrantType": "client_credentials",
+                                            "Scope": "https://datalake.azure.net/.default"
+                                        },
+                                        "host": {
+                                            "triggerName": "manual",
+                                            "workflow": {
+                                                "id": "[parameters('workflows_OAuthAuthenticator_externalid')]"
+                                            }
+                                        }
+                                    }
+                                },
+                                "Parse_OAuthAuthenticator_Response": {
+                                    "runAfter": {
+                                        "OAuthAuthenticator": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('OAuthAuthenticator')",
+                                        "schema": {
+                                            "properties": {
+                                                "HTTPResponse": {
+                                                    "type": "string"
+                                                },
+                                                "LogicAppHTTPOutputs": {
+                                                    "properties": {
+                                                        "HTTPOutput": {
+                                                            "type": "string"
+                                                        },
+                                                        "OauthParseOutput": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "Set_BearerToken_variable": {
+                                    "runAfter": {
+                                        "Parse_OAuthAuthenticator_Response": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "BearerToken",
+                                        "value": "@{json(base64ToString(body('Parse_OAuthAuthenticator_Response')?['HTTPResponse'])).access_token}"
+                                    }
+                                },
+                                "Switch_on_Operation": {
+                                    "runAfter": {
+                                        "Set_BearerToken_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "cases": {
+                                        "Create_/_save_file": {
+                                            "case": "CreateFile",
+                                            "actions": {
+                                                "Catch_1": {
+                                                    "actions": {
+                                                        "Set_error_flag_1": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Try_1": [
+                                                            "Failed",
+                                                            "Skipped",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "Scope"
+                                                },
+                                                "Check_status_code_1": {
+                                                    "actions": {
+                                                        "Set_variable": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Catch_1": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "expression": {
+                                                        "or": [
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@outputs('Create_file')['statusCode']",
+                                                                        201
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@outputs('Append_file')['statusCode']",
+                                                                        202
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@outputs('Append_-_Flush_stream')['statusCode']",
+                                                                        200
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                },
+                                                "Try_1": {
+                                                    "actions": {
+                                                        "Append_-_Flush_stream": {
+                                                            "runAfter": {
+                                                                "Append_file": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer @{variables('BearerToken')}"
+                                                                },
+                                                                "headers": {
+                                                                    "x-ms-content-type": "text/plain",
+                                                                    "x-ms-version": "2018-11-09"
+                                                                },
+                                                                "method": "PATCH",
+                                                                "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?action=flush&position=@{length(triggerBody()?['Data']?['FileContent'])}"
+                                                            }
+                                                        },
+                                                        "Append_file": {
+                                                            "runAfter": {
+                                                                "Create_file": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer @{variables('BearerToken')}"
+                                                                },
+                                                                "body": "@triggerBody()?['Data']?['FileContent']",
+                                                                "headers": {
+                                                                    "Content-Length": "@{length(triggerBody()?['Data']?['FileContent'])}",
+                                                                    "x-ms-version": "2018-11-09"
+                                                                },
+                                                                "method": "PATCH",
+                                                                "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?action=append&position=0"
+                                                            }
+                                                        },
+                                                        "Create_file": {
+                                                            "runAfter": {},
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer @{variables('BearerToken')}"
+                                                                },
+                                                                "headers": {
+                                                                    "x-ms-version": "2018-11-09"
+                                                                },
+                                                                "method": "PUT",
+                                                                "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?resource=file"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "Scope"
+                                                }
+                                            }
+                                        },
+                                        "Create_directory": {
+                                            "case": "CreateFolder",
+                                            "actions": {
+                                                "Catch_2": {
+                                                    "actions": {
+                                                        "Set_error_flag_2": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Try_2": [
+                                                            "Failed",
+                                                            "Skipped",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "Scope"
+                                                },
+                                                "Check_status_code_2": {
+                                                    "actions": {
+                                                        "Set_error_flag": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Catch_2": [
+                                                            "Succeeded",
+                                                            "TimedOut",
+                                                            "Skipped",
+                                                            "Failed"
+                                                        ]
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@outputs('Create_Directory')['statusCode']",
+                                                                        201
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                },
+                                                "Try_2": {
+                                                    "actions": {
+                                                        "Create_Directory": {
+                                                            "runAfter": {},
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer @{variables('BearerToken')}"
+                                                                },
+                                                                "headers": {
+                                                                    "x-ms-version": "2018-11-09"
+                                                                },
+                                                                "method": "PUT",
+                                                                "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FolderName']}?resource=directory"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "Scope"
+                                                }
+                                            }
+                                        },
+                                        "Get_File": {
+                                            "case": "GetFile",
+                                            "actions": {
+                                                "Catch_3": {
+                                                    "actions": {
+                                                        "Set_error_flag_3": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Try_3": [
+                                                            "Failed",
+                                                            "Skipped",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "Scope"
+                                                },
+                                                "Check_status_code_3": {
+                                                    "actions": {
+                                                        "Set_variable_2": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorFlag",
+                                                                "value": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Catch_3": [
+                                                            "Succeeded",
+                                                            "TimedOut",
+                                                            "Skipped",
+                                                            "Failed"
+                                                        ]
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "not": {
+                                                                    "equals": [
+                                                                        "@outputs('Get_file')['statusCode']",
+                                                                        200
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                },
+                                                "Try_3": {
+                                                    "actions": {
+                                                        "Get_file": {
+                                                            "runAfter": {},
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer @{variables('BearerToken')}"
+                                                                },
+                                                                "headers": {
+                                                                    "x-ms-version": "2018-11-09"
+                                                                },
+                                                                "method": "GET",
+                                                                "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}"
+                                                            }
+                                                        },
+                                                        "Set_ResponseBody_variable": {
+                                                            "runAfter": {
+                                                                "Get_file": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ResponseBody",
+                                                                "value": "@{body('Get_file')}"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "Scope"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": {
+                                        "actions": {}
+                                    },
+                                    "expression": "@triggerBody()?['Operation']",
+                                    "type": "Switch"
+                                }
+                            },
+                            "runAfter": {
+                                "Get_secret_-_DL_Client_Secret": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Scope"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "keyvault": {
+                                "connectionId": "[parameters('connections_keyvault_externalid')]",
+                                "connectionName": "[parameters('Keyvault-Conn-Name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis', resourceGroup().location, 'keyvault')]"
+                            }
+                        }
+                    },
+                    "Azure Mgmt RG": {
+                        "value": "[resourceGroup().name]"
+                    },
+                    "DL Url": {
+                        "value": "[parameters('DataLakeURL-arm')]"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <section name="JwtSecurityConfiguration" type="VRM.Integration.Servicebus.Core.ObjectConfigHandler, VRM.Integration.Servicebus.Core" />
+  </configSections>
+  <JwtSecurityConfiguration type="Vimt.JsonWebToken.Services.Configuration.JwtSecurityConfiguration, Vimt.JsonWebToken.Services">
+    <Issuer>gov.va.vamf.tmp-int.v1</Issuer>
+    <Authenticated>true</Authenticated>
+    <AuthenticationAuthority>gov.va.iam.ssoi.v1</AuthenticationAuthority>
+    <IdType>secid</IdType>
+    <VamfAuthRole>staff</VamfAuthRole>
+    <Loa>3</Loa>
+    <CertificateThumbPrint>697EFAFA4B13A5ABDFF14F23893B9D7CF8251839</CertificateThumbPrint>
+    <BaseUri>https://staff-dev.mobilehealth.va.gov</BaseUri>
+    <EncryptUri>/users/v1/session</EncryptUri>
+  </JwtSecurityConfiguration>
+</configuration>

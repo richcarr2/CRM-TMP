@@ -1,0 +1,31 @@
+﻿if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+
+// Create Namespace container for functions in this library;
+MCS.AppointmentRibbon = {};
+
+MCS.AppointmentRibbon.RunCloseAppointmentDialog = function () {
+    var runVista = MCS.VIALogin.CheckVistaSwitches();
+    var dialogId = "";
+    if (!runVista) {
+        dialogId = "7AB12A8A-A5BA-4ABD-9912-A9F859BCC39A";
+    }
+    else {
+        var validDuz = MCS.VIALogin.IsValidUserDuz();
+        if (!validDuz) {
+            var validToken = MCS.VIALogin.IsValidSamlToken();
+            if (validToken) {
+                MCS.VIALogin.Login();
+                alert("Unable to cancel appointment in Vista until you have logged into Vista.");
+            }
+            else {
+                MCS.VIALogin.Saml();
+                alert("Unable to cancel appointment in Vista until you have logged into Vista.");
+            }
+        }
+        else
+            dialogId = "88AB1E53-757C-4CA7-9BF5-C3221FE4E9F6";
+    }
+    if (dialogId != "")
+        MCS.cvt_Common.openDialogOnCurrentRecord(dialogId);
+}

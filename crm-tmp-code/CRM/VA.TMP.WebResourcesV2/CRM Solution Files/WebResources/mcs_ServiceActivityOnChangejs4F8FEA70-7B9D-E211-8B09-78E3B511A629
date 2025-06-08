@@ -1,0 +1,417 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_Service_Activity = {};
+MCS.mcs_Service_Activity.FORM_TYPE_CREATE = 1;
+MCS.mcs_Service_Activity.FORM_TYPE_UPDATE = 2;
+MCS.mcs_Service_Activity.FORM_TYPE_READ_ONLY = 3;
+MCS.mcs_Service_Activity.FORM_TYPE_DISABLED = 4;
+
+//Gets the TSA Data - populates fields on Service Activity
+MCS.mcs_Service_Activity.GetTSAData = function () {
+    var relatedtsa = Xrm.Page.getAttribute("mcs_relatedtsa").getValue();
+
+    if (relatedtsa != null) {
+        MCS.mcs_Service_Activity.getmcs_relatedtsaLookupData(relatedtsa[0].id);
+        MCS.mcs_Service_Activity.GroupPat();
+    }
+    else {        
+        Xrm.Page.getAttribute("serviceid").setValue(null);
+        Xrm.Page.getAttribute("mcs_servicetype").setValue(null);
+        Xrm.Page.getAttribute("mcs_servicesubtype").setValue(null);
+        Xrm.Page.getAttribute("mcs_capacity").setValue(null);
+    }
+};
+
+//re-written piece leveraging the Crm Rest Kit Library - pulls in values from the TSA and sets appropriate fields on Service Activity
+MCS.mcs_Service_Activity.getmcs_relatedtsaLookupData = function (mcs_relatedtsa) {
+    CrmRestKit.Retrieve('mcs_services', mcs_relatedtsa, ['cvt_servicesubtype', 'cvt_servicetype', 'mcs_Capacity', 'mcs_RelatedServiceId', 'cvt_Type',
+        'cvt_AvailableTelehealthModalities', 'cvt_relatedpatientsiteid','cvt_relatedprovidersiteid', 'cvt_groupappointment', 'cvt_SchedulingInstructions'], true).fail(
+        function (err) {
+            alert("Please verify that this TSA is in Production, and if so, contact your system administrator");
+            return;
+        }).done(
+        function (data) {
+            MCS.mcs_Service_Activity.SetLookup(data.d.mcs_RelatedServiceId, Xrm.Page.getAttribute("serviceid"));
+            MCS.mcs_Service_Activity.SetLookup(data.d.cvt_servicetype, Xrm.Page.getAttribute("mcs_servicetype"));
+            MCS.mcs_Service_Activity.SetLookup(data.d.cvt_servicesubtype, Xrm.Page.getAttribute("mcs_servicesubtype"));
+            MCS.mcs_Service_Activity.SetLookup(data.d.cvt_relatedpatientsiteid, Xrm.Page.getAttribute("mcs_relatedsite"));
+            MCS.mcs_Service_Activity.SetLookup(data.d.cvt_relatedprovidersiteid, Xrm.Page.getAttribute("mcs_relatedprovidersite"));
+
+            //Fire OnChange so that SubType shows
+            Xrm.Page.getAttribute("mcs_servicetype").fireOnChange();
+
+            if (Xrm.Page.getAttribute("mcs_capacity") != null)
+                Xrm.Page.getAttribute("mcs_capacity").setValue(data.d.mcs_Capacity);
+            if (data.d.cvt_Type != null)
+                Xrm.Page.getAttribute("cvt_type").setValue(data.d.cvt_Type);
+            if (data.d.cvt_groupappointment != null)
+                Xrm.Page.getAttribute("mcs_groupappointment").setValue(data.d.cvt_groupappointment);
+            Xrm.Page.getAttribute("cvt_telehealthmodality").setValue((data.d.cvt_AvailableTelehealthModalities.Value == 917290001))
+            if (data.d.cvt_SchedulingInstructions != null)
+                Xrm.Page.getAttribute("cvt_schedulinginstructions").setValue(data.d.cvt_SchedulingInstructions);
+
+        });
+};
+
+//Pass in OData EntityReferences and set a lookup with the EntityReference Value
+MCS.mcs_Service_Activity.SetLookup = function (column, targetField) {
+    if (targetField != null) {
+        var obj = { id: column.Id, entityType: column.LogicalName, name: column.Name }
+        if (obj.name == null)
+            targetField.setValue(null);
+        else 
+            targetField.setValue([obj]);
+    }
+}
+
+//Show TSA lookup field once site has been selected
+MCS.mcs_Service_Activity.EnableTSA = function () {
+    var relatedSite = null;
+    var relatedSiteSLU = null;
+    var relatedProviderSite = null;
+    var relatedProviderSiteSLU = null;
+
+    var relatedSiteAttribute = Xrm.Page.getAttribute("mcs_relatedsite");
+    if (relatedSiteAttribute != null)
+        relatedSite = relatedSiteAttribute.getValue();
+    if (relatedSite != null)
+        relatedSiteSLU = relatedSite[0].name;
+
+    var relatedProviderSiteAttribute = Xrm.Page.getAttribute("mcs_relatedprovidersite");
+    if (relatedProviderSiteAttribute != null)
+        relatedProviderSite = relatedProviderSiteAttribute.getValue();
+    if (relatedProviderSite != null)
+        relatedProviderSiteSLU = relatedProviderSite[0].name;
+ 
+    if (relatedSiteSLU != null || relatedProviderSiteSLU != null) {
+        Xrm.Page.ui.controls.get("mcs_relatedtsa").setVisible(true);
+        Xrm.Page.ui.controls.get("mcs_relatedtsa").setFocus();
+    }
+    else {
+        Xrm.Page.ui.controls.get("mcs_relatedtsa").setVisible(false);
+        Xrm.Page.getAttribute("mcs_relatedtsa").setValue(null);
+    }
+};
+
+//Show Specialty subtype field once Specialty has been selected
+MCS.mcs_Service_Activity.EnableServiceSubType = function () {
+    var serviceType = null;
+    var serviceTypeSLU = null;
+
+    if (Xrm.Page.getAttribute("mcs_servicetype") != null)
+        serviceType = Xrm.Page.getAttribute("mcs_servicetype").getValue();
+    if (serviceType != null)
+        serviceTypeSLU = serviceType[0].name;
+
+    if (serviceTypeSLU != null) {
+        Xrm.Page.getControl("mcs_servicesubtype").setVisible(true);
+        //Xrm.Page.getControl("mcs_servicesubtype").setFocus();
+    }
+    else {
+        Xrm.Page.getControl("mcs_servicesubtype").setVisible(false);
+        Xrm.Page.getAttribute("mcs_servicesubtype").setValue(null);
+    }
+};
+
+    /* Adds Custom Filtered lookup view for TSA based on selections
+    /* for Specialty, Service Sub-Type, and Site(Patient Site). */
+MCS.mcs_Service_Activity.HandleOnChangeTSALookup = function () {
+    var tsaControl = Xrm.Page.ui.controls.get("mcs_relatedtsa");
+    if (tsaControl.getVisible()) {
+        var siteObj, site, sitesearch;
+        var serviceType = new Array();
+        var serviceSubType = new Array();
+        serviceType = Xrm.Page.getAttribute("mcs_servicetype").getValue();
+        serviceSubType = Xrm.Page.getAttribute("mcs_servicesubtype").getValue();
+        var TSAtype = Xrm.Page.getAttribute("cvt_type").getValue();
+
+        var groupAppt = Xrm.Page.getAttribute("mcs_groupappointment") == null ? 0 : Xrm.Page.getAttribute("mcs_groupappointment").getValue();
+        var providers = Xrm.Page.getAttribute("cvt_relatedproviderid").getValue();
+
+        if (groupAppt == 0) {
+            if (TSAtype == true) { //CVT to Home - Provider
+                siteObj = Xrm.Page.getAttribute("mcs_relatedprovidersite");
+                sitesearch = "cvt_relatedprovidersiteid";
+            }
+            else { //(I) - Patient
+                siteObj = Xrm.Page.getAttribute("mcs_relatedsite");
+                sitesearch = "cvt_relatedpatientsiteid";
+            }
+        }
+        else { //(G) - Provider
+            siteObj = Xrm.Page.getAttribute("mcs_relatedprovidersite");
+            sitesearch = "cvt_relatedprovidersiteid";
+        }
+        if (siteObj != null)
+            site = siteObj.getValue();
+        if (site == null)
+            return;
+
+        var viewDisplayName = "Filtered by Site";
+        var siteID = site[0].id;
+        var fetchBase = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false"><entity name="mcs_services"><attribute name="mcs_servicesid"/><attribute name="mcs_name"/><attribute name="createdon"/><order attribute="mcs_name" descending="false"/><filter type="and"><condition attribute="statecode" operator="eq" value="0"/><condition attribute="' + sitesearch + '" operator="eq" uiname="' + MCS.cvt_Common.formatXML(site[0].name) + '" uitype="mcs_site" value="' + siteID + '"/>';
+        if (providers != null) {
+            viewDisplayName += " & Provider";
+            fetchBase += '<condition attribute="cvt_providers" value="' + '%' + MCS.cvt_Common.formatXML(providers[0].name) + '%' + '" operator="like"/>';
+        }
+        if (serviceType != null) {
+            viewDisplayName += " & Specialty";
+            var serviceTypeID = serviceType[0].id;
+            fetchBase += '<condition attribute="cvt_servicetype" operator="eq" uiname="' + MCS.cvt_Common.formatXML(serviceType[0].name) + '" uitype="mcs_servicetype" value="' + serviceTypeID + '"/>';
+            if (serviceSubType != null) {
+                viewDisplayName += " & Service Sub-Type";
+                var serviceSubTypeID = serviceSubType[0].id;
+                fetchBase += '<condition attribute="cvt_servicesubtype" operator="eq" uiname="' + MCS.cvt_Common.formatXML(serviceSubType[0].name) + '" uitype="mcs_servicesubtype" value="' + serviceSubTypeID + '"/>';
+            }
+        }
+        if (TSAtype == true) {
+            viewDisplayName += " & Home/Mobile";
+            fetchBase += '<condition attribute="cvt_type" value="true" operator="eq"/>';
+        }
+        else {
+            viewDisplayName += " & Clinic Based";
+            fetchBase += '<filter type="or"><condition attribute="cvt_type" value="false" operator="eq"/><condition attribute="cvt_type" operator="null"/></filter>';
+        }
+
+        if (Xrm.Page.getAttribute("cvt_telehealthmodality").getValue() == true) {
+            viewDisplayName += " & SFT";
+            fetchBase += '<condition attribute="cvt_availabletelehealthmodalities" value="917290001" operator="eq"/>';
+        }
+        else {
+            viewDisplayName += " & CVT";
+            fetchBase += '<filter type="or"><condition attribute="cvt_availabletelehealthmodalities" value="917290000" operator="eq"/><condition attribute="cvt_availabletelehealthmodalities" operator="null"/></filter>';
+        }
+        fetchBase += '<condition attribute="statuscode" value="251920000" operator="eq"/><condition attribute="cvt_groupappointment" value="' + groupAppt + '" operator="eq"/></filter></entity></fetch>';
+
+        var TsalayoutXml = '<grid name="resultset" object="10010" jump="mcs_name" select="1" icon="0" preview="0"><row name="result" id="mcs_servicesid"><cell name="cvt_provsitevistaclinics" width="300"/><cell name="cvt_patsitevistaclinics" width="300"/><cell name="cvt_providers" width="300"/><cell name="mcs_name" width="300"/><cell name="cvt_groupappointment" width="125"/><cell name="cvt_patientsites" width="300"/><cell name="cvt_servicetype" width="100"/><cell name="cvt_servicesubtype" width="100"/><cell name="createdon" width="125"/></row></grid>';
+        tsaControl.addCustomView(siteID, "mcs_services", viewDisplayName, fetchBase, TsalayoutXml, true);
+    }
+};
+
+//Description: CreateName for Service Activity Subject
+MCS.mcs_Service_Activity.CreateName = function () {
+    var serviceType = Xrm.Page.getAttribute("mcs_servicetype").getValue();
+    var serviceSubType = Xrm.Page.getAttribute("mcs_servicesubtype").getValue();
+    var groupApptOption = Xrm.Page.getAttribute("mcs_groupappointment").getValue();
+    var derivedResultField = "";       
+    if (serviceType != null)
+        derivedResultField += serviceType[0].name + " ";
+    if (serviceSubType != null)
+        derivedResultField += " : " + serviceSubType[0].name + " ";
+    if (groupApptOption == 1)
+        derivedResultField += "Group Appointment";
+
+    Xrm.Page.getAttribute("subject").setValue(derivedResultField);
+};
+
+//Disallow user from entering 0.  If they attempt to do so, it will reset to the cached value and tell the user
+MCS.mcs_Service_Activity.CheckCapacity = function () {
+    var CapacityValue = Xrm.Page.data.entity.attributes.get("mcs_capacity").getValue();
+    if (CapacityValue == 0) {
+        alert("Capacity must be greater than 0, resetting to original value of " + CachedCapacityValue);
+        Xrm.Page.data.entity.attributes.get("mcs_capacity").setValue(CachedCapacityValue);        
+    }
+};
+
+//If group appointment, show pro site and patient rooms,
+MCS.mcs_Service_Activity.GroupAppt = function () {
+
+    var groupAppt = Xrm.Page.getAttribute("mcs_groupappointment").getValue();
+    var patSite = Xrm.Page.ui.controls.get("mcs_relatedsite");
+    var proSite = Xrm.Page.ui.controls.get("mcs_relatedprovidersite");
+
+    var patRoomsTab = Xrm.Page.ui.tabs.get("tab_groupscheduling");
+//    var grouppatientsTab = Xrm.Page.ui.tabs.get("tab_grouppatients");
+
+    var teleModala = Xrm.Page.getAttribute("cvt_telehealthmodality");
+    var teleModalc = Xrm.Page.getControl("cvt_telehealthmodality");
+
+    if (groupAppt == true) {
+        proSite.setVisible(true);
+        patSite.setVisible(false);
+        patRoomsTab.setVisible(true);
+        Xrm.Page.getAttribute("mcs_relatedsite").setValue(null);
+        Xrm.Page.getAttribute("mcs_relatedprovidersite").setRequiredLevel("required");
+        Xrm.Page.getAttribute("mcs_relatedsite").setRequiredLevel("none");
+
+        teleModala.setValue(false);
+        teleModala.fireOnChange();
+        teleModalc.setVisible(false);
+
+        Xrm.Page.getAttribute("mcs_capacity").setRequiredLevel("required");
+    }
+    else {
+        proSite.setVisible(false);
+        patSite.setVisible(true);
+        patRoomsTab.setVisible(false);
+        Xrm.Page.getAttribute("mcs_relatedprovidersite").setRequiredLevel("none");
+        Xrm.Page.getAttribute("mcs_relatedsite").setRequiredLevel("required");
+        if (Xrm.Page.getAttribute("cvt_type").getValue() != true) {
+            Xrm.Page.getAttribute("mcs_relatedprovidersite").setValue(null);
+        }
+        Xrm.Page.getAttribute("mcs_capacity").setRequiredLevel("none");
+        teleModalc.setVisible(true);
+        teleModala.fireOnChange();
+    }
+};
+
+//Group SA - add PatSide AR ResSpec to Resources field
+MCS.mcs_Service_Activity.GroupPat = function () {
+    if (Xrm.Page.getAttribute("mcs_groupappointment").getValue() == true && Xrm.Page.ui.getFormType() == 1) {
+        var TSAid = "";
+        if (Xrm.Page.getAttribute("mcs_relatedtsa").getValue() != null) {
+            TSAid = Xrm.Page.getAttribute("mcs_relatedtsa").getValue()[0].id;
+        }
+        //Retrieve the info from the TSA
+        CrmRestKit.Retrieve('mcs_services', TSAid, ['cvt_grouppatientbranch'], true).fail(
+            function (err) {
+                //
+            }).done(
+            function (data) {
+                if (data.d.cvt_grouppatientbranch != null) {
+                    //break result into an array
+                    var resultArray = data.d.cvt_grouppatientbranch.split("|");
+                    if (resultArray.length == 3) {
+                        //Turn it into an object
+                        var groupActivityParty = [];
+                        groupActivityParty[0] = {
+                            id: resultArray[0],
+                            resouceSpecId: resultArray[2],
+                            typeName: resultArray[1],
+                            entityType: resultArray[1],
+                            name: "Search for All Resources"
+                        };
+
+                        //Set the object to the Resouce field
+                        Xrm.Page.getAttribute("resources").setValue(groupActivityParty);
+                    }
+                }
+
+            });
+    }
+};
+MCS.mcs_Service_Activity.ClearResources = function () {
+    var tsa = Xrm.Page.getAttribute("mcs_relatedtsa").getValue(); 
+    if (tsa == null) {
+        Xrm.Page.getAttribute("resources").setValue(null);
+        Xrm.Page.getAttribute("resources").setSubmitMode();
+        Xrm.Page.getAttribute("mcs_remainingcapacity").setValue(null);
+        Xrm.Page.getAttribute("mcs_remainingcapacity").setSubmitMode();
+
+    }
+};
+
+//If resources are on Service Activity, display the scheduling tab, otherwise hide it
+MCS.mcs_Service_Activity.SchedulingInfo = function () {
+    var resources = Xrm.Page.getAttribute("resources").getValue();
+    var schedulingTab = Xrm.Page.ui.tabs.get("tab_scheduling").setVisible(resources.length > 0);
+};
+
+//TO DO: explore why this is running onSave - probably need to remove this
+MCS.mcs_Service_Activity.filterSubGrid = function() {
+    var PatRoomsGrid = document.getElementById("PatientRooms"); //grid to filter 
+    if (PatRoomsGrid == null) { //make sure the grid has loaded 
+        setTimeout(function () { MCS.mcs_Service_Activity.filterSubGrid(); }, 500); //if the grid hasn’t loaded run this again when it has 
+        return;
+    }
+
+    var TSAValue = Xrm.Page.getAttribute("mcs_relatedtsa").getValue(); //field to filter by 
+
+    var TSAId = "00000000-0000-0000-0000-000000000000"; //if filter field is null display nothing 
+    if (TSAValue != null) {
+        var TSAId = TSAValue[0].id;
+    }
+
+    //fetch xml code which will retrieve all Pat Sites Related to this Service Activity.  
+    var fetchXml =
+        
+        "<?xml version='1.0'?>" +
+        "<fetch distinct='false' mapping='logical' output-format='xml-platform' version='1.0'>" +
+        "<entity name='cvt_patientresourcegroup'>" +
+        "<attribute name='cvt_roomcapacity'/>" +
+        "<attribute name='cvt_type'/>" +
+        "<attribute name='cvt_name'/>" +
+        "<attribute name='cvt_patientresourcegroupid'/>" +
+        "<order descending='false' attribute='cvt_name'/>" +
+        "<filter type='and'>" +
+        "<condition attribute='cvt_type' value='251920001' operator='eq'/>" +
+        "<condition attribute='cvt_relatedtsaid' value='" + TSAId + "' operator='eq'/>" +
+        "<condition attribute='statecode' value='0' operator='eq'/>" +
+        "</filter>" +
+        "</entity>" +
+        "</fetch>"
+
+    PatRoomsGrid.control.SetParameter("fetchXml", fetchXml); //set the fetch xml to the sub grid   
+    PatRoomsGrid.control.Refresh(); //refresh the sub grid using the new fetch xml 
+};
+
+MCS.mcs_Service_Activity.EnforceChanges = function () {
+  
+    Xrm.Page.getAttribute("resources").setSubmitMode("always");
+    Xrm.Page.getAttribute("serviceid").setSubmitMode("always");
+    Xrm.Page.getAttribute("scheduledstart").setSubmitMode("always");
+    Xrm.Page.getAttribute("scheduledend").setSubmitMode("always");
+    Xrm.Page.getAttribute("scheduleddurationminutes").setSubmitMode("always");
+    Xrm.Page.getAttribute("cvt_patientcount").setSubmitMode("always");
+    Xrm.Page.getAttribute("mcs_remainingcapacity").setSubmitMode("always");
+};
+
+MCS.mcs_Service_Activity.CVTtoHome = function () {
+    var type = Xrm.Page.getAttribute("cvt_type").getValue();
+    var typec = Xrm.Page.getControl("cvt_type");
+    if (Xrm.Page.ui.getFormType() == MCS.mcs_Service_Activity.FORM_TYPE_CREATE) {
+        typec.setDisabled(false);
+    }
+    var groupAppta = Xrm.Page.getAttribute("mcs_groupappointment");
+    var groupApptc = Xrm.Page.getControl("mcs_groupappointment");
+
+    var patSitea = Xrm.Page.getAttribute("mcs_relatedsite");
+    var patSitec = Xrm.Page.getControl("mcs_relatedsite");
+
+    var proSitea = Xrm.Page.getAttribute("mcs_relatedprovidersite");
+    var proSitec = Xrm.Page.getControl("mcs_relatedprovidersite");
+
+    var patients = Xrm.Page.getControl("customers");
+    var patRoomsTab = Xrm.Page.ui.tabs.get("tab_groupscheduling");
+    var grouppatientsTab = Xrm.Page.ui.tabs.get("tab_grouppatients");
+
+    var teleModala = Xrm.Page.getAttribute("cvt_telehealthmodality");
+    var teleModalc = Xrm.Page.getControl("cvt_telehealthmodality");
+
+    if (type == true) { //Cvt to home
+        groupAppta.setValue(false);
+        groupAppta.fireOnChange();
+        groupApptc.setVisible(false);
+
+        teleModala.setValue(false);
+        teleModala.fireOnChange();
+        teleModalc.setVisible(false);
+
+        proSitec.setVisible(true);
+        proSitea.setRequiredLevel("required");
+
+        patSitea.setValue(null);
+        patSitea.setRequiredLevel("none");
+        patSitec.setVisible(false);
+
+        patRoomsTab.setVisible(false);
+    }
+    else { //Clinic based
+        if (groupAppta.getValue() != true)
+            proSitea.setValue(null);
+
+        proSitec.setVisible(false);
+        proSitea.setRequiredLevel("none");
+        
+        patSitec.setVisible(true);
+        patSitea.setRequiredLevel("required");
+
+        groupApptc.setVisible(true);
+        groupAppta.fireOnChange();
+
+        teleModalc.setVisible(true);
+        teleModala.fireOnChange();
+    }
+};

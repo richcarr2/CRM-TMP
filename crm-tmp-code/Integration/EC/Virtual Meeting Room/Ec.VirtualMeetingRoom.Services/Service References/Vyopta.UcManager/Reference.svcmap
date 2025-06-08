@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="5fafef39-bc7e-449e-8921-ebaba5a7b9cd" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://173.227.88.234:8270/UcManagerService/mex" Protocol="mex" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="Vyopta.UcManager.wsdl" MetadataType="Wsdl" ID="7f215d3c-52ea-4c2b-baf8-78b101a06cf4" SourceId="1" SourceUrl="http://173.227.88.234:8270/UcManagerService/mex" />
+    <MetadataFile FileName="service.wsdl" MetadataType="Wsdl" ID="33038885-19d1-4cc7-836c-3874ad336219" SourceId="1" SourceUrl="http://173.227.88.234:8270/UcManagerService/mex" />
+    <MetadataFile FileName="Vyopta.UcManager.xsd" MetadataType="Schema" ID="ab1fb5f3-b488-4b20-9cc8-80b6a3e9b710" SourceId="1" SourceUrl="http://173.227.88.234:8270/UcManagerService/mex" />
+    <MetadataFile FileName="service.xsd" MetadataType="Schema" ID="9b6d76a6-6d77-4a6d-b101-f1fc2d43baab" SourceId="1" SourceUrl="http://173.227.88.234:8270/UcManagerService/mex" />
+    <MetadataFile FileName="Vyopta.UcManager1.xsd" MetadataType="Schema" ID="5c205531-a0cd-4529-b7d2-9ab3fe17fc19" SourceId="1" SourceUrl="http://173.227.88.234:8270/UcManagerService/mex" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

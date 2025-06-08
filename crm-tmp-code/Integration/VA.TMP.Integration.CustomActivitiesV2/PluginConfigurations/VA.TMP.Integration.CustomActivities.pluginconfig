@@ -1,0 +1,16 @@
+{
+  "Id": "cd3a46b0-05a9-4053-81e3-98de776e466e",
+  "IsolationMode": 2,
+  "IsRegisteredInCrm": true,
+  "SourceType": 0,
+  "PluginTypeConfigs": [
+    {
+      "DisplayName": "0fca538d-eb6e-4da8-a326-25dbf780cfce",
+      "Id": "200e87e9-f6ce-e711-9436-0050568da084",
+      "IsWorkflow": true,
+      "Name": "VA.TMP.Integration.CustomActivities.VIALoginAction",
+      "TypeName": "VA.TMP.Integration.CustomActivities.VIALoginAction",
+      "WorkflowActivityGroupName": "VA.TMP.Integration.CustomActivities (1.0.0.16)"
+    }
+  ]
+}

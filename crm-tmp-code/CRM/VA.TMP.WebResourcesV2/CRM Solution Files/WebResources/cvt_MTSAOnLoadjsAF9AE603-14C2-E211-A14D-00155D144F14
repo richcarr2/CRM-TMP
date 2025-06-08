@@ -1,0 +1,122 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.cvt_MTSA_OnLoad = {};
+
+//Page space variables
+MCS.cvt_MTSA_OnLoad.EntityId = null;
+MCS.cvt_MTSA_OnLoad.EntityName = null;
+MCS.cvt_MTSA_OnLoad.relatedProviderSiteName = null;
+MCS.cvt_MTSA_OnLoad.relatedProviderSiteId = null;
+MCS.cvt_MTSA_OnLoad.GroupAppt = false;
+
+//OnLoad
+MCS.cvt_MTSA_OnLoad.SetDefaults = function () {
+    Xrm.Page.getControl("cvt_type").setDisabled(false);
+
+    //If not Create
+    if (Xrm.Page.ui.getFormType() != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        //Read Only Fields
+        Xrm.Page.getControl("cvt_relatedsiteid").setDisabled(true);
+        Xrm.Page.getControl("cvt_servicetype").setDisabled(true);
+        Xrm.Page.getControl("cvt_servicesubtype").setDisabled(true);
+        Xrm.Page.getControl("cvt_groupappointment").setDisabled(true);
+        Xrm.Page.getControl("cvt_availabletelehealthmodalities").setDisabled(true);
+        Xrm.Page.getControl("cvt_type").setDisabled(true);
+        //Conditional because of potentially missing data.
+        if (Xrm.Page.getAttribute("cvt_providerlocationtype").getValue() != null) {
+            Xrm.Page.getControl("cvt_providerlocationtype").setDisabled(true);
+        }
+        else {
+            Xrm.Page.getControl("cvt_providerlocationtype").setDisabled(false);
+        }
+    }
+    //Field manipulation - These are all called by specific field OnChange
+    MCS.cvt_Common.EnableOtherDetails("cvt_admissioncriteria", "cvt_otheradmissioncriteriadetails", "917290002");
+    MCS.cvt_Common.EnableOtherDetails("cvt_dischargecriteria", "cvt_otherdischargecriteriadetails", "917290002");
+    if (Xrm.Page.getAttribute("cvt_servicesubtype").getValue() != null)
+        MCS.cvt_Common.EnableDependentLookup("cvt_servicetype", "cvt_servicesubtype");
+
+    //Load Default Responsibilities Text Fields
+    var provResponsibilities = Xrm.Page.getAttribute("cvt_providerstaffemergencyresponsibilities");
+    if (provResponsibilities.getValue() == null) {
+        var provString = "Provider will assure that s/he has an direct, fail-safe emergency contact phone number for the patient site" +
+        " and immediately call this number to notify patient site staff of the emergency. \n" +
+"Provider will assure that s/he has police and/or 911 emergency numbers for the patient location. \n" +
+"Provider will stay on the videoconferencing call to assist patient site staff during the emergency. \n" +
+"Provider agrees to facilitate continued care/hospitalization for Veteran patient, if necessary.  \n" +
+"Note frequency of Telehealth provider or Surrogate log in to Patient Site CPRS to receive/view/respond notifications based on the site’s critical value policy. "
+        provResponsibilities.setValue(provString);
+    }
+
+    var patResponsibilities = Xrm.Page.getAttribute("cvt_patientstaffemergencyresponsibilities");
+    if (patResponsibilities.getValue() == null) {
+        var patString = "Patient site staff will activate pre-defined local emergency protocols. \n" +
+"Patient site staff will not leave the Veteran patient alone during an emergency. \n" +
+"Patient site staff will keep the visit Provider informed of disposition of the emergency/Veteran patient.";
+        patResponsibilities.setValue(patString);
+    }
+
+    var preReqInfo = Xrm.Page.getAttribute("cvt_informationrequiredbeforevisit");
+    if (preReqInfo.getValue() == null) {
+        var preReqString = "Labs: \nImaging: \nStudies: \nScreenings: \nSpecific Clinical History: \nOther Information: ";
+        preReqInfo.setValue(preReqString);
+    }
+
+    //Check's Capacity Value
+    if (Xrm.Page.getAttribute("cvt_capacity").getValue() == null) {
+        Xrm.Page.getAttribute("cvt_capacity").setValue(1);
+        Xrm.Page.getAttribute("cvt_capacity").setSubmitMode("always");
+    }
+    MCS.cvt_MTSA_OnLoad.EntityId = Xrm.Page.data.entity.getId();
+    MCS.cvt_MTSA_OnLoad.EntityName = Xrm.Page.data.entity.getEntityName();
+    if (Xrm.Page.getAttribute("cvt_relatedsiteid").getValue() != null) {
+        MCS.cvt_MTSA_OnLoad.relatedProviderSiteName = Xrm.Page.getAttribute("cvt_relatedsiteid").getValue()[0].name;
+        MCS.cvt_MTSA_OnLoad.relatedProviderSiteId = Xrm.Page.getAttribute("cvt_relatedsiteid").getValue()[0].id;
+    }
+    MCS.cvt_MTSA_OnLoad.GroupAppt = Xrm.Page.getAttribute("cvt_groupappointment").getValue();
+};
+
+//MCS.cvt_MTSA_OnLoad.SetProviderSubgrids = function () {
+//    if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_UPDATE) {
+//        //Grids to filter
+//        var ProvSelect1Grid = document.getElementById("provgroupsselect1");
+//        var ProvSelectAllGrid = document.getElementById("provgroupsselectall");
+
+//        var MTSAId = (MCS.cvt_MTSA_OnLoad.EntityId) ? MCS.cvt_MTSA_OnLoad.EntityId : MCS.cvt_Common.BlankGUID;
+//        var MTSAName = (MCS.cvt_MTSA_OnLoad.EntityName) ? MCS.cvt_MTSA_OnLoad.EntityName : '';
+
+//        //Make Sure Grids have loaded, else re-fire
+//        if (ProvSelect1Grid == null || ProvSelectAllGrid == null) { 
+//            setTimeout(function () { MCS.cvt_MTSA_OnLoad.SetProviderSubgrids(); }, 500);
+//            return;
+//        }
+
+//        var columns = [
+//            'cvt_name',
+//            'createdon',
+//            'cvt_providerresourcegroupid'
+//        ];
+//        var conditions = [
+//            '<condition attribute="statecode" operator="eq" value="0" />',
+//            '<condition attribute="cvt_type" operator="eq" value="917290000" />',
+//            '<condition attribute="cvt_relatedmastertsaid" operator="eq" uiname="' + MCS.cvt_Common.formatXML(MTSAName) + '" uitype="cvt_mastertsa" value="' + MTSAId + '" />'
+//        ];
+//        var fetchSelect1ProvGroups = MCS.cvt_Common.CreateFetch('cvt_providerresourcegroup', columns, conditions, ['cvt_name', false]); 
+
+//        conditions = [
+//            '<condition attribute="statecode" operator="eq" value="0" />',
+//            '<condition attribute="cvt_type" operator="ne" value="917290000" />',
+//            '<condition attribute="cvt_relatedmastertsaid" operator="eq" uiname="' + MCS.cvt_Common.formatXML(MTSAName) + '" uitype="cvt_mastertsa" value="' + MTSAId + '" />'
+//        ];
+//        var fetchSelectAllProvGroups = MCS.cvt_Common.CreateFetch('cvt_providerresourcegroup', columns, conditions, ['cvt_name', false]);
+
+//        //Set the fetch xml to the sub grid
+//        ProvSelect1Grid.control.SetParameter("fetchXml", fetchSelect1ProvGroups); 
+//        ProvSelectAllGrid.control.SetParameter("fetchXml", fetchSelectAllProvGroups);
+//        //refresh the sub grid using the new fetch xml 
+//        ProvSelect1Grid.control.Refresh(); 
+//        ProvSelectAllGrid.control.Refresh();
+//    }
+//};

@@ -1,0 +1,259 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "type": "String"
+        },
+        "ISE_Name": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Name of the target ISE for this environment"
+            },
+            "allowedValues": [
+                "eis-dev-southwest-ise",
+                "eis-nprod-southwest-ise",
+                "eis-prod-east-ise",
+                "eis-prod-southwest-ise"
+            ]
+        },
+        "datalake_api_wrapper_LogicAppName": {
+            "type": "String"
+        },
+        "IntegrationAccount_Name": {
+            "type": "string"
+        },
+        "ServiceBus_Connection_Name": {
+            "type": "string"
+        },
+        "Service_Bus_Topic_Name": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+        "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+        "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+        "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicApp_Name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "integrationAccount": {
+                    "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+                },
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISE_Name')]",
+                    "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "actions": {
+                        "Compose:_Persist_to_Log_Analytics": {
+                            "inputs": {
+                                "AppointmentId": "@{triggerBody()?['AppointmentId']}",
+                                "HasResources": "@{triggerBody()?['HasResources']}",
+                                "MessageControlId": "@{triggerBody()?['MessageControlId']}",
+                                "MsgType": "@{triggerBody()?['MsgType']}"
+                            },
+                            "runAfter": {
+                                "Response_to_client": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "trackedProperties": {
+                                "AppointmentId": "@action()['outputs']['AppointmentId']",
+                                "HasResources": "@action()['outputs']['HasResources']",
+                                "MessageControlId": "@action()['outputs']['MessageControlId']",
+                                "MsgType": "@action()['outputs']['MsgType']"
+                            },
+                            "type": "Compose"
+                        },
+                        "Filter_array:_Filter_Errors": {
+                            "inputs": {
+                                "from": "@result('Scope:_Try')",
+                                "where": "@equals(item()?['status'], 'Failed')"
+                            },
+                            "runAfter": {
+                                "Scope:_Try": [
+                                    "Failed",
+                                    "Skipped",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Query"
+                        },
+                        "Get_Current_Date": {
+                            "inputs": "@convertTimeZone(string(utcNow()),'UTC','Central Standard Time','MM-dd-yyyy')",
+                            "runAfter": {
+                                "Compose:_Persist_to_Log_Analytics": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose"
+                        },
+                        "HTTP:_Call_DataLakeAPIWrapper_Logic_App": {
+                            "inputs": {
+                                "body": {
+                                    "Data": {
+                                        "FileContent": "@{triggerBody()}",
+                                        "FileName": "HL7-RawData-@{workflow().run.name}.txt",
+                                        "FolderPath": "gen2datalake/@{outputs('Get_Current_Date')}"
+                                    },
+                                    "Operation": "CreateFile"
+                                },
+                                "method": "POST",
+                                "uri": "@parameters('Datalake API Wrapper Trigger URL')"
+                            },
+                            "runAfter": {
+                                "Get_Current_Date": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http"
+                        },
+                        "Response": {
+                            "inputs": {
+                                "body": {
+                                    "code": "Error",
+                                    "message": "The Logic App Action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'. CorrelationId = @{workflow().run.name}"
+                                },
+                                "headers": {
+                                    "CorrelationId ": "@{workflow().run.name}"
+                                },
+                                "statusCode": 500
+                            },
+                            "kind": "Http",
+                            "runAfter": {
+                                "Filter_array:_Filter_Errors": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response"
+                        },
+                        "Response_to_client": {
+                            "inputs": {
+                                "body": "Message recieved successfully.\nCorrelationId = @{workflow().run.name}",
+                                "headers": {
+                                    "CorrelationId ": "@{workflow().run.name}"
+                                },
+                                "statusCode": 200
+                            },
+                            "kind": "Http",
+                            "runAfter": {
+                                "Scope:_Try": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response"
+                        },
+                        "Scope:_Try": {
+                            "actions": {
+                                "Send_Message_to_Service_Bus": {
+                                    "inputs": {
+                                        "body": {
+                                            "ContentData": "@{base64(triggerBody())}",
+                                            "ContentType": "text/plain",
+                                            "CorrelationId": "@triggerBody()?['MessageControlId']",
+                                            "Properties": {
+                                                "hasResources": "@toLower(triggerBody()?['HasResources'])",
+                                                "isAppointmentConfirmation": "@{toLower(string(not(equals(0,length(triggerBody()?['AppointmentId'])))))}"
+                                            }
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['servicebus']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/messages"
+                                    },
+                                    "runAfter": {},
+                                    "type": "ApiConnection"
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "Scope"
+                        }
+                    },
+                    "contentVersion": "1.0.0.0",
+                    "outputs": {},
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "Datalake API Wrapper Trigger URL": {
+                            "defaultValue": "",
+                            "type": "String"
+                        },
+                        "Service Bus Topic Name": {
+                            "defaultValue": "hl7messagetopic",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "request": {
+                            "inputs": {
+                                "method": "POST",
+                                "relativePath": "MakeCancel",
+                                "schema": {
+                                    "properties": {
+                                        "AppointmentId": {
+                                            "type": "string"
+                                        },
+                                        "HasResources": {
+                                            "type": "string"
+                                        },
+                                        "MessageControlId": {
+                                            "type": "string"
+                                        },
+                                        "Msg": {
+                                            "type": "string"
+                                        },
+                                        "MsgType": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "kind": "Http",
+                            "operationOptions": "EnableSchemaValidation",
+                            "type": "Request"
+                        }
+                    }
+                },
+                "parameters": {
+                    "Datalake API Wrapper Trigger URL": {
+                        "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('datalake_api_wrapper_LogicAppName'), 'manual'), '2016-06-01').value]"
+                    },
+                    "Service Bus Topic Name": {
+                        "value": "[parameters('Service_Bus_Topic_Name')]"
+                    },
+                    "$connections": {
+                        "value": {
+                            "servicebus": {
+                                "connectionId": "[variables('connections_servicebus_externalid')]",
+                                "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                                "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

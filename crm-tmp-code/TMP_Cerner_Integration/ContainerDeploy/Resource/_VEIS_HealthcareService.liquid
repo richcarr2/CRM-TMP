@@ -1,0 +1,42 @@
+{
+    "fullUrl":"urn:uuid:{{ GUID }}",
+    "resource":{
+        "resourceType": "HealthcareService",
+        "id":"{{ GUID }}",
+        "identifier": [
+            {
+                "value": "{{ AIG.3.value }}",
+            }    
+        ],
+        "category": [
+            {
+                "coding": [
+                    {
+                        {% if AIG -%}
+                        "code": "35",
+                        "display": "Hospital",
+                        "system": "http://terminology.hl7.org/CodeSystem/service-category",
+                        {% endif -%}
+                    },
+                ],
+            }
+        ],
+        "type": [
+            {
+                "coding": [
+                    {
+                        {% if AIG -%}
+                        "code": "333",
+                        "display": "Equipment",
+                        "system": "http://terminology.hl7.org/CodeSystem/service-type",
+                        {% endif -%}
+                    },
+                ],
+            },
+        ],
+    },
+    "request":{
+        "method":"PUT",
+        "url":"HealthcareService/{{ GUID }}",
+    },
+},

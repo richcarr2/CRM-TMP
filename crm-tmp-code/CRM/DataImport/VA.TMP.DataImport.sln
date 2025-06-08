@@ -1,0 +1,17 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{159641D6-6404-4A2A-AE62-294DE0FE8301}") = "VA.TMP.DataImport", "VA.TMP.DataImport\VA.TMP.DataImport.dtproj", "{8D11A291-B9C3-4A3B-961E-6246B5FC34A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Development|Default = Development|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D11A291-B9C3-4A3B-961E-6246B5FC34A8}.Development|Default.ActiveCfg = Development
+		{8D11A291-B9C3-4A3B-961E-6246B5FC34A8}.Development|Default.Build.0 = Development
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

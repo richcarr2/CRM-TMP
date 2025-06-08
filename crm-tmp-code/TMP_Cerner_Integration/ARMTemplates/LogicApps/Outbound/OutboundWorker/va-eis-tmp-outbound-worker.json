@@ -1,0 +1,1685 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "type": "String"
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "type": "string"
+    },
+    "ServiceBus_Connection_Name": {
+      "type": "string"
+    },
+    "KeyVault_Connection_Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "HC_Endpoint_URL": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "Service_Bus_Topic_Name": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+    "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "CKID": "195",
+        "Environment": "PREPROD",
+        "ProjectName": "Veterans Experience Integration Solution",
+        "VAAzureProgram": "EIS",
+        "VAECID": "AZG20181226001"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Compose_failed_logging_message_(Overall)": {
+              "inputs": {
+                "Custom Attributes": {
+                  "controlid": "@{variables('ControlId')}",
+                  "integrationresultids": "@{join(variables('AppointmentLevelIntegrationResults'),',')}",
+                  "serviceappointmentid": "@{variables('ActivityId')}"
+                },
+                "Errors": [
+                  "@body('Filter_array:_Filter_Errors_(Overall)')"
+                ],
+                "Message:": "@{outputs('Compose_human_readable_failure_message_(Overall)')}",
+                "Workflow Name": "@{workflow().name}",
+                "Workflow Run ID": "@{workflow()['run']['name']}",
+                "WorkflowStatus": "Failed"
+              },
+              "runAfter": {
+                "Compose_human_readable_failure_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "trackedProperties": {
+                "ErrorMessage": "@action()['outputs']"
+              },
+              "type": "Compose"
+            },
+            "Compose_human_readable_failure_message_(Overall)": {
+              "inputs": "The Cerner Outbound Worker failed to gather the data necessary to be able to send this Service Appointment to Cerner. Please contact technical support.",
+              "runAfter": {
+                "Filter_array:_Filter_Errors_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Compose_human_readable_success_message_(Overall)": {
+              "inputs": "The Cerner Outbound Worker successfully *attempted* to send one or more appointments to HealthConnect for relay to Cerner. This message does *not* indicate whether that operation was successful. No further action is required.",
+              "runAfter": {
+                "Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Compose_success_logging_message_(overall)": {
+              "inputs": {
+                "Custom Attributes": {
+                  "controlid": "@{variables('ControlId')}",
+                  "integrationresultids": "@{join(variables('AppointmentLevelIntegrationResults'),',')}",
+                  "serviceappointmentid": "@{variables('ActivityId')}"
+                },
+                "Errors": [],
+                "Message:": "@{outputs('Compose_human_readable_success_message_(Overall)')}",
+                "Workflow Name": "@{workflow().name}",
+                "Workflow Run ID": "@{workflow()['run']['name']}",
+                "WorkflowStatus": "Success"
+              },
+              "runAfter": {
+                "Compose_human_readable_success_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Filter_array:_Filter_Errors_(Overall)": {
+              "inputs": {
+                "from": "@result('Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Try": [
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Failed_Integration_Result_(Overall)": {
+              "inputs": {
+                "body": {
+                  "cvt_isclinicintegration": false,
+                  "cvt_visibletouser": true,
+                  "mcs_error": "@{outputs('Compose_human_readable_failure_message_(Overall)')}",
+                  "mcs_name": "TMP/Cerner Outbound - Overall Process Failed",
+                  "mcs_payload": "@{outputs('ContentData_Compose')}",
+                  "mcs_result": "@{variables('LogicAppRunId')}",
+                  "mcs_retry": false,
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ActivityId')})",
+                  "mcs_status": 803750003,
+                  "mcs_vimtrequest": "outbound-worker-logicapp-level",
+                  "mcs_vimtrequestmessagetype": "TmpCernerMakeCancelOutboundRequestMessage",
+                  "mcs_vimtresponsemessagetype": "TmpCernerMakeCancelOutboundResponseMessage"
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Compose_failed_logging_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "HTTP:_Create_Success_Integration_Result_(Overall)": {
+              "inputs": {
+                "body": {
+                  "cvt_isclinicintegration": false,
+                  "cvt_visibletouser": false,
+                  "mcs_error": "@{outputs('Compose_human_readable_success_message_(Overall)')}",
+                  "mcs_name": "TMP/Cerner Outbound - Overall Process Completed",
+                  "mcs_payload": "@{outputs('ContentData_Compose')}",
+                  "mcs_result": "@{variables('LogicAppRunId')}",
+                  "mcs_retry": false,
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ActivityId')})",
+                  "mcs_status": 803750002,
+                  "mcs_vimtrequest": "outbound-worker-logicapp-level",
+                  "mcs_vimtrequestmessagetype": "TmpCernerMakeCancelOutboundRequestMessage",
+                  "mcs_vimtresponse": "@{outputs('Compose_success_logging_message_(overall)')}",
+                  "mcs_vimtresponsemessagetype": "TmpCernerMakeCancelOutboundResponseMessage"
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Compose_success_logging_message_(overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Initialize_ActivityId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ActivityId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Patient_Fetch_Conditions": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_AnyAppointmentFailed": {
+              "description": "This is used to track if any individual patient failed to send (as an individual appointment) in this process.",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AnyAppointmentFailed",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_CurrentPatientFullName": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_AppointmentId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AppointmentId",
+                    "type": "string",
+                    "value": "@{triggerBody()?['Properties']['AppointmentId']}"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ActivityId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_AppointmentLevelIntegrationResults": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AppointmentLevelIntegrationResults",
+                    "type": "array"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AnyAppointmentFailed": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ControlId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ControlId",
+                    "type": "string",
+                    "value": "N/A"
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Initialize_CurrentPatientFullName": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "CurrentPatientFullName",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Patients": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_LogicAppRunId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "LogicAppRunId",
+                    "type": "string",
+                    "value": "@{workflow().run.name}"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_StartTimeUTC": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_MessageId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "MessageId",
+                    "type": "string",
+                    "value": "@{guid()}"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ControlId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Patient_Fetch_Conditions": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Patient Fetch Conditions",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Secrets": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Patients": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Patients",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AppointmentId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ReserveResourceOdataBind": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ReserveResourceOdataBind",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AppointmentLevelIntegrationResults": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_SA_JSON_Placeholder": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "SA JSON Placeholder",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ReserveResourceOdataBind": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Secrets": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Secrets",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_LogicAppRunId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_StartTimeUTC": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "StartTimeUTC",
+                    "type": "string",
+                    "value": "formatDateTime(, \"o\")"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_MessageId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Terminate": {
+              "inputs": {
+                "runError": {
+                  "code": "@{body('Filter_array:_Filter_Errors_(Overall)')}",
+                  "message": "@{outputs('Compose_failed_logging_message_(Overall)')}"
+                },
+                "runStatus": "Failed"
+              },
+              "runAfter": {
+                "HTTP:_Create_Failed_Integration_Result_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Terminate"
+            },
+            "Try": {
+              "actions": {
+                "Clinic_Info_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"activityparty\">\n    <attribute name=\"partyid\" />\n    <attribute name=\"participationtypemask\" />\n    <link-entity name=\"equipment\" to=\"partyid\" from=\"equipmentid\" alias=\"equipment\" link-type=\"outer\">\n      <attribute name=\"name\" alias=\"EquipmentName\" />\n      <attribute name=\"cvt_type\" alias=\"EquipmentType\" />\n      <attribute name=\"cvt_type\" />\n      <link-entity name=\"mcs_resource\" to=\"equipmentid\" from=\"mcs_relatedresourceid\" alias=\"resource\" link-type=\"outer\">\n        <attribute name=\"mcs_type\" />\n        <attribute name=\"mcs_name\" />\n        <attribute name=\"mcs_cerneruniqueid\" />\n        <attribute name=\"mcs_outboundcernerid\" />\n        <attribute name=\"mcs_resourceid\" />\n        <attribute name=\"cvt_ien\" />\n        <attribute name=\"cvt_defaultproviderduz\" />\n        <link-entity name=\"mcs_site\" to=\"mcs_relatedsiteid\" from=\"mcs_siteid\" alias=\"mcs_site\" link-type=\"outer\">\n          <attribute name=\"mcs_name\" />\n          <link-entity name=\"mcs_facility\" to=\"mcs_facilityid\" from=\"mcs_facilityid\" alias=\"mcs_facility\" link-type=\"outer\">\n            <attribute name=\"mcs_stationnumber\" />\n            <attribute name=\"cvt_facilitytype\" />\n          </link-entity>\n        </link-entity>\n      </link-entity>\n    </link-entity>\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n      <condition attribute=\"mcs_type\" entityname=\"resource\" operator=\"eq\" value=\"251920000\" />\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Parse_Properties_message_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Clinic_Info_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/activityparties?fetchXml=@{outputs('Clinic_Info_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Clinic_Info_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Compose_Properties_JSON": {
+                  "inputs": "@body('Parse_Properties_message_into_JSON')",
+                  "runAfter": {
+                    "Get_Appointment_Modalities_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose_SA_JSON": {
+                  "inputs": "@replace(replace(variables('SA JSON Placeholder'),'\\\"',''''),'/','-')",
+                  "runAfter": {
+                    "Set_variable_SA_JSON_Placeholder": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Condition:_Is_it_a_group_appointment": {
+                  "actions": {
+                    "Combine_group_and_individual_patient_JSON_for_Patient_Information": {
+                      "inputs": "@union(body('Group_Appointment_Patient_Info_(HTTP)')['value'],body('Patients_(HTTP)')['value'])",
+                      "runAfter": {},
+                      "type": "Compose"
+                    },
+                    "Set_Patients_variable_1": {
+                      "inputs": {
+                        "name": "Patients",
+                        "value": "@outputs('Combine_group_and_individual_patient_JSON_for_Patient_Information')"
+                      },
+                      "runAfter": {
+                        "Combine_group_and_individual_patient_JSON_for_Patient_Information": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "description": "If it is a group appt,,union the patients from the Service Appointment activity party list and the Reserve Resource activity party list.",
+                  "else": {
+                    "actions": {
+                      "Set_Patients_variable_2": {
+                        "inputs": {
+                          "name": "Patients",
+                          "value": "@body('Patients_(HTTP)')['value']"
+                        },
+                        "runAfter": {},
+                        "type": "SetVariable"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@body('Parse_SA_message_into_JSON')?['ServiceAppointment'][0]['mcs_groupappointment']",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Compose_Properties_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Condition:_Is_there_a_reserve_resource": {
+                  "actions": {
+                    "Set_ReserveResourceOdataBind": {
+                      "inputs": {
+                        "name": "ReserveResourceOdataBind",
+                        "value": "/appointments(@{variables('AppointmentId')})"
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@variables('AppointmentId')",
+                            "@null"
+                          ]
+                        }
+                      },
+                      {
+                        "not": {
+                          "equals": [
+                            "@variables('AppointmentId')",
+                            ""
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Condition:_Is_it_a_group_appointment": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "ContentData_Compose": {
+                  "inputs": "@json(decodeBase64(triggerBody()?['ContentData']))",
+                  "runAfter": {},
+                  "type": "Compose"
+                },
+                "Decide_if_any_single_appointment_schedule_failed": {
+                  "actions": {
+                    "Condition:_Set_SA_status_based_on_whether_this_is_a_book_or_cancel": {
+                      "actions": {
+                        "Set_Service_Appointment_Status_to_Scheduled,_Interface_Failure": {
+                          "description": "This is a book (or possibly a retry). Set SA to Scheduled (3) and Interface Failure (917290004)",
+                          "inputs": {
+                            "body": {
+                              "statecode": 3,
+                              "statuscode": 917290004
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "PATCH",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/serviceappointments(@{variables('ActivityId')})"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Set_Service_Appointment_Status_to_Open,_Cancel_Failure": {
+                            "description": "This is a cancellation. Set the SA state to Open (0), and the Status to Cancel Failure (917290006)",
+                            "inputs": {
+                              "body": {
+                                "statecode": 0,
+                                "statuscode": 917290006
+                              },
+                              "headers": {
+                                "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                              },
+                              "method": "PATCH",
+                              "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/serviceappointments(@{variables('ActivityId')})"
+                            },
+                            "runAfter": {},
+                            "type": "Http"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@contains(toLower(body('Parse_Properties_message_into_JSON')?['Action']),'book')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {},
+                      "type": "If"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@variables('AnyAppointmentFailed')",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "For_each_patient,_send_to_HealthConnect": [
+                      "Succeeded",
+                      "Failed"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "For_each_patient,_send_to_HealthConnect": {
+                  "actions": {
+                    "Append_to_AppointmentLevelIntegrationResults_(failure)": {
+                      "inputs": {
+                        "name": "AppointmentLevelIntegrationResults",
+                        "value": "@split(split(outputs('Create_Integration_Result_(Failure)').headers.Location,'(')[1],')')[0]"
+                      },
+                      "runAfter": {
+                        "Create_Integration_Result_(Failure)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "AppendToArrayVariable"
+                    },
+                    "Append_to_AppointmentLevelIntegrationResults_(success)": {
+                      "inputs": {
+                        "name": "AppointmentLevelIntegrationResults",
+                        "value": "@split(split(outputs('Create_Integration_Result_(Successful_but_Waiting_for_Response)').headers.Location,'(')[1],')')[0]"
+                      },
+                      "runAfter": {
+                        "Create_Integration_Result_(Successful_but_Waiting_for_Response)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "AppendToArrayVariable"
+                    },
+                    "Compose_failed_logging_message_(appointment_level)": {
+                      "inputs": {
+                        "Custom Attributes": {
+                          "contactid": "@{variables('ActivityId')}",
+                          "serviceappointmentid": "@{variables('ActivityId')}"
+                        },
+                        "Errors": [
+                          "@body('Filter_array:_Filter_errors_(appointment_level)')"
+                        ],
+                        "Message:": "@{outputs('Compose_human_readable_error_message_(appointment_level)')}",
+                        "Workflow Name": "@{workflow().name}",
+                        "Workflow Run ID": "@{workflow()['run']['name']}",
+                        "WorkflowStatus": "Failed"
+                      },
+                      "runAfter": {
+                        "Compose_human_readable_error_message_(appointment_level)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose_human_readable_error_message_(appointment_level)": {
+                      "inputs": "The appointment from TMP for @{variables('CurrentPatientFullName')} failed to send to Cerner. More details may be found in the Error field for this record. Contact technical support.",
+                      "runAfter": {
+                        "Filter_array:_Filter_errors_(appointment_level)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose_human_readable_success_message_(appointment_level)": {
+                      "inputs": "The appointment from TMP for @{variables('CurrentPatientFullName')} was successfully sent to Cerner. Please check the Status field to determine whether an appointment confirmation has been received from them in response to this request. A status of 'Waiting for Response' indicates we are awaiting an appointment confirmation from Cerner, and a status of 'Complete' indicates we received an appointment confirmation from Cerner. No further action is required.",
+                      "runAfter": {
+                        "Core_Operation_Try": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose_successful_logging_message_(appointment_level)": {
+                      "inputs": {
+                        "Custom Attributes": {
+                          "contactid": "@{items('For_each_patient,_send_to_HealthConnect')['contactid']}",
+                          "serviceappointmentid": "@{variables('ActivityId')}"
+                        },
+                        "Errors": [],
+                        "Message:": "@{outputs('Compose_human_readable_success_message_(appointment_level)')}",
+                        "Workflow Name": "@{workflow().name}",
+                        "Workflow Run ID": "@{workflow()['run']['name']}",
+                        "WorkflowStatus": "Success"
+                      },
+                      "runAfter": {
+                        "Compose_human_readable_success_message_(appointment_level)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Core_Operation_Try": {
+                      "actions": {
+                        "Compose_the_combined_JSON": {
+                          "inputs": {
+                            "AppointmentModalities": [
+                              "@body('Get_Appointment_Modalities_(HTTP)').value[0]"
+                            ],
+                            "ClinicInfo": [
+                              "@body('Clinic_Info_(HTTP)')"
+                            ],
+                            "ControlId": "@{variables('ControlId')}",
+                            "Facilities": [
+                              "@body('Patient_And_Provider_Facilities_(HTTP)')"
+                            ],
+                            "GroupAppointmentAction": "@{body('Parse_Properties_message_into_JSON')?['Action']}",
+                            "GroupAppointmentResources": [
+                              "@body('Group_Appointment_Resources_(HTTP)')"
+                            ],
+                            "GroupAppointmentSystemuserResources": [
+                              "@body('Group_Appointment_Systemuser_Resources_(HTTP)')"
+                            ],
+                            "GroupPatientFacility": [
+                              "@body('Group_Patient_Facility_(HTTP)')"
+                            ],
+                            "LastModifiedUser": [
+                              {
+                                "DomainName": "@{body('Scheduler_(HTTP)')?.value[0]?.domainName}",
+                                "EDIPI": "@{body('Scheduler_(HTTP)')?.value[0]?.edipi}"
+                              }
+                            ],
+                            "LogicAppRunId": "@{variables('LogicAppRunId')}",
+                            "MessageId": "@{variables('MessageId')}",
+                            "Patient": [
+                              "@items('For_each_patient,_send_to_HealthConnect')"
+                            ],
+                            "Provider": [
+                              "@body('Provider_(HTTP)')"
+                            ],
+                            "SchedulerInfo": [
+                              "@body('Scheduler_(HTTP)')"
+                            ],
+                            "ServiceAppointment": [
+                              "@body('Parse_SA_message_into_JSON')"
+                            ],
+                            "SystemuserResources": [
+                              "@body('Systemuser_Resources_(HTTP)')"
+                            ],
+                            "TMPResources": [
+                              "@body('TMP_Resources_(HTTP)')"
+                            ]
+                          },
+                          "runAfter": {
+                            "Set_CurrentPatientFullName": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose"
+                        },
+                        "Send_HTTP_request_to_HC_endpoint": {
+                          "description": "Send a HTTP request with the transformed JSON to HealthConnect, so that they can send the message to Cerner.",
+                          "inputs": {
+                            "body": "@outputs('Update_ServiceAppointment_StartTime_Property')",
+                            "headers": {
+                              "Content-Type": "text/html; charset=ISO-8859-1"
+                            },
+                            "method": "POST",
+                            "uri": "@parameters('HCEndpointURL')"
+                          },
+                          "runAfter": {
+                            "Update_ServiceAppointment_StartTime_Property": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Http"
+                        },
+                        "Set_ControlId": {
+                          "description": "Random 20 digit number, this is required by HealthConnect.",
+                          "inputs": {
+                            "name": "ControlId",
+                            "value": "@{rand(1000000000,9999999999)}@{rand(1000000000,9999999999)}"
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        },
+                        "Set_CurrentPatientFullName": {
+                          "inputs": {
+                            "name": "CurrentPatientFullName",
+                            "value": "@{items('For_each_patient,_send_to_HealthConnect')?.fullname}"
+                          },
+                          "runAfter": {
+                            "Set_ControlId": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Transform_JSON_to_Phil's_JSON_using_Liquid_template": {
+                          "description": "Transform the JSON we constructed into a format accepted by Health Connect. The Map can be found in the 'Integration Account' associated with this logic app.",
+                          "inputs": {
+                            "content": "@outputs('Compose_the_combined_JSON')",
+                            "integrationAccount": {
+                              "map": {
+                                "name": "ServiceAppointmentUpdateLiquid"
+                              }
+                            }
+                          },
+                          "kind": "JsonToJson",
+                          "runAfter": {
+                            "Compose_the_combined_JSON": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Liquid"
+                        },
+                        "Update_ServiceAppointment_StartTime_Property": {
+                          "description": "The StartTime property needs to be a specific format to conform to Phil's processing code. This cannot be done in the Liquid template, so we are updating the combined JSON with the correctly formatted start time.",
+                          "inputs": "@setProperty(body('Transform_JSON_to_Phil''s_JSON_using_Liquid_template'),'StartTime',formatDateTime(body('Transform_JSON_to_Phil''s_JSON_using_Liquid_template')['StartTime'],'yyyy-MM-ddTHH:mm:ss+0000Z'))",
+                          "runAfter": {
+                            "Transform_JSON_to_Phil's_JSON_using_Liquid_template": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose"
+                        }
+                      },
+                      "runAfter": {},
+                      "type": "Scope"
+                    },
+                    "Create_Integration_Result_(Failure)": {
+                      "description": "Create Integration Result with status \"Error\" (803750003) and mcs_vimtrequest = 'outbound-worker-patient-level'.  DO NOT change mcs_vimtrequest, mcs_integrationrequest, mcs_vimtresponse, or mcs_vimtmessageregistryname fields!",
+                      "inputs": {
+                        "body": {
+                          "cvt_controlid": "@{variables('ControlId')}",
+                          "cvt_isclinicintegration": false,
+                          "cvt_visibletouser": true,
+                          "mcs_appointmentid@odata.bind": "@{variables('ReserveResourceOdataBind')}",
+                          "mcs_error": "@{outputs('Compose_human_readable_error_message_(appointment_level)')}",
+                          "mcs_integrationrequest": "@{outputs('Update_ServiceAppointment_StartTime_Property')}",
+                          "mcs_name": "TMP/Cerner Outbound - Failed to send appt to Cerner for @{variables('CurrentPatientFullName')}",
+                          "mcs_payload": "@{variables('LogicAppRunId')}",
+                          "mcs_retry": false,
+                          "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ActivityId')})",
+                          "mcs_status": 803750003,
+                          "mcs_url": "@{parameters('HCEndpointURL')}",
+                          "mcs_vimtmessageregistryname": "@{items('For_each_patient,_send_to_HealthConnect')['pi.mcs_identifier']}",
+                          "mcs_vimtrequest": "outbound-worker-patient-level",
+                          "mcs_vimtrequestmessagetype": "TmpCernerMakeCancelOutboundRequestMessage",
+                          "mcs_vimtresponse": "@{outputs('Compose_failed_logging_message_(appointment_level)')}",
+                          "mcs_vimtresponsemessagetype": "TmpCernerMakeCancelOutboundResponseMessage"
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                      },
+                      "runAfter": {
+                        "Compose_failed_logging_message_(appointment_level)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Create_Integration_Result_(Successful_but_Waiting_for_Response)": {
+                      "description": "Create Integration Result with status \"Waiting for Response\" (100000001) and mcs_vimtrequest = 'outbound-worker-patient-level'. DO NOT change mcs_vimtrequest, mcs_integrationrequest, mcs_vimtresponse, mcs_vimtmessageregistryname fields!fields",
+                      "inputs": {
+                        "body": {
+                          "cvt_controlid": "@{variables('ControlId')}",
+                          "cvt_isclinicintegration": false,
+                          "cvt_visibletouser": true,
+                          "mcs_appointmentid@odata.bind": "@{variables('ReserveResourceOdataBind')}",
+                          "mcs_error": "@{outputs('Compose_human_readable_success_message_(appointment_level)')}",
+                          "mcs_integrationrequest": "@{outputs('Update_ServiceAppointment_StartTime_Property')}",
+                          "mcs_name": "TMP/Cerner Outbound - @{replace(replace(body('Parse_Properties_message_into_JSON')?['Action'], '|', ' '), 'ServiceAppointment', 'Appointment')} for @{variables('CurrentPatientFullName')}",
+                          "mcs_payload": "@{variables('LogicAppRunId')}",
+                          "mcs_retry": false,
+                          "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ActivityId')})",
+                          "mcs_status": 100000001,
+                          "mcs_url": "@{parameters('HCEndpointURL')}",
+                          "mcs_vimtmessageregistryname": "@{items('For_each_patient,_send_to_HealthConnect')['pi.mcs_identifier']}",
+                          "mcs_vimtrequest": "outbound-worker-patient-level",
+                          "mcs_vimtrequestmessagetype": "TmpCernerMakeCancelOutboundRequestMessage",
+                          "mcs_vimtresponse": "@{outputs('Compose_successful_logging_message_(appointment_level)')}",
+                          "mcs_vimtresponsemessagetype": "TmpCernerMakeCancelOutboundResponseMessage"
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                      },
+                      "runAfter": {
+                        "Compose_successful_logging_message_(appointment_level)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Filter_array:_Filter_errors_(appointment_level)": {
+                      "inputs": {
+                        "from": "@result('Core_Operation_Try')",
+                        "where": "@equals(item()?['status'], 'Failed')"
+                      },
+                      "runAfter": {
+                        "Set_AnyAppointmentFailed=_true": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Query"
+                    },
+                    "Set_AnyAppointmentFailed=_true": {
+                      "inputs": {
+                        "name": "AnyAppointmentFailed",
+                        "value": true
+                      },
+                      "runAfter": {
+                        "Core_Operation_Try": [
+                          "TimedOut",
+                          "Skipped",
+                          "Failed"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "foreach": "@body('Parse_Patient_Information_Combined_JSON_1')",
+                  "runAfter": {
+                    "Parse_Patient_Information_Combined_JSON_1": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  },
+                  "type": "Foreach"
+                },
+                "Get_Appointment_Modalities_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/EntityDefinitions(LogicalName='serviceappointment')/Attributes/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$select=LogicalName&$filter=LogicalName eq 'tmp_appointmentmodality'&$expand=OptionSet($select=Options)"
+                  },
+                  "runAfter": {
+                    "Group_Appointment_Systemuser_Resources_(HTTP)": [
+                      "Succeeded"
+                    ],
+                    "Parse_Patient_Information_Combined_JSON": [
+                      "Succeeded"
+                    ],
+                    "Systemuser_Resources_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Get_secret:_CDS_Tenant_ID": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('cds-tenant-id')}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {
+                    "ContentData_Compose": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_HC_URL": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('healthconnect-rest-url')}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Tenant_ID": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Group_Appointment_Patient_Info_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"contact\" >\n    <attribute name=\"contactid\" />\n    <attribute name=\"fullname\" />\n    @{variables('Patient Fetch Conditions')}\n    <link-entity name=\"mcs_personidentifiers\" from=\"mcs_patient\" to=\"contactid\" link-type=\"outer\" alias=\"pi\">\n      <attribute name=\"mcs_identifier\" />\n      <filter>\n        <condition attribute=\"mcs_assigningfacility\" operator=\"null\" />\n        <condition attribute=\"mcs_assigningauthority\" operator=\"eq\" value=\"USVHA\" />\n        <condition attribute=\"mcs_identifiertype\" operator=\"eq\" value=\"125150000\" />\n        <condition attribute=\"mcs_identifier\" operator=\"like\" value=\"%V%\" />\n      </filter>\n    </link-entity>\n  </entity>\n</fetch>\n",
+                  "runAfter": {
+                    "Patients_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Group_Appointment_Patient_Info_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/contacts?fetchXml=@{outputs('Group_Appointment_Patient_Info_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Group_Appointment_Patient_Info_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Group_Appointment_Resources_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"equipment\" >\n    <attribute name=\"cvt_type\" />\n    <link-entity name=\"activityparty\" to=\"equipmentid\" from=\"partyid\" alias=\"ap\" link-type=\"inner\" >\n      <attribute name=\"partyid\" />\n      <attribute name=\"activityid\" />\n      <link-entity name=\"appointment\" to=\"activityid\" from=\"activityid\" alias=\"appt\" link-type=\"inner\" >\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('AppointmentId')}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"mcs_resource\" to=\"equipmentid\" from=\"mcs_relatedresourceid\" alias=\"resource\" link-type=\"inner\" >\n      <attribute name=\"mcs_cerneruniqueid\" />\n        <attribute name=\"mcs_outboundcernerid\" />\n      <attribute name=\"mcs_name\" />\n      <attribute name=\"mcs_type\" />\n      <attribute name=\"cvt_ien\" />\n      <link-entity name=\"mcs_facility\" to=\"mcs_facility\" from=\"mcs_facilityid\" alias=\"mcs_facility\" link-type=\"inner\" >\n        <attribute name=\"mcs_stationnumber\" />\n      </link-entity>\n      <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedsiteid\" alias=\"mcs_site\" >\n        <attribute name=\"mcs_name\" />\n      </link-entity>\n      <attribute name=\"mcs_name\" />\n    </link-entity>\n    <filter>\n      <condition entityname=\"ap\" attribute=\"participationtypemask\" operator=\"eq\" value=\"5\" />\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "TMP_Resources_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Group_Appointment_Resources_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/equipments?fetchXml=@{outputs('Group_Appointment_Resources_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Group_Appointment_Resources_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Group_Appointment_Systemuser_Resources_(FetchXML)": {
+                  "inputs": "<fetch no-lock=\"true\" >\n  <entity name=\"systemuser\" >\n    <attribute name=\"mcs_edipi\" />\n    <attribute name=\"fullname\" />\n    <link-entity name=\"activityparty\" from=\"partyid\" to=\"systemuserid\" >\n      <link-entity name=\"serviceappointment\" from=\"activityid\" to=\"activityid\" >\n        <attribute name=\"cvt_relatedproviderid\" />\n        <attribute name=\"cvt_prouserduz\" />\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('AppointmentId')}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Group_Appointment_Resources_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Group_Appointment_Systemuser_Resources_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?fetchXml=@{outputs('Group_Appointment_Systemuser_Resources_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Group_Appointment_Systemuser_Resources_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Group_Patient_Facility_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"appointment\" >\n    <attribute name=\"activityid\" />\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('AppointmentId')}\" />\n    </filter>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"cvt_site\" link-type=\"outer\" alias=\"cvt_siteLink\" >\n      <attribute name=\"mcs_name\" alias=\"PatientSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"cvt_siteFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"PatientFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"PatientStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"PatientFacility\" />\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Patient_And_Provider_Facilities_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Group_Patient_Facility_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments?fetchXml=@{outputs('Group_Patient_Facility_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Group_Patient_Facility_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret:_HC_URL": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Last_modified_user_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name='systemuser'>\n    <attribute name='domainname' />\n    <attribute name='mcs_edipi' alias='EDIPI' />\n    <filter>\n      <condition attribute='systemuserid' operator='eq' value='@{body('Parse_SA_message_into_JSON')?['ServiceAppointment'][0]['_modifiedby_value']}' />\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Group_Patient_Facility_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Last_modified_user_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?fetchXml=@{outputs('Last_modified_user_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Last_modified_user_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Parse_ContentData_into_JSON": {
+                  "inputs": {
+                    "content": "@outputs('ContentData_Compose')",
+                    "schema": {}
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Parse_Patient_Information_Combined_JSON": {
+                  "inputs": {
+                    "content": "@variables('Patients')",
+                    "schema": {
+                      "items": {
+                        "properties": {
+                          "@@odata.etag": {
+                            "type": "string"
+                          },
+                          "contactid": {
+                            "type": "string"
+                          },
+                          "fullname": {
+                            "type": "string"
+                          },
+                          "pi.mcs_identifier": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "@@odata.etag",
+                          "fullname",
+                          "contactid",
+                          "pi.mcs_identifier"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "runAfter": {
+                    "Last_modified_user_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Parse_Patient_Information_Combined_JSON_1": {
+                  "inputs": {
+                    "content": "@variables('Patients')",
+                    "schema": {
+                      "items": {
+                        "properties": {
+                          "@@odata.etag": {
+                            "type": "string"
+                          },
+                          "contactid": {
+                            "type": "string"
+                          },
+                          "fullname": {
+                            "type": "string"
+                          },
+                          "pi.mcs_identifier": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "@@odata.etag",
+                          "fullname",
+                          "contactid",
+                          "pi.mcs_identifier"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "runAfter": {
+                    "Condition:_Is_there_a_reserve_resource": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Parse_Properties_message_into_JSON": {
+                  "inputs": {
+                    "content": "@triggerBody()?['Properties']",
+                    "schema": {
+                      "properties": {
+                        "Action": {
+                          "type": "string"
+                        },
+                        "DateTimeMessageSentFromSource": {
+                          "type": "string"
+                        },
+                        "MessageSource": {
+                          "type": "string"
+                        },
+                        "PluginCorrelationId": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "runAfter": {
+                    "Were_patients_passed_in_from_the_plugin": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Parse_SA_message_into_JSON": {
+                  "inputs": {
+                    "content": "@outputs('Compose_SA_JSON')",
+                    "schema": {}
+                  },
+                  "runAfter": {
+                    "Compose_SA_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Patient_And_Provider_Facilities_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"serviceappointment\" >\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n    </filter>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedprovidersite\" link-type=\"outer\" alias=\"ProviderSite\" >\n      <attribute name=\"mcs_name\" alias=\"ProviderSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"ProviderFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"ProviderFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"ProviderStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"ProviderFacility\" />\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedsite\" link-type=\"outer\" alias=\"PatientSite\" >\n      <attribute name=\"mcs_name\" alias=\"PatientSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"PatientFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"PatientFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"PatientStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"PatientFacility\" />\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Provider_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Patient_And_Provider_Facilities_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/serviceappointments?fetchXml=@{outputs('Patient_And_Provider_Facilities_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Patient_And_Provider_Facilities_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Patients_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"contact\" >\n    <attribute name=\"contactid\" />\n    <attribute name=\"fullname\" />\n@{variables('Patient Fetch Conditions')}\n    <link-entity name=\"activityparty\" to=\"contactid\" from=\"partyid\" alias=\"ap\" link-type=\"inner\" >\n      <filter>\n        <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n      </filter>\n    </link-entity>\n    <link-entity name=\"mcs_personidentifiers\" to=\"contactid\" from=\"mcs_patient\" alias=\"pi\" link-type=\"inner\" >\n      <attribute name=\"mcs_identifier\" />\n      <filter type=\"and\" >\n        <condition attribute=\"mcs_assigningfacility\" operator=\"null\" />\n        <condition attribute=\"mcs_assigningauthority\" operator=\"eq\" value=\"USVHA\" />\n        <condition attribute=\"mcs_identifier\" operator=\"like\" value=\"%V%\" />\n        <condition attribute=\"mcs_identifiertype\" operator=\"eq\" value=\"125150000\" />\n      </filter>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Clinic_Info_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Patients_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/contacts?fetchXml=@{outputs('Patients_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Patients_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Provider_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"systemuser\" >\n    <attribute name=\"fullname\" />\n      <attribute name=\"mcs_edipi\" />\n    <link-entity name=\"serviceappointment\" to=\"systemuserid\" from=\"cvt_relatedproviderid\" alias=\"sa\" link-type=\"inner\" >\n      <attribute name=\"cvt_relatedproviderid\" />\n      <attribute name=\"cvt_prouserduz\" />\n    </link-entity>\n    <filter>\n      <condition attribute=\"activityid\" entityname=\"sa\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Parse_Properties_message_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Provider_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?fetchXml=@{outputs('Provider_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Provider_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Scheduler_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name='systemuser'>\n    <attribute name='domainname' alias='domainName' />\n    <attribute name='mcs_edipi' alias='edipi' />\n    <filter>\n      <condition attribute='systemuserid' operator='eq' value='@{body('Parse_SA_message_into_JSON')?['ServiceAppointment'][0]['_createdby_value']}' />\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Parse_Properties_message_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Scheduler_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?fetchXml=@{outputs('Scheduler_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Scheduler_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Set_variable_ActivityId": {
+                  "inputs": {
+                    "name": "ActivityId",
+                    "value": "@{body('Parse_SA_message_into_JSON')?['ServiceAppointment'][0]['activityid']}"
+                  },
+                  "runAfter": {
+                    "Parse_SA_message_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "SetVariable"
+                },
+                "Set_variable_SA_JSON_Placeholder": {
+                  "inputs": {
+                    "name": "SA JSON Placeholder",
+                    "value": "@{body('Parse_ContentData_into_JSON')}"
+                  },
+                  "runAfter": {
+                    "Parse_ContentData_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "SetVariable"
+                },
+                "Systemuser_Resources_(FetchXML)": {
+                  "inputs": "<fetch no-lock=\"true\" distinct=\"true\">\n  <entity name=\"systemuser\" >\n    <attribute name=\"mcs_edipi\" />\n    <attribute name=\"fullname\" />\n    <link-entity name=\"activityparty\" from=\"partyid\" to=\"systemuserid\" >\n      <link-entity name=\"serviceappointment\" from=\"activityid\" to=\"activityid\" >\n        <attribute name=\"cvt_relatedproviderid\" />\n        <attribute name=\"cvt_prouserduz\" />\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Group_Appointment_Patient_Info_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Systemuser_Resources_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?fetchXml=@{outputs('Systemuser_Resources_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Systemuser_Resources_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "TMP_Resources_(FetchXML)": {
+                  "inputs": "<fetch no-lock='true'>\n  <entity name=\"activityparty\" >\n    <attribute name=\"partyid\" />\n    <attribute name=\"participationtypemask\" />\n    <link-entity name=\"equipment\" to=\"partyid\" from=\"equipmentid\" alias=\"e\" link-type=\"inner\" >\n      <attribute name=\"name\" alias=\"EquipmentName\" />\n      <attribute name=\"cvt_type\" alias=\"EquipmentType\" />\n      <link-entity name=\"mcs_resource\" to=\"equipmentid\" from=\"mcs_relatedresourceid\" alias=\"resource\" link-type=\"outer\" >\n        <attribute name=\"mcs_type\" />\n        <attribute name=\"mcs_name\" />\n        <attribute name=\"mcs_cerneruniqueid\" />\n        <attribute name=\"mcs_outboundcernerid\" />\n        <attribute name=\"cvt_ien\" />\n        <attribute name=\"cvt_defaultproviderduz\" />\n        <link-entity name=\"mcs_facility\" to=\"mcs_facility\" from=\"mcs_facilityid\" link-type=\"inner\" >\n          <attribute name=\"mcs_stationnumber\" />\n        </link-entity>\n        <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedsiteid\" >\n          <attribute name=\"mcs_name\" />\n        </link-entity>\n      </link-entity>\n    </link-entity>\n    <filter>\n      <filter>\n        <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ActivityId')}\" />\n      </filter>\n    </filter>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Scheduler_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "TMP_Resources_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/activityparties?fetchXml=@{outputs('TMP_Resources_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "TMP_Resources_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Were_patients_passed_in_from_the_plugin": {
+                  "actions": {
+                    "Append_to_Patient_Fetch_Conditions": {
+                      "description": "Construct the end of the filter node for the beginning of the Patient FetchXML filter statement.",
+                      "inputs": {
+                        "name": "Patient Fetch Conditions",
+                        "value": "</condition></filter>"
+                      },
+                      "runAfter": {
+                        "For_each": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "AppendToStringVariable"
+                    },
+                    "For_each": {
+                      "actions": {
+                        "Append_to_Patient_Fetch_Conditions_1": {
+                          "inputs": {
+                            "name": "Patient Fetch Conditions",
+                            "value": "<value>@{items('For_each')?['PatientId']}</value>"
+                          },
+                          "runAfter": {},
+                          "type": "AppendToStringVariable"
+                        }
+                      },
+                      "description": "Loop through the patients list and construct the conditions node of a FetchXML statement (to be used in the fetches later for the Patient information)",
+                      "foreach": "@body('Parse_SA_message_into_JSON')?['Patients']",
+                      "runAfter": {
+                        "Set_Patient_Fetch_Conditions": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Foreach"
+                    },
+                    "Set_Patient_Fetch_Conditions": {
+                      "description": "Construct the beginning of the filter node for the beginning of the Patient FetchXML filter statement.",
+                      "inputs": {
+                        "name": "Patient Fetch Conditions",
+                        "value": "<filter><condition attribute=\"contactid\" operator=\"in\" uitype=\"contact\">"
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    }
+                  },
+                  "description": "A patients list of all patients associated with a new a group appointment is sent by the TMP plugin on group appointment creation, and a delta list is sent of just the changed patients in the case of additions or cancellations to an existing group ap",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('Parse_SA_message_into_JSON')?['Patients'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Set_variable_ActivityId": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {
+                "Initialize_SA_JSON_Placeholder": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "HCEndpointURL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            },
+            "Service Bus Topic Name": {
+              "defaultValue": "cdstriggertooutboundtopic",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "When_a_message_is_received_in_a_topic_subscription_(auto-complete)": {
+              "description": "Checks the service bus for incoming messages from the outbound worker logic app.",
+              "evaluatedRecurrence": {
+                "frequency": "Second",
+                "interval": 5
+              },
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "get",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('outbound-worker-sub')}/messages/head",
+                "queries": {
+                  "subscriptionType": "Main"
+                }
+              },
+              "recurrence": {
+                "frequency": "Second",
+                "interval": 5
+              },
+              "type": "ApiConnection"
+            }
+          }
+        },
+        "parameters": {
+          "HCEndpointURL": {
+            "value": "[parameters('HC_Endpoint_URL')]"
+          },
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "Service Bus Topic Name": {
+            "value": "[parameters('Service_Bus_Topic_Name')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              },
+              "servicebus": {
+                "connectionId": "[variables('connections_servicebus_externalid')]",
+                "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

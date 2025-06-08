@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "VEIS Reports", "Reports\VEIS Reports.rptproj", "{F568EAF2-F90B-46A7-8479-287B485072E3}"
+EndProject
+Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "Reports Fetch", "Reports Fetch\Reports Fetch.rptproj", "{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Default = Debug|Default
+		DebugLocal|Default = DebugLocal|Default
+		Release|Default = Release|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Debug|Default.ActiveCfg = Debug
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Debug|Default.Build.0 = Debug
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Debug|Default.Deploy.0 = Debug
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.DebugLocal|Default.ActiveCfg = DebugLocal
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.DebugLocal|Default.Build.0 = DebugLocal
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Release|Default.ActiveCfg = Release
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Release|Default.Build.0 = Release
+		{F568EAF2-F90B-46A7-8479-287B485072E3}.Release|Default.Deploy.0 = Release
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Debug|Default.ActiveCfg = Debug
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Debug|Default.Build.0 = Debug
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Debug|Default.Deploy.0 = Debug
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.DebugLocal|Default.ActiveCfg = DebugLocal
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.DebugLocal|Default.Build.0 = DebugLocal
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Release|Default.ActiveCfg = Release
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Release|Default.Build.0 = Release
+		{9C50BBAD-AA25-494A-B297-8978CFB0C5CD}.Release|Default.Deploy.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {73CE456A-7937-450F-BFAA-3C258252B7CF}
+	EndGlobalSection
+EndGlobal

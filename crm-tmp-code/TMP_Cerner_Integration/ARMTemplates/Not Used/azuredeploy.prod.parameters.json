@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "usgovarizona"
+        },
+        "subscriptionID": {
+            "value": "c0eb1fa5-dd86-490c-bd98-217a85aaa1c9"
+        },
+        "resourceGroupName": {
+            "value": "EIS-PROD-INT-SOUTHWEST-EIS-RG"
+        },
+        "orchestratorLogicAppName": {
+            "value": "va-eis-tmp-orchestrator-prod"
+        },        
+        "logicAppName": {
+            "value": "myPRODCustomDevOpsLogicApp"
+        },
+        "namespaces_vaeistmpservicebusdev_name": {
+            "value": "vaeistmpservicebusprod"
+        },
+        "environment_name" : {
+            "value": "PROD"
+        },
+        "location_name" : {
+            "value": "USGov Arizona"
+        },
+        "topic_name" : {
+            "value": "servicetopicprod"
+        },
+        "subscription_name" : {
+            "value": "demosub"
+        }
+    }
+}

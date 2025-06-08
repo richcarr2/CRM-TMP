@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PREPROD-GOV-INTERNAL">
+  <AppService Name="jwt-ec-nprod-tmp" ResourceGroup="VEIS-PREPROD-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="Issuer" Value="gov.va.vamf.tmp-azure-qa.v1" />
+        <AppSetting Key="Authenticated" Value="true" />
+        <AppSetting Key="AuthenticationAuthority" Value="gov.va.iam.ssoi.v1" />
+        <AppSetting Key="IdType" Value="secid" />
+        <AppSetting Key="VamfAuthRole" Value="staff" />
+        <AppSetting Key="Loa" Value="3" />
+        <AppSetting Key="CertificateUrl" Value="https://vanprodeastveiskv1.vault.usgovcloudapi.net/secrets/jwt-ec-nprod-tmp-nprod-vaec-va-gov/4f9e8c0f8f044725a59120f3b35ca24c" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="BaseUri" Value="https://staff.apps-staging.va.gov" />
+        <AppSetting Key="EncryptUri" Value="/users/v2/session" />
+        <AppSetting Key="RefererUri" Value="https://tmp.va.gov" />
+        <AppSetting Key="InstrumentationKey" Value="c15f2984-2c19-fdca-a0d4-d42ce3b6cf5f" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="C4302EDA0B4D2BFA1F19A2DAD591BCC4607BF42F" />        
+      </AppSettings>    
+  </AppService>
+</Azure>

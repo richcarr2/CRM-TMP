@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RptDataSource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="AzureSQL">
+  <ConnectionProperties>
+    <Extension>SQL</Extension>
+    <ConnectString>Data Source=vac21sqlverp01.database.usgovcloudapi.net,1433;Initial Catalog=TMP</ConnectString>
+  </ConnectionProperties>
+  <DataSourceID>c17ca71c-0039-40c4-889a-388099deadb6</DataSourceID>
+</RptDataSource>

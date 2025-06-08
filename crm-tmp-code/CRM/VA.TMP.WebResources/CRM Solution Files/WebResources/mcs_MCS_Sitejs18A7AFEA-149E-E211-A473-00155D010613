@@ -1,0 +1,67 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_MCS_Site = {};
+
+MCS.mcs_MCS_Site.FORM_TYPE_CREATE = 1;
+MCS.mcs_MCS_Site.FORM_TYPE_UPDATE = 2;
+MCS.mcs_MCS_Site.FORM_TYPE_READ_ONLY = 3;
+MCS.mcs_MCS_Site.FORM_TYPE_DISABLED = 4;
+
+MCS.mcs_MCS_Site.CreateName = function () {
+    var mcs_type = Xrm.Page.getAttribute("mcs_type").getValue();
+    var mcs_usernameinput = Xrm.Page.getAttribute("mcs_usernameinput").getValue();
+    var mcs_stationnumber = Xrm.Page.getAttribute("mcs_stationnumber").getValue();
+    var nonVASiteFieldValue = (Xrm.Page.getAttribute("cvt_nonvasite") != null) ? Xrm.Page.getAttribute("cvt_nonvasite").getValue() : null;
+    var derivedResultField = "";
+
+    if (mcs_usernameinput != null) 
+        derivedResultField += mcs_usernameinput + " ";
+    
+    if (mcs_type != null) 
+        derivedResultField += Xrm.Page.getAttribute("mcs_type").getText();
+    
+    if (nonVASiteFieldValue != null)
+        derivedResultField += " : " + nonVASiteFieldValue;
+
+    if (mcs_stationnumber != null)
+        derivedResultField += " (" + mcs_stationnumber + ") ";
+    
+    if (Xrm.Page.getAttribute("mcs_name").getValue() != derivedResultField) {
+        Xrm.Page.getAttribute("mcs_name").setSubmitMode("always");
+        Xrm.Page.getAttribute("mcs_name").setValue(derivedResultField);
+    }
+    
+    //-To do: remove always saving
+    Xrm.Page.getAttribute("cvt_nonvasite").setSubmitMode("always");
+};
+
+MCS.mcs_MCS_Site.MakeFieldsReadOnly = function () {
+    return;
+    var systemSite = (Xrm.Page.getAttribute("mcs_relatedactualsiteid") != null) ? Xrm.Page.getAttribute("mcs_relatedactualsiteid").getValue() : null;
+
+    if (systemSite != null) {
+        Xrm.Page.getControl("mcs_facilityid").setDisabled(true);
+        if (Xrm.Page.getControl("cvt_nonvasite") != null)
+            Xrm.Page.getControl("cvt_nonvasite").setDisabled(true);
+    }
+};
+
+//Displays different fields based on Site Type selected. 
+MCS.mcs_MCS_Site.SiteType = function () {
+    //grab the control for the type field
+    var siteTypeValue = (Xrm.Page.getAttribute("mcs_type") != null) ? Xrm.Page.getAttribute("mcs_type").getValue() : null;
+    var nonVASiteField = Xrm.Page.getControl("cvt_nonvasite");
+    var stationNumber = Xrm.Page.getAttribute("mcs_stationnumber");
+
+    if (siteTypeValue == 917290000){
+        nonVASiteField.setVisible(true);
+        stationNumber.setRequiredLevel("none");
+    }
+    else{
+        nonVASiteField.setVisible(false);
+        stationNumber.setRequiredLevel("required");
+    }
+};
+

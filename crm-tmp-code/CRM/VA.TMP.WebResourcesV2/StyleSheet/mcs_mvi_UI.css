@@ -1,0 +1,145 @@
+﻿﻿body, input, select, textarea, table.cvt-tss-Loading {
+    font-family: 'Segoe UI',Tahoma,Arial;
+    font-size: 11px;
+}
+
+table {
+    width: 100%;
+}
+
+input {
+    border: 1px solid #DFDFDF;
+    width: 200px;
+    height: 22px
+}
+
+td {
+    font-size: 11px;
+    padding: 5px;
+}
+
+tdinfo {
+    font-size: 11px;
+    padding: 0px;
+}
+
+th {
+    font-size: 11px;
+    font-weight: normal;
+}
+
+a, a:link img, a:link, a:visited img, a:visited, a:active img, a:active, a:hover img, a:hover {
+    font-weight: normal;
+    text-decoration: none;
+}
+
+h2 {
+    font-size: 16px;
+}
+
+button {
+    border: 1px solid #666666;
+    border-radius: 3px;
+    font-size: 11px;
+    width: 80px;
+    height: 22px;
+    text-decoration: none;
+    display: inline-block;
+    color: #000000;
+    background-image: linear-gradient(#edebe6, #cccac6);
+}
+
+    button:hover {
+        border: 1px solid #336699;
+        border-radius: 3px;
+        font-size: 11px;
+        width: 80px;
+        height: 22px;
+        text-decoration: none;
+        display: inline-block;
+        color: #000000;
+        background-image: linear-gradient(#daf3f7, #68D2FC);
+    }
+
+    button:disabled {
+        border: 1px solid #BBBFC4;
+        color: #666666;
+        background: #DFDFDF;
+    }
+
+.required {
+    color: red;
+}
+
+.recommended {
+    font-size: .83em;
+    color: darkblue;
+    line-height: 0.5em;
+    vertical-align: baseline;
+    position: relative;
+    top: -0.4em;
+}
+
+.info, .error {
+    border: 1px solid;
+}
+
+.header {
+    font-size: 12px;
+    font-weight: bolder;
+    text-align: left;
+    color: #000000;
+    border-bottom: 1px solid #8D8D8D;
+}
+
+.td_right {
+    width: 60px;
+}
+
+.td_left {
+    width: 120px;
+}
+
+.input_month {
+    width: 50px;
+}
+
+.infoText {
+    font-size: 16px;
+    color: #00529B;
+}
+
+.errorText {
+    font-size: 16px;
+    color: #D8000C;
+}
+
+.message_box_image {
+    width: 75px;
+}
+
+.grid_title {
+    border: 1px solid #8D8D8D;
+    padding: 0px;
+    background-image: linear-gradient(#F8F8F8, #F0F0F0);
+}
+
+.grid_title_left {
+    border: 1px solid #8D8D8D;
+    padding: 0px;
+    background-image: linear-gradient(#F8F8F8, #F0F0F0);
+    text-align: left;
+    padding-left: 4px;
+}
+
+.grid_row_left {
+    padding: 0px;
+    padding-left: 4px;
+    border-bottom: 1px solid #DBDEE1;
+    text-transform: capitalize;
+    text-align: left;
+}
+
+.grid_row:hover {
+    background: #CEE3F6;
+}

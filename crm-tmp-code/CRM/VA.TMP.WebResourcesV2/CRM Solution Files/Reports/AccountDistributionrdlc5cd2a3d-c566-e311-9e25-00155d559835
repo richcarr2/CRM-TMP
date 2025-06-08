@@ -1,0 +1,290 @@
+<?xml version="1.0"?><Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner"><DataSources><DataSource Name="CRM"><ConnectionProperties><IntegratedSecurity>true</IntegratedSecurity><ConnectString>data source=localhost;initial catalog=Adventure_Works_Cycle_MSCRM</ConnectString><DataProvider>SQL</DataProvider></ConnectionProperties><rd:DataSourceID>bd1301de-68ad-4451-8159-73edf1a55fea</rd:DataSourceID></DataSource></DataSources><BottomMargin>0.5in</BottomMargin><RightMargin>0.5in</RightMargin><PageWidth>8.25in</PageWidth><ReportParameters><ReportParameter Name="CRM_FilterText"><DataType>String</DataType><Nullable>true</Nullable><AllowBlank>true</AllowBlank><Prompt>CRM_FilterText</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FormatDate"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>DateFormat</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FormatDate</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FormatTime"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>TimeFormat</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FormatDate</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FullName"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><DataSetReference><DataSetName>UserInfo</DataSetName><ValueField>fullname</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FullName</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_NotSpecified"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>Not Specified</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_NotSpecified</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_SortField"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>EarnedRevenue</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_SortField</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_SortDirection"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>Descending</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_SortDirection</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_IncludeSub"><DataType>String</DataType><DefaultValue><Values><Value>=0</Value></Values></DefaultValue><Prompt>Sub-Accounts</Prompt><ValidValues><ParameterValues><ParameterValue><Value>1</Value><Label>Include</Label></ParameterValue><ParameterValue><Value>0</Value><Label>Exclude</Label></ParameterValue></ParameterValues></ValidValues><Hidden>true</Hidden></ReportParameter><ReportParameter Name="TopAccounts"><DataType>Integer</DataType><DefaultValue><Values><Value>10</Value></Values></DefaultValue><Prompt>Top Accounts</Prompt></ReportParameter><ReportParameter Name="GroupBy"><DataType>String</DataType><DefaultValue><Values><Value>ownerid</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>Group By</Prompt><ValidValues><ParameterValues><ParameterValue><Value>ownerid</Value><Label>Owner</Label></ParameterValue><ParameterValue><Value>accountcategorycode</Value><Label>Category</Label></ParameterValue><ParameterValue><Value>territoryid</Value><Label>Territory</Label></ParameterValue><ParameterValue><Value>industrycode</Value><Label>Industry</Label></ParameterValue><ParameterValue><Value>numberofemployees</Value><Label>No. of Employees</Label></ParameterValue><ParameterValue><Value>revenue</Value><Label>Annual Revenue</Label></ParameterValue><ParameterValue><Value>marketcap</Value><Label>Market Capitalization</Label></ParameterValue></ParameterValues></ValidValues></ReportParameter><ReportParameter Name="CRM_FilteredAccount"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>select  [account0].*  from  FilteredAccount as "account0"</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FilteredAccount</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FilteredOpportunity"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>select  [opportunity0].*  from  FilteredOpportunity as "opportunity0" join (select top 1 dbo.fn_LastXYear(GetUTCDate(), 1) as actualclosedate1,GetUTCDate() as actualclosedate2 order by actualclosedate1,actualclosedate2) as actualclosedatedtc on 1=1  where  ( opportunity0.actualclosedateutc &gt;= actualclosedatedtc.actualclosedate1 and opportunity0.actualclosedateutc &lt;= actualclosedatedtc.actualclosedate2 )</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FilteredOpportunity</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_URL"><DataType>String</DataType><Nullable>true</Nullable><AllowBlank>true</AllowBlank><Prompt>CRM_URL</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_NumberLanguageCode"><DataType>String</DataType><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>NumberLanguageCode</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_NumberLanguageCode</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_CalendarType"><DataType>String</DataType><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>CalendarType</ValueField></DataSetReference></DefaultValue><Prompt>CRM_CalendarType</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_UserTimeZoneName"><DataType>String</DataType><DefaultValue><Values><Value>Eastern Standard Time</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_UserTimeZoneName</Prompt><Hidden>true</Hidden></ReportParameter></ReportParameters><rd:DrawGrid>true</rd:DrawGrid><InteractiveWidth>8.5in</InteractiveWidth><rd:GridSpacing>0.03125in</rd:GridSpacing><rd:SnapToGrid>true</rd:SnapToGrid><Body><ReportItems><Rectangle Name="rectangle1"><ReportItems><Textbox Name="txtBilorMil"><Left>5.09375in</Left><Top>1.03125in</Top><ZIndex>12</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.59375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>=IIF( Parameters!GroupBy.Value = "marketcap" or Parameters!GroupBy.Value = "revenue", IIF(First(Fields!groupbycolumn.Value, "DSAcctDistribution")  = "0.5-1" or First(Fields!groupbycolumn.Value, "DSAcctDistribution") = "&gt;1", ReportItems!txtBil.Value,ReportItems!txtMil.Value),"")</Value></Textbox><Textbox Name="txtDollar"><Left>6.09375in</Left><Top>0.65625in</Top><ZIndex>11</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.59375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>$</Value></Textbox><Textbox Name="txtBil"><Left>5.40625in</Left><Top>0.6875in</Top><ZIndex>10</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.59375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>Bil.</Value></Textbox><Textbox Name="txtAvgWinRatevalue"><Left>2.65625in</Left><Top>0.96875in</Top><ZIndex>8</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Format>P0</Format><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value /></Textbox><Textbox Name="txtAvgDealSizevalue"><Left>2.65625in</Left><Top>0.6875in</Top><ZIndex>7</ZIndex><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Format>=First(Fields!CurrencyFormat_BaseCurrency_Precision.Value, "DSNumandCurrency")</Format><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop><Language>= Parameters!CRM_NumberLanguageCode.Value</Language></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=IIF( IsNothing(Sum(Fields!EarnedRevenueCount.Value, "DSAcctDistribution")) or  Sum(Fields!EarnedRevenueCount.Value, "DSAcctDistribution") = 0,"",
+Sum(Fields!EarnedRevenue.Value, "DSAcctDistribution")/ Sum(Fields!EarnedRevenueCount.Value, "DSAcctDistribution"))</Value></Textbox><Textbox Name="txtTotalRevValue"><Left>2.65625in</Left><Top>0.40625in</Top><ZIndex>6</ZIndex><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Format>=First(Fields!CurrencyFormat_BaseCurrency_Precision.Value, "DSNumandCurrency")</Format><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop><Language>= Parameters!CRM_NumberLanguageCode.Value</Language></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=Sum(Fields!EarnedRevenue.Value, "DSAcctDistribution")</Value></Textbox><Textbox Name="txtAvgWinRate"><Left>0.28125in</Left><Top>0.96875in</Top><ZIndex>5</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>="Average Win Rate : "</Value></Textbox><Textbox Name="txtAvgDealSize"><Left>0.28125in</Left><Top>0.6875in</Top><ZIndex>4</ZIndex><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>="Average Deal Size : "</Value></Textbox><Textbox Name="txtTotalRev"><Left>0.28125in</Left><Top>0.40625in</Top><ZIndex>3</ZIndex><Width>2.15625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>="Total Revenue Earned : "</Value></Textbox><Textbox Name="txtAccounts"><Left>3.6in</Left><Top>0.05in</Top><ZIndex>2</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.90625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.28125in</Height><Value>Accounts</Value></Textbox><Textbox Name="txtstatisticslabel"><Left>0.28125in</Left><Top>0.05in</Top><ZIndex>1</ZIndex><Width>3.3125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.28125in</Height><Value>="Statistics for Top " &amp; Parameters!TopAccounts.Value &amp; " " &amp; ReportItems!txtAccounts.Value</Value></Textbox><Textbox Name="txtNoData"><Left>5.8125in</Left><Top>1in</Top><Visibility><Hidden>true</Hidden></Visibility><Width>0.71875in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>No Data</Value></Textbox></ReportItems><Top>1.17in</Top><ZIndex>7</ZIndex><Width>7.03125in</Width><Style><BackgroundColor>#deddcf</BackgroundColor></Style><Height>1.205in</Height></Rectangle><Textbox Name="textbox2"><Left>2.71875in</Left><Top>9.15625in</Top><ZIndex>6</ZIndex><Width>1.65625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>=Parameters!GroupBy.Label</Value></Textbox><Textbox Name="txtShowAll"><Left>2.8125in</Left><Top>9.53125in</Top><ZIndex>5</ZIndex><Action><Drillthrough><ReportName>Account Distribution Detail</ReportName><Parameters><Parameter Name="CRM_FilteredAccount"><Value>=Parameters!CRM_FilteredAccount.Value</Value></Parameter><Parameter Name="CRM_FilteredOpportunity"><Value>=Parameters!CRM_FilteredOpportunity.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>=Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_IncludeSub"><Value>=Parameters!CRM_IncludeSub.Value</Value></Parameter><Parameter Name="CRM_TopAccounts"><Value>=Parameters!TopAccounts.Value</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>showall</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Width>1.25in</Width><Style><TextAlign>Center</TextAlign><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>Blue</Color><TextDecoration>Underline</TextDecoration><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>Show All</Value></Textbox><Textbox Name="textbox1"><Left>3in</Left><Top>5.71875in</Top><rd:DefaultName>textbox1</rd:DefaultName><ZIndex>4</ZIndex><Width>1.5in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>=Parameters!GroupBy.Label</Value></Textbox><Rectangle Name="rectFilterSummary"><ReportItems><Textbox Name="txtMil"><Left>6.0625in</Left><Top>0.1875in</Top><ZIndex>2</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.71875in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>Mil.</Value></Textbox><Textbox Name="txtFilterSummaryValue"><Left>0.25in</Left><Top>0.325in</Top><ZIndex>1</ZIndex><Visibility><ToggleItem>txtFilterSummary</ToggleItem><Hidden>true</Hidden></Visibility><Width>5.53125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize><Color>#313336</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>=Parameters!CRM_FilterText.Value</Value></Textbox><Textbox Name="txtFilterSummary"><Left>0.25in</Left><Top>0.03125in</Top><Width>5.53125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>12pt</FontSize><Color>#313336</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>Filter Summary</Value></Textbox></ReportItems><Top>0.5in</Top><ZIndex>3</ZIndex><Visibility><Hidden>=IIF(IsNothing(Parameters!CRM_FilterText.Value) or (Parameters!CRM_FilterText.Value) = "" or (Parameters!CRM_FilterText.Value) = " " , True, False)</Hidden></Visibility><Width>7.03125in</Width><Style><BackgroundColor>#deddcf</BackgroundColor></Style><Height>0.6685in</Height></Rectangle><Rectangle Name="Bodyrectangle"><ReportItems><Textbox Name="txtReportHeaderLabel"><Left>0.25in</Left><Top>0.09375in</Top><Width>6.51875in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>14pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.28125in</Height><Value>Account Distribution</Value></Textbox></ReportItems><ZIndex>2</ZIndex><Width>7.03125in</Width><Style><BackgroundColor>#deddcf</BackgroundColor></Style><Height>0.5in</Height></Rectangle><Chart Name="ADEarnRevChart"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title /><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>3.21875in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.09375in</Left><ThreeDProperties><Rotation>25</Rotation><Inclination>10</Inclination><Shading>Simple</Shading><WallThickness>18</WallThickness></ThreeDProperties><DataSetName>DSAcctDistribution</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>ADEarRev</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>2.4375in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>Earned Revenue</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize><Format>=First(Fields!CurrencyFormat_BaseCurrency_Precision.Value, "DSNumandCurrency")</Format><Language>= Parameters!CRM_NumberLanguageCode.Value</Language></Style><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><ZIndex>1</ZIndex><Type>Column</Type><Width>6.90625in</Width><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="DSAcctDistChart_CategoryGroup1"><GroupExpressions><GroupExpression>=Fields!groupbycolumn.Value</GroupExpression></GroupExpressions></Grouping><Sorting><SortBy><SortExpression>=IIF( Parameters!GroupBy.Value = "revenue" or Parameters!GroupBy.Value = "marketcap" or Parameters!GroupBy.Value = "numberofemployees", Fields!categorynumber.Value,Sum(Fields!EarnedRevenue.Value))</SortExpression><Direction>Descending</Direction></SortBy></Sorting><Label>=IIF(Fields!groupbycolumnname.Value = "_CRM_NOTSPECIFIED", Parameters!CRM_NotSpecified.Value, Fields!groupbycolumnname.Value) &amp; " " &amp; IIF( Parameters!GroupBy.Value = "marketcap" or Parameters!GroupBy.Value = "revenue", IIF(Fields!groupbycolumn.Value  = "0.5-1" or Fields!groupbycolumn.Value = "&gt;1", ReportItems!txtBil.Value,ReportItems!txtMil.Value),"")</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>=Sum(Fields!EarnedRevenue.Value)</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize><Format>=First(Fields!CurrencyFormat_BaseCurrency_Precision.Value, "DSNumandCurrency")</Format><Language>= Parameters!CRM_NumberLanguageCode.Value</Language></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Account Distribution Detail</ReportName><Parameters><Parameter Name="CRM_FilteredAccount"><Value>=Parameters!CRM_FilteredAccount.Value</Value></Parameter><Parameter Name="CRM_FilteredOpportunity"><Value>=Parameters!CRM_FilteredOpportunity.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_IncludeSub"><Value>=Parameters!CRM_IncludeSub.Value</Value></Parameter><Parameter Name="CRM_TopAccounts"><Value>=Parameters!TopAccounts.Value</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>=Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_type"><Value>=IIF(IsNothing(Fields!groupbycolumn.Value) or Fields!groupbycolumn.Value = " " or Fields!groupbycolumn.Value = "" ,"_CRM_NOTSPECIFIED ",Fields!groupbycolumn.Value.Tostring())</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Style /><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart><Chart Name="ADAccountCountChart"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title /><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>3.03125in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.09375in</Left><ThreeDProperties><Rotation>25</Rotation><Inclination>10</Inclination><Shading>Simple</Shading><WallThickness>18</WallThickness></ThreeDProperties><DataSetName>DSAcctDistribution</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>ADAcctCnt</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>6.03125in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>No. of Accounts</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><Type>Column</Type><Width>6.875in</Width><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="chart1_CategoryGroup1"><GroupExpressions><GroupExpression>=Fields!groupbycolumn.Value</GroupExpression></GroupExpressions></Grouping><Sorting><SortBy><SortExpression>=IIF( Parameters!GroupBy.Value = "revenue" or Parameters!GroupBy.Value = "marketcap" or Parameters!GroupBy.Value = "numberofemployees", Fields!categorynumber.Value,Sum(Fields!EarnedRevenue.Value))</SortExpression><Direction>Descending</Direction></SortBy></Sorting><Label>=IIf(Fields!groupbycolumnname.Value = "_CRM_NOTSPECIFIED", Parameters!CRM_NotSpecified.Value, Fields!groupbycolumnname.Value) &amp; " " &amp; IIF( Parameters!GroupBy.Value = "marketcap" or Parameters!GroupBy.Value = "revenue", IIF(Fields!groupbycolumn.Value  = "0.5-1" or Fields!groupbycolumn.Value = "&gt;1", ReportItems!txtBil.Value,ReportItems!txtMil.Value),"")</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>=IIF( Fields!groupbycolumn.Value.ToString() = "_CRM_OTHER", Fields!EarnedRevenueCount.Value,
+Count( Fields!groupbycolumn.Value.ToString()))</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Account Distribution Detail</ReportName><Parameters><Parameter Name="CRM_FilteredAccount"><Value>=Parameters!CRM_FilteredAccount.Value</Value></Parameter><Parameter Name="CRM_FilteredOpportunity"><Value>=Parameters!CRM_FilteredOpportunity.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_IncludeSub"><Value>=Parameters!CRM_IncludeSub.Value</Value></Parameter><Parameter Name="CRM_TopAccounts"><Value>=Parameters!TopAccounts.Value</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>=Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_type"><Value>=IIF(IsNothing(Fields!groupbycolumn.Value), "_CRM_NOTSPECIFIED",Fields!groupbycolumn.Value.Tostring())</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Style /><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart></ReportItems><Height>12.21875in</Height></Body><rd:ReportID>175a60d8-7f95-49ba-b4f6-a498c1c36244</rd:ReportID><LeftMargin>0.5in</LeftMargin><DataSets><DataSet Name="UserInfo"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>select fullname from FilteredSystemUser where systemuserid = dbo.fn_FindUserGuid()</CommandText><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="fullname"><rd:TypeName>System.String</rd:TypeName><DataField>fullname</DataField></Field></Fields></DataSet><DataSet Name="DSNumandCurrency"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>select * from dbo.fn_GetFormatStrings()</CommandText><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="DateFormat"><rd:TypeName>System.String</rd:TypeName><DataField>DateFormat</DataField></Field><Field Name="TimeFormat"><rd:TypeName>System.String</rd:TypeName><DataField>TimeFormat</DataField></Field><Field Name="NumberLanguageCode"><rd:TypeName>System.String</rd:TypeName><DataField>NumberLanguageCode</DataField></Field><Field Name="CalendarType"><rd:TypeName>System.String</rd:TypeName><DataField>CalendarType</DataField></Field><Field Name="NumberFormat_0_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_0_Precision</DataField></Field><Field Name="NumberFormat_1_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_1_Precision</DataField></Field><Field Name="NumberFormat_2_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_2_Precision</DataField></Field><Field Name="NumberFormat_3_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_3_Precision</DataField></Field><Field Name="NumberFormat_4_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_4_Precision</DataField></Field><Field Name="NumberFormat_5_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_5_Precision</DataField></Field><Field Name="CurrencyFormat_0_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_0_Precision</DataField></Field><Field Name="CurrencyFormat_1_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_1_Precision</DataField></Field><Field Name="CurrencyFormat_2_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_2_Precision</DataField></Field><Field Name="CurrencyFormat_3_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_3_Precision</DataField></Field><Field Name="CurrencyFormat_4_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_4_Precision</DataField></Field><Field Name="CurrencyFormat_5_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_5_Precision</DataField></Field><Field Name="CurrencyFormat_BaseCurrency_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_BaseCurrency_Precision</DataField></Field></Fields></DataSet><DataSet Name="DSAcctDistribution"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>Declare @SQL nVarchar(max)
+Declare @SQL1 nVarchar(max)
+Declare @SQL2 nVarchar(max)
+Declare @SQL3 nVarchar(max)
+Declare @SQL4 nVarchar(max)
+Declare @SQL5 nVarchar(max)
+Declare @SQL6 nVarchar(max)
+Declare @GroupByCol nVarchar(40)
+Declare @top15col nVarchar(40)
+Declare @groupbyname nVarchar(200)
+Declare @groupbycolname nVarchar(40)
+Declare @joinstr nVarchar(max)
+Declare @joinstr2 nVarchar(max)
+
+if @GroupBy = 'ownerid'
+Begin
+set @GroupByCol = 'tn.ownerid'
+set @top15col = 'tn.ownerid'
+set @groupbyname = 'tn.owneridname'
+set @groupbycolname = 'att.owneridname'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = '''',''categorynumber'' = ''''
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = ''
+End
+if @GroupBy = 'accountcategorycode'
+Begin
+set @GroupByCol = 'tn.accountcategorycode'
+set @top15col = 'tn.accountcategorycode'
+set @groupbyname = 'tn.accountcategorycodename'
+set @groupbycolname = 'att.accountcategorycodename'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = '''',''categorynumber'' = ''''
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = ''
+End
+if @GroupBy = 'territoryid'
+Begin
+set @GroupByCol = 'tn.territoryid'
+set @top15col = 'tn.territoryid'
+set @groupbyname = 'tn.territoryidname'
+set @groupbycolname = 'att.territoryidname'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = '''',''categorynumber'' = ''''
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = ''
+End
+if @GroupBy = 'industrycode'
+Begin
+set @GroupByCol = 'tn.industrycode'
+set @top15col = 'tn.industrycode'
+set @groupbyname = 'tn.industrycodename'
+set @groupbycolname = 'att.industrycodename'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = '''',''categorynumber'' = ''''
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = ''
+End
+if @GroupBy = 'numberofemployees'
+Begin
+set @GroupByCol = 'qq.category'
+set @top15col = 'tn.groupbycolumn'
+set @groupbycolname = 'qq.category'
+set @groupbyname = 'qq.category'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &lt; 10) then ''&lt;10''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 10 and IsNull(numberofemployees, 0) &lt;= 49 )then ''10-49''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 50   and IsNull(numberofemployees, 0) &lt;= 99) then ''50-99''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 100  and IsNull(numberofemployees, 0) &lt;= 499) then ''100-499''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 1000) then ''500-1000''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 4999) then ''1000-4999''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 5000) then ''&gt;5000'' end,
+''categorynumber'' = Case 
+		When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &lt; 10) then 7
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 10 and IsNull(numberofemployees, 0) &lt;= 49 )then 6
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 50   and IsNull(numberofemployees, 0) &lt;= 99) then 5
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 100  and IsNull(numberofemployees, 0) &lt;= 499) then 4
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 1000) then 3
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 4999) then 2
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 5000) then 1 end
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &lt; 10) then ''&lt;10''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 10 and IsNull(numberofemployees, 0) &lt;= 49 )then ''10-49''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 50   and IsNull(numberofemployees, 0) &lt;= 99) then ''50-99''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 100  and IsNull(numberofemployees, 0) &lt;= 499) then ''100-499''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 1000) then ''500-1000''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 4999) then ''1000-4999''
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 5000) then ''&gt;5000'' end,
+''categorynumber'' = Case 
+		When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &lt; 10) then 7
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 10 and IsNull(numberofemployees, 0) &lt;= 49 )then 6
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 50   and IsNull(numberofemployees, 0) &lt;= 99) then 5
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 100  and IsNull(numberofemployees, 0) &lt;= 499) then 4
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 1000) then 3
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 500  and IsNull(numberofemployees, 0) &lt;= 4999) then 2
+                When ''' + @GroupBy + ''' in (''numberofemployees'') and (IsNull(numberofemployees, 0) &gt;= 5000) then 1 end
+from FilteredAccount) as qq on (tn.accountid = qq.accountid) '
+End
+if @GroupBy = 'revenue'
+Begin
+set @GroupByCol = 'qq.category'
+set @top15col = 'tn.groupbycolumn'
+set @groupbycolname = 'qq.category'
+set @groupbyname = 'qq.category'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &lt; 5000000) then ''&lt;5''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= 5000000 and IsNull(revenue_base, 0) &lt;= (1000000*25)) then ''5-25''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*25)   and IsNull(revenue_base, 0) &lt;= (1000000*50)) then ''25-50''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*50)  and IsNull(revenue_base, 0) &lt;= (1000000*250)) then ''50-250''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*250) and IsNull(revenue_base, 0) &lt;= (1000000*500)) then ''250-500''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*500) and IsNull(revenue_base, 0) &lt;=  (1000000*1000)) then ''0.5-1''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt; (1000000*1000)) then ''&gt;1'' end,
+''categorynumber'' = Case 
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &lt; 5000000) then 7
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= 5000000 and IsNull(revenue_base, 0) &lt;= (1000000*25)) then 6
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*25)   and IsNull(revenue_base, 0) &lt;= (1000000*50)) then 5
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*50)  and IsNull(revenue_base, 0) &lt;= (1000000*250)) then 4
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*250) and IsNull(revenue_base, 0) &lt;= (1000000*500)) then 3
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*500) and IsNull(revenue_base, 0) &lt;=  (1000000*1000)) then 2
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt; (1000000*1000)) then 1 end
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &lt; 5000000) then ''&lt;5''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= 5000000 and IsNull(revenue_base, 0) &lt;= (1000000*25)) then ''5-25''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*25)   and IsNull(revenue_base, 0) &lt;= (1000000*50)) then ''25-50''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*50)  and IsNull(revenue_base, 0) &lt;= (1000000*250)) then ''50-250''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*250) and IsNull(revenue_base, 0) &lt;= (1000000*500)) then ''250-500''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*500) and IsNull(revenue_base, 0) &lt;=  (1000000*1000)) then ''0.5-1''
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt; (1000000*1000)) then ''&gt;1'' end,
+''categorynumber'' = Case 
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &lt; 5000000) then 7
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= 5000000 and IsNull(revenue_base, 0) &lt;= (1000000*25)) then 6
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*25)   and IsNull(revenue_base, 0) &lt;= (1000000*50)) then 5
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*50)  and IsNull(revenue_base, 0) &lt;= (1000000*250)) then 4
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*250) and IsNull(revenue_base, 0) &lt;= (1000000*500)) then 3
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt;= (1000000*500) and IsNull(revenue_base, 0) &lt;=  (1000000*1000)) then 2
+                When ''' + @GroupBy + ''' in (''revenue'') and (IsNull(revenue_base, 0) &gt; (1000000*1000)) then 1 end
+from FilteredAccount) as qq on (tn.accountid = qq.accountid) '
+End
+if @GroupBy = 'marketcap'
+Begin
+set @GroupByCol = 'qq.category'
+set @top15col = 'tn.groupbycolumn'
+set @groupbycolname = 'qq.category'
+set @groupbyname = 'qq.category'
+set @joinstr = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &lt;= 5000000) then ''&lt;5''                 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= 5000000 and IsNull(marketcap_base, 0) &lt;= (1000000*25)) then ''5-25''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*25)   and IsNull(marketcap_base, 0) &lt;= (1000000*50)) then ''25-50''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*50)  and IsNull(marketcap_base, 0) &lt;= (1000000*250)) then ''50-250''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*250) and IsNull(marketcap_base, 0) &lt;= (1000000*500)) then ''250-500''
+                when ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*500) and IsNull(marketcap_base, 0) &lt;= (1000000*1000)) then ''0.5-1''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt; (1000000*1000)) then ''&gt;1'' end,
+''categorynumber'' = Case 
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &lt;= 5000000) then 7                 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= 5000000 and IsNull(marketcap_base, 0) &lt;= (1000000*25)) then 6
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*25)   and IsNull(marketcap_base, 0) &lt;= (1000000*50)) then 5
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*50)  and IsNull(marketcap_base, 0) &lt;= (1000000*250)) then 4
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*250) and IsNull(marketcap_base, 0) &lt;= (1000000*500)) then 3
+                when ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*500) and IsNull(marketcap_base, 0) &lt;= (1000000*1000)) then 2
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt; (1000000*1000)) then 1 end
+from FilteredAccount) as qq on (ci.ParentId = qq.accountid) '
+set @joinstr2 = 'join (select accountid, ' + @GroupBy + ',
+ ''category'' = Case 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &lt;= 5000000) then ''&lt;5''                 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= 5000000 and IsNull(marketcap_base, 0) &lt;= (1000000*25)) then ''5-25''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*25)   and IsNull(marketcap_base, 0) &lt;= (1000000*50)) then ''25-50''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*50)  and IsNull(marketcap_base, 0) &lt;= (1000000*250)) then ''50-250''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*250) and IsNull(marketcap_base, 0) &lt;= (1000000*500)) then ''250-500''
+                when ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*500) and IsNull(marketcap_base, 0) &lt;= (1000000*1000)) then ''0.5-1''
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt; (1000000*1000)) then ''&gt;1'' end,
+''categorynumber'' = Case 
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &lt;= 5000000) then 7                 
+		When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= 5000000 and IsNull(marketcap_base, 0) &lt;= (1000000*25)) then 6
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*25)   and IsNull(marketcap_base, 0) &lt;= (1000000*50)) then 5
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*50)  and IsNull(marketcap_base, 0) &lt;= (1000000*250)) then 4
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*250) and IsNull(marketcap_base, 0) &lt;= (1000000*500)) then 3
+                when ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt;= (1000000*500) and IsNull(marketcap_base, 0) &lt;= (1000000*1000)) then 2
+                When ''' + @GroupBy + ''' in (''marketcap'') and (IsNull(marketcap_base, 0) &gt; (1000000*1000)) then 1 end
+from FilteredAccount) as qq on (tn.accountid = qq.accountid) '
+End
+Create table #CustomerIds (
+	ParentId uniqueidentifier,
+	ChildId uniqueidentifier
+     	primary key clustered
+	(	
+		[ParentId],
+		[ChildId]
+	) 
+	
+)
+
+create statistics rupactbatchstat on #CustomerIds(ParentId, ChildId)
+set @SQL = '
+insert into #CustomerIds 
+select accountid,accountid from (' + @CRM_FilteredAccount +') as acct '
+Exec (@SQL)
+
+declare @AcctDepth int
+declare @ContactDepth int
+set @AcctDepth = 3
+set @ContactDepth = 3
+
+exec p_AccountDistRollup @CRM_IncludeSub, @AcctDepth, 1, @ContactDepth
+
+set @SQL1 = '
+Declare @TopN Table(accountid uniqueidentifier,estamount money, 
+                    EarnedRevenueCount int, acctcount int,
+                    name nVarchar(max),
+                    owneridname nVarchar(max), ownerid uniqueidentifier,
+                    numberofemployees int,revenue float,marketcap float,
+                    territoryidname nVarchar(max),
+                    accountcategorycodename nVarchar(max), industrycodename nvarchar(max),
+                    categorynumber int, groupbycolumn nVarchar(400),groupbycolumnname nVarchar(400),territoryid uniqueidentifier,accountcategorycode int,
+                    industrycode int
+                    )
+Insert into @TopN
+Select Top ' + CONVERT(VarChar(10), @TopAccounts) + ' ci.ParentId ,Sum(IsNull(o.actualvalue_base,0)) as estamount,
+count(*) as EarnedRevenueCount, 1 as acctcount,
+att.name,att.owneridname,att.ownerid,att.numberofemployees,att.revenue_base as revenue,att.marketcap_base as marketcap,
+att.territoryidname,att.accountcategorycodename,att.industrycodename,
+''categorynumber'' = Case 
+         	When ''' + @GroupBy + ''' not in (''numberofemployees'',''revenue'',''marketcap'') then
+         		0
+	 	When ''' + @GroupBy + ''' in (''numberofemployees'',''revenue'',''marketcap'') then 
+                      qq.categorynumber
+                     end,
+''groupbycolumn'' =  Case 
+         	When ''' + @GroupBy + ''' not in (''numberofemployees'',''revenue'',''marketcap'') then
+         		Convert(nVarchar(400), att.' + @GroupBy + ')
+	 	When ''' + @GroupBy + ''' in (''numberofemployees'',''revenue'',''marketcap'') then qq.category
+                     end,
+ ' + @groupbycolname + ' as groupbycolumnname,att.territoryid ,att.accountcategorycode,att.industrycode '
+set @SQL2 = '
+from #CustomerIds ci
+join ('+ @CRM_FilteredAccount + ') att on (att.accountid = ci.ParentId)
+join (' + @CRM_FilteredOpportunity + ') o on (ci.ChildId = o.customerid)
+'+ @joinstr + '
+where o.statecode = 1 and o.actualvalue_base &gt; 0
+Group By ci.ParentId,att.name,att.owneridname,att.ownerid,att.numberofemployees,att.revenue_base,att.marketcap_base,
+att.territoryidname,att.accountcategorycodename,att.industrycodename,qq.categorynumber,qq.category,
+att.territoryid ,att.accountcategorycode,att.industrycode
+order by Sum(o.actualvalue_base) desc 
+'
+set @SQL3 =
+'Declare @Top15 Table(groupbyid nVarchar(60), estamount money,gcount int)
+
+Insert into @Top15 
+Select top 15 IsNull(Cast(' + @GroupByCol + ' as nvarchar(60)),''_CRM_NOTSPECIFIED'')as groupbyid,
+        Sum(tn.estamount) as estamount,Sum(tn.acctcount) as gcount
+from @TopN tn
+' + @joinstr2 + ' ' 
+set @SQL4 = '
+Group By IsNull(Cast(' + @GroupByCol + ' as nvarchar(60)),''_CRM_NOTSPECIFIED''),' + @groupbyname + '
+order by Sum(tn.estamount) desc ,' + @groupbyname + '
+
+
+Declare @total money
+Select @total = Sum(estamount) FROM @TopN
+Declare @count int
+Select @count = Sum(acctcount) FROM @TopN '
+
+set @SQL5 = '
+select * from (
+select accountid, name,owneridname,ownerid,numberofemployees,revenue,marketcap,
+territoryidname,accountcategorycodename,industrycodename,categorynumber,
+ estamount as EarnedRevenue,EarnedRevenueCount,
+ IsNull(Cast(groupbycolumn as nvarchar(60)),''_CRM_NOTSPECIFIED'') as groupbycolumn,
+IsNull(groupbycolumnname,''_CRM_NOTSPECIFIED'') as groupbycolumnname
+from @TopN tn
+where IsNull(Cast(' + @top15col + ' as nvarchar(60)),''_CRM_NOTSPECIFIED'') in 
+(select groupbyid from @Top15)
+union '
+set @SQL6 = '
+select Null as accountid,Null as name,Null as owneridname,Null as ownerid,0 as numberofemployees,0 as revenue,0 as marketcap,
+         Null as territoryidname,
+         Null as accountcategorycodename,Null as industrycodename, 0 as categorynumber,
+ @total-(select Sum(estamount) from @Top15) as EarnedRevenue,@count-(select Sum(gcount) from @Top15) as EarnedRevenueCount,
+         ''_CRM_OTHER'' as groupbycolumn,''_CRM_OTHER'' as groupbycolumnname) as xx where xx.EarnedRevenue &lt;&gt; 0 '
+Exec (@SQL1 + @SQL2 + @SQL3 + @SQL4 + @SQL5 + @SQL6)
+
+Drop table #CustomerIds</CommandText><QueryParameters><QueryParameter Name="@GroupBy"><Value>=Parameters!GroupBy.Value</Value></QueryParameter><QueryParameter Name="@CRM_FilteredAccount"><Value>=Parameters!CRM_FilteredAccount.Value</Value></QueryParameter><QueryParameter Name="@CRM_IncludeSub"><Value>=Parameters!CRM_IncludeSub.Value</Value></QueryParameter><QueryParameter Name="@TopAccounts"><Value>=Parameters!TopAccounts.Value</Value></QueryParameter><QueryParameter Name="@CRM_FilteredOpportunity"><Value>=Parameters!CRM_FilteredOpportunity.Value</Value></QueryParameter></QueryParameters><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="accountid"><rd:TypeName>System.Guid</rd:TypeName><DataField>accountid</DataField></Field><Field Name="name"><rd:TypeName>System.String</rd:TypeName><DataField>name</DataField></Field><Field Name="owneridname"><rd:TypeName>System.String</rd:TypeName><DataField>owneridname</DataField></Field><Field Name="ownerid"><rd:TypeName>System.Guid</rd:TypeName><DataField>ownerid</DataField></Field><Field Name="numberofemployees"><rd:TypeName>System.Int32</rd:TypeName><DataField>numberofemployees</DataField></Field><Field Name="revenue"><rd:TypeName>System.Double</rd:TypeName><DataField>revenue</DataField></Field><Field Name="marketcap"><rd:TypeName>System.Double</rd:TypeName><DataField>marketcap</DataField></Field><Field Name="territoryidname"><rd:TypeName>System.String</rd:TypeName><DataField>territoryidname</DataField></Field><Field Name="accountcategorycodename"><rd:TypeName>System.String</rd:TypeName><DataField>accountcategorycodename</DataField></Field><Field Name="industrycodename"><rd:TypeName>System.String</rd:TypeName><DataField>industrycodename</DataField></Field><Field Name="categorynumber"><rd:TypeName>System.Int32</rd:TypeName><DataField>categorynumber</DataField></Field><Field Name="EarnedRevenue"><rd:TypeName>System.Decimal</rd:TypeName><DataField>EarnedRevenue</DataField></Field><Field Name="EarnedRevenueCount"><rd:TypeName>System.Int32</rd:TypeName><DataField>EarnedRevenueCount</DataField></Field><Field Name="groupbycolumn"><rd:TypeName>System.String</rd:TypeName><DataField>groupbycolumn</DataField></Field><Field Name="groupbycolumnname"><rd:TypeName>System.String</rd:TypeName><DataField>groupbycolumnname</DataField></Field></Fields></DataSet></DataSets><Author> MSFT</Author><Width>7.09375in</Width><CustomProperties><CustomProperty><Name>Custom</Name><Value>&lt;MSCRM xmlns="mscrm"&gt;&amp;lt;ReportFilter&amp;gt;&amp;lt;ReportEntity paramname="CRM_FilteredAccount" displayname="Accounts"&amp;gt;&amp;lt;fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false"&amp;gt;&amp;lt;entity name="account"&amp;gt;&amp;lt;all-attributes /&amp;gt;&amp;lt;filter type="and"&amp;gt;&amp;lt;condition attribute="industrycode" operator="eq" value=""/&amp;gt;&amp;lt;condition attribute="territoryid" operator="eq"/&amp;gt;&amp;lt;condition attribute="ownerid" operator="eq"/&amp;gt;&amp;lt;/filter&amp;gt;&amp;lt;/entity&amp;gt;&amp;lt;/fetch&amp;gt;&amp;lt;/ReportEntity&amp;gt;&amp;lt;ReportEntity paramname="CRM_FilteredOpportunity" displayname="Opportunities"&amp;gt;&amp;lt;fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false"&amp;gt;&amp;lt;entity name="opportunity"&amp;gt;&amp;lt;all-attributes /&amp;gt;&amp;lt;filter type="and"&amp;gt;&amp;lt;condition attribute="actualclosedate" operator="last-x-years" value="1"/&amp;gt;&amp;lt;/filter&amp;gt;&amp;lt;/entity&amp;gt;&amp;lt;/fetch&amp;gt;&amp;lt;/ReportEntity&amp;gt;&amp;lt;/ReportFilter&amp;gt;&lt;/MSCRM&gt;</Value></CustomProperty></CustomProperties><InteractiveHeight>11in</InteractiveHeight><Language>=Parameters!CRM_NumberLanguageCode.Value</Language><PageFooter><ReportItems><Textbox Name="txtPageCount"><Left>4.84375in</Left><ZIndex>2</ZIndex><Width>1.9875in</Width><Style><TextAlign>Right</TextAlign><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>=String.Format("Page {0} of {1}", Format(Globals!PageNumber, "#,##0"), Format(Globals!TotalPages, "#,##0"))</Value></Textbox><Textbox Name="txtUserIDLabel"><Left>2.46875in</Left><ZIndex>1</ZIndex><Width>2.0625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>="Prepared by: " &amp; Parameters!CRM_FullName.Value</Value></Textbox><Textbox Name="txtExecutionDateTimeLabel"><Left>0.15625in</Left><Width>2in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop><Format>=Parameters!CRM_FormatDate.Value + " " + Parameters!CRM_FormatTime.Value</Format><Calendar>=Parameters!CRM_CalendarType.Value</Calendar></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>=CDate(Microsoft.Crm.Reporting.RdlHelper.DateTimeUtility.ConvertUtcToLocalTime(DateTime.UtcNow, Parameters!CRM_UserTimeZoneName.Value))</Value></Textbox></ReportItems><Height>0.28125in</Height><PrintOnLastPage>true</PrintOnLastPage><PrintOnFirstPage>true</PrintOnFirstPage><Style><BackgroundColor>#deddcf</BackgroundColor></Style></PageFooter><TopMargin>0.5in</TopMargin><CodeModules><CodeModule>Microsoft.Crm.Reporting.RdlHelper, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35</CodeModule></CodeModules></Report>

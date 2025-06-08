@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "value": "va-eis-tmp-inbound-worker-dev"
+    },
+    "ISE_Name": {
+      "value": "eis-dev-southwest-ise"
+    },
+    "IntegrationAccount_Name": {
+      "value": "va-eis-tmp-integration-acct-dev"
+    },
+    "ServiceBus_Connection_Name": {
+      "value": "va-eis-tmp-servicebus-conn-dev"
+    },
+    "KeyVault_Connection_Name": {
+      "value": "va-eis-tmp-keyvault-conn-dev"
+    },
+    "AzureAPIForFHIR_URL": {
+      "value": "https://va-eis-tmp-fhir-dev.azurehealthcareapis.us"
+    },
+    "AzureContainerRegistry_ArtifactReference": {
+      "value": "vaeistmpcontainerregdev.azurecr.us/fhir-converter:main"
+    },
+    "S12_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S12-dev"
+    },
+    "S13_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S13-dev"
+    },
+    "S15_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S15-dev"
+    },
+    "S23_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S23-dev"
+    },
+    "S24_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S24-dev"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "value": "cds-client-id"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "value": "cds-client-secret"
+    },
+    "Service_Bus_Topic_Name": {
+      "value": "hl7messagetopic"
+    },
+    "CDS_Client_URL": {
+      "value": "https://dvagov-msftcerner-dev.crm9.dynamics.com"
+    },
+    "CDS_Tenant_Id": {
+      "value": "e95f1b23-abaf-45ee-821d-b7ab251ab3bf"
+    }
+  }
+}

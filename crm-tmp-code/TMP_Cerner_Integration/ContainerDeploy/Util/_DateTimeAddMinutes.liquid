@@ -1,0 +1,93 @@
+{%- assign _delta = minutesDelta | abs -%}
+{%- assign _date2Format = dateValue -%}
+{%- assign _fieldName = fieldName | default:nil -%}
+
+{%- assign _minDelta=_delta | abs -%}
+{%- assign _hrDelta=0 | abs -%}
+{%- assign _numberOfDays=0 | abs -%}
+{% if _minDelta > 59 %}
+    {%- assign _minDelta=_minDelta | modulo:60 | abs -%}
+    {%- assign _hrDelta=_delta | divided_by:60 | floor | abs -%}
+{% endif %}
+
+{%- assign _yr = _date2Format | slice:0,4 | abs -%}
+{%- assign _mo = _date2Format | slice:4,2 | abs -%}
+{%- assign _day = _date2Format | slice:6,2 | abs -%}
+{%- assign _hr = _date2Format | slice:8,2 | abs -%}
+{%- assign _min = _date2Format | slice:10,2 | abs -%}
+{%- assign _sec= _date2Format | slice:12,2 | abs -%}
+{%- assign _tz= _date2Format | slice:14,5 -%}
+{%- comment -%} "dateParts":"{{_yr}}-{{_mo}}-{{_day}}T{{_hr}}:{{_min}}:{{_sec}}{{_tz}}",{%- endcomment -%}
+
+{%- comment -%}Add the delta values to min and hours {%- endcomment -%}
+{%- assign _min=_min | abs | plus:_minDelta -%}
+{%- assign _hr=_hr | abs | plus:_hrDelta -%}
+
+{%- comment -%}Increment minutes, hours, then days {%- endcomment -%}
+{%- if _min > 59 -%}
+    {%- assign _min = _min | abs| plus:-60 -%}
+    {%- assign _hr= _hr | abs | plus:1 -%}
+{%- endif -%}
+
+{%- if _hr > 23 -%}
+    {%- assign _hr=_hr | modulo:24 | abs -%}
+    {%- assign _numberOfDays=_hrDelta | divided_by:24 | floor -%}
+    {%- if _numberOfDays < 1 -%}
+        {%- assign _numberOfDays=_numberOfDays | plus:1 -%}
+    {%- endif -%}
+    {%- assign _day=_day | plus:_numberOfDays | abs -%}
+{%- endif -%}
+
+{%- comment -%}Decide if we increment month. First check Feb end of month{%- endcomment -%}
+{%- for i in (1..48) -%}
+    {%- assign _mo_days=31 -%}
+
+    {%- if _mo == 2 -%}
+        {%- comment -%}Leap Year Test - check for 29 days{%- endcomment -%}
+        {%- assign _mo_days=28 -%}
+        {%- assign __val =_yr | modulo:4 -%}
+        {%- if __val == 0 -%}
+            {%- assign _mo_days=29 -%}
+        {%- endif -%}
+    {%- comment -%}Months with 30 days{%- endcomment -%}
+    {%- elsif _mo == 4 or _mo == 6 or _mo == 9 or _mo == 11 -%}
+        {%- assign _mo_days=30 -%}
+    {%- endif -%}    
+
+    {%- if _day <= _mo_days -%}
+        {%- break -%}
+        {%- comment -%}Break out of Loop, we have our end date{%- endcomment -%}
+    {%- else -%}
+        {%- assign _day=_day | minus: _mo_days -%}
+        {%- assign _mo=_mo | plus:1 -%}
+        {%- if _mo > 12 -%}
+            {%- assign _mo = 1 -%}
+            {%- assign _yr = _yr | plus:1 -%}
+        {%- endif -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%}Pad leading zeros{%- endcomment -%}
+{%- if _mo < 10 -%}
+    {%- assign _mo="0" | plus:_mo -%}
+{%- endif -%}
+{%- if _hr < 10 -%}
+    {%- assign _hr="0" | plus:_hr -%}
+{%- endif -%}
+{%- if _day < 10 -%}
+    {%- assign _day="0" | plus:_day -%}
+{%- endif -%}
+{%- if _min < 10 -%}
+    {%- assign _min="0" | plus:_min -%}
+{%- endif -%}
+{%- if _sec < 10 -%}
+    {%- assign _sec="0" | plus:_sec -%}
+{%- endif -%}
+
+{%- capture _dateAddMinutes -%}{{_yr}}{{_mo}}{{_day}}{{_hr}}{{_min}}{{_sec}}{{_tz}}{%- endcapture -%}
+{% if _fieldName <> nil %}
+"{{_fieldName}}":"{{_dateAddMinutes | format_as_date_time}}",
+{%- endif -%}
+{%- comment -%}
+{%- capture _dateAddMin -%}{{_yr}}-{{_mo}}-{{_day}}T{{_hr}}:{{_min}}:{{_sec}}{{_tz}}{%- endcapture -%}
+{%- endcomment -%}

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RptDataSource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="MSCRM_DataSourceFetch">
+  <ConnectionProperties>
+    <Extension>MSCRMFETCH</Extension>
+    <ConnectString>http://10.245.189.155/CVT-DEV</ConnectString>
+    <IntegratedSecurity>true</IntegratedSecurity>
+  </ConnectionProperties>
+  <DataSourceID>283030e3-302b-4728-9d25-2fd094a9b6fd</DataSourceID>
+</RptDataSource>

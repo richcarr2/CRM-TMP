@@ -1,0 +1,19 @@
+{% capture identifiers -%}
+{% if type == 'First' and XCN-%}{{XCN.Repeats[0].1.Value}},{{XCN.Repeats[0].9.Value}}
+{% elsif type == 'EDIPI' and XCN and XCN.9.value == 'EDIPI' -%}{{XCN.Repeats[0].1.Value}}
+{% elsif type == 'AssigningAuthority' -%}
+{% for p in XCN.Repeats -%}
+    {% if p.9.Value == authority -%}
+        {{p.1.Value}}
+        {% break -%}
+    {% elsif p.13.Value == authority -%}
+        {{p.1.Value}}
+        {% break -%}
+    {% else -%}
+        null
+    {% endif -%}
+{% endfor -%}
+{% elsif XCN -%}{{XCN.Value}}
+{% endif -%}
+{% endcapture -%}
+{{ identifiers }}

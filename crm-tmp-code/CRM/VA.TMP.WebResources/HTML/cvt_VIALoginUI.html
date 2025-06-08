@@ -1,0 +1,147 @@
+﻿<html>
+<head>
+    <style>
+        td, th {
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+</head>
+<body style="word-wrap: break-word;">
+    ﻿
+
+    <link href="mcs_mvi_ui" rel="stylesheet" type="text/css">
+    <script src="ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="cvt_jquery.3.6.0.js" type="text/javascript"></script>
+    <script src="mcs_CrmRestKit.js" type="text/javascript"></script>
+    <script src="mcs_JSON.js" type="text/javascript"></script>
+    <script src="cvt_CommonFunctions.js" type="text/javascript"></script>
+    <script src="cvt_Process.js" type="text/javascript"></script>
+    <script src="cvt_ViaLogin.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            ////Set up the form
+            MCS.VIALogin.hideAll();
+
+            //Bind the function to the Search Button
+            $("#PatAVButton").bind("click", function () {
+                MCS.VIALogin.PatDuzButton();
+            });
+
+            $("#ProAVButton").bind("click", function () {
+                MCS.VIALogin.ProDuzButton();
+            });
+
+            $("#LoginButton").bind("click", function () {
+                MCS.VIALogin.LoginButton();
+            });
+        });
+    </script>
+
+    <div>
+        <table id="viaLogin" summary="Track the login to VistA through SAML and User Duz.">
+            <tbody>
+                <tr>
+                    <th class="td_right" title="Login"><b>Login</b></th>
+                    <th class="td_right" title="Status"><b>Status</b></th>
+                    <th class="td_right" title="Details"><b>Details</b></th>
+                </tr>
+
+                <tr>
+                    <td title="SAML Token" class="td_right"><label for="SAMLTokenTextBox"><b>SAML Token</b></label></td>
+                    <td class="td_right" align="center">
+                        <div id="msgSAML_working">
+                            <img src="mcs_mvi_loading" height="25" width="25" alt="SAML Status Loading">
+                        </div>
+                        <div id="msgSAML_success">
+                            <img src="cvt_checked.png" height="25" width="25" alt="SAML Status Success">
+                        </div>
+                        <div id="msgSAML_failure">
+                            <img src="mcs_mvi_error" height="25" width="25" alt="SAML Status Failure">
+                        </div>
+                    </td>
+                    <td class="infoText">
+                        <button title="Login" style="width:200px;" tabindex="9" id="LoginButton" class="button_normal_gradient">Login</button>
+                        <div id="SAMLNotification" aria-live="polite" role="alert"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Patient Duz" class="td_right"><b>Patient Duz</b></td>
+                    <td class="td_right" align="center">
+                        <div id="msgPatDuz_working">
+                            <img src="mcs_mvi_loading" height="25" width="25" alt="Patient Duz Status Loading">
+                        </div>
+                        <div id="msgPatDuz_success">
+                            <img src="cvt_checked.png" height="25" width="25" alt="Patient Duz Status Success">
+                        </div>
+                        <div id="msgPatDuz_failure">
+                            <img src="mcs_mvi_error" height="25" width="25" alt="Patient Duz Status Failure">
+                        </div>
+                    </td>
+                    <td class="infoText">
+                        <div id="PatAV">
+                            <table id="patAVtable">
+                                <tbody>
+                                    <tr>
+                                        <td title="Access Code (Required)" width="20%"><label for="PatientAccessCodeTextBox">Access Code </label><span class="required">*</span></td>
+                                        <td title="Access Code (Required)">
+                                            <input name="patientAccessCode*" tabindex="2" class="formInputText" id="PatientAccessCodeTextBox" size="30" maxlength="200" aria-required="true" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td title="Verify Code (Required)"><label for="PatientVerifyCodeTextBox">Verify Code </label><span class="required">*</span></td>
+                                        <td title="Access Code (Required)">
+                                            <input name="patientVerifyCode*" tabindex="2" class="formInputText" id="PatientVerifyCodeTextBox" size="30" maxlength="200" aria-required="true" type="password" />
+                                        </td>
+                                    </tr>
+                                    <tr><td colspan="2"><button title="Access/Verify Login" style="width:200px;" tabindex="9" id="PatAVButton" class="button_normal_gradient">Submit Access/Verify</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="PatDuzNotification" aria-live="polite" role="alert"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Provider Duz" class="td_right"><b>Provider Duz</b></td>
+                    <td class="" align="center">
+                        <div id="msgProDuz_working">
+                            <img src="mcs_mvi_loading" height="25" width="25" alt="Provider Duz Status Loading">
+                        </div>
+                        <div id="msgProDuz_success">
+                            <img src="cvt_checked.png" height="25" width="25" alt="Provider Duz Status Success">
+                        </div>
+                        <div id="msgProDuz_failure">
+                            <img src="mcs_mvi_error" height="25" width="25" alt="Provider Duz Status Failure">
+                        </div>
+                    </td>
+                    <td class="infoText">
+                        <div id="ProAV">
+                            <table id="proAVtable">
+                                <tbody>
+                                    <tr>
+                                        <td title="Access Code (Required)" width="20%"><label for="ProviderAccessCodeTextBox">Access Code </label><span class="required">*</span></td>
+                                        <td title="Access Code (Required)">
+                                            <input name="providerAccessCode*" tabindex="2" class="formInputText" id="ProviderAccessCodeTextBox" size="30" maxlength="200" aria-required="true" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td title="Verify Code (Required)"><label for="ProviderVerifyCodeTextBox">Verify Code </label><span class="required">*</span></td>
+                                        <td title="Access Code (Required)">
+                                            <input name="providerVerifyCode*" tabindex="2" class="formInputText" id="ProviderVerifyCodeTextBox" size="30" maxlength="200" aria-required="true" type="password" />
+                                        </td>
+                                    </tr>
+                                    <tr><td colspan="2"><button title="Access/Verify Login" style="width:200px;" tabindex="9" id="ProAVButton" class="button_normal_gradient">Submit Access/Verify</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="ProDuzNotification" aria-live="polite" role="alert"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyOriginatorKeyFile>TMPPlugins.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>True</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Associate\**" />
+    <Compile Remove="RequirementGroup\**" />
+    <EmbeddedResource Remove="Associate\**" />
+    <EmbeddedResource Remove="RequirementGroup\**" />
+    <None Remove="Associate\**" />
+    <None Remove="RequirementGroup\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="SchedulingResource\SchedulingResourceCreatePostStage.cs" />
+    <Compile Remove="SchedulingResource\SchedulingResourceCreatePostStageRunner.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\MCSShared\Logger\AILogicBase.cs" Link="Helpers\AILogicBase.cs" />
+    <Compile Include="..\..\MCSShared\Logger\AppInsightsLogData.cs" Link="Helpers\AppInsightsLogData.cs" />
+    <Compile Include="..\..\MCSShared\Logger\AppInsightsLogger.cs" Link="Helpers\AppInsightsLogger.cs" />
+    <Compile Include="..\..\MCSShared\Logger\HttpHelper.cs" Link="Helpers\HttpHelper.cs" />
+    <Compile Include="..\..\MCSShared\Logger\Messages.cs" Link="Helpers\Messages.cs" />
+    <Compile Include="..\..\MCSShared\Logger\PluginLogger.cs" Link="Helpers\PluginLogger.cs" />
+    <Compile Include="..\..\MCSShared\Logger\SerializationHelper.cs" Link="Helpers\SerializationHelper.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelper.cs" Link="Helpers\CvtHelper.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelperCalendar.cs" Link="Helpers\CvtHelperCalendar.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelperData.cs" Link="Helpers\CvtHelperData.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelperEmail.cs" Link="Helpers\CvtHelperEmail.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelperLocations.cs" Link="Helpers\CvtHelperLocations.cs" />
+    <Compile Include="..\..\MCSShared\CvtHelperSP.cs" Link="Helpers\CvtHelperSP.cs" />
+    <Compile Include="..\..\MCSShared\MCSHelper.cs" Link="Helpers\MCSHelper.cs" />
+    <Compile Include="..\..\MCSShared\MCSLogger.cs" Link="Helpers\MCSLogger.cs" />
+    <Compile Include="..\..\MCSShared\MCSSettings.cs" Link="Helpers\MCSSettings.cs" />
+    <Compile Include="..\..\MCSShared\PluginRunner.cs" Link="Helpers\PluginRunner.cs" />
+    <Compile Include="..\..\MCSShared\UrlBuilder.cs" Link="Helpers\UrlBuilder.cs" />
+    <Compile Include="..\..\MCSShared\UtilityFunctions.cs" Link="Helpers\UtilityFunctions.cs" />
+    <Compile Include="..\..\MCSShared\VA.TMP.DataModel.cs" Link="Helpers\VA.TMP.DataModel.cs" />
+    <Compile Include="..\..\MCSShared\VA.TMP.Xrm.OptionSets.cs" Link="Helpers\VA.TMP.Xrm.OptionSets.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Search\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.42" />
+    <PackageReference Include="Microsoft.CrmSdk.Workflow" Version="9.0.2.45" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+</Project>

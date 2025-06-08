@@ -1,0 +1,163 @@
+{
+    "fullUrl":"urn:uuid:{{ ID }}",
+    "resource":{
+        "resourceType": "Appointment",
+        "id": "{{ ID }}",
+        "identifier":
+        [
+            {
+                "value":"{{ SCH.1.Value }}",
+            },
+        ],
+        "status": "{{ SCH.25.Value | get_property: 'CodeSystem/VEIS_AppointmentStatus', 'code' }}",
+        "appointmentType": 
+        {
+            "coding": 
+            [
+                {
+                    {% if SCH.7.1.value -%}
+                    "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+                    "code": "Routine appointment - default if not valued",
+                    "display": "ROUTINE",
+                    {% endif -%}
+                },
+            ],
+            "text": "{{ SCH.7.1.value }}",
+        }, 
+        "cancelationReason": 
+        {
+            "coding": 
+            [
+                {
+                    {% if SCH.6.1.value -%}
+                    "system": "{{ SCH.6.1.Value | get_property: 'CodeSystem/VEIS_AppointmentCancellationReason', 'system' }}",
+                    "code": "{{ SCH.6.1.Value | get_property: 'CodeSystem/VEIS_AppointmentCancellationReason', 'code' }}",
+                    "display": "{{ SCH.6.1.Value | get_property: 'CodeSystem/VEIS_AppointmentCancellationReason', 'display' }}",
+                    {% endif -%}
+                },
+            ],
+            "text": "{{ SCH.6.1.value }}",  
+        },
+        "reasonCode":
+        {
+            {% if SCH.6.4 -%}
+            "text": "{{ SCH.6.4.value }}",
+            {% endif -%}
+        },
+        {% if SCH.11.4.Value -%}
+        "start": "{{ SCH.11.4.Value | format_as_date_time}}",
+        {% endif -%}
+        {% if SCH.11.5.Value -%}
+        "end": "{{ SCH.11.5.Value | format_as_date_time}}",
+        {% endif -%}
+        "minutesDuration": "{{ SCH.9.Value }}",
+        "participant":
+        [
+            {% if Practitioner_GUID_SCH_20 -%}
+            {
+                "type":
+                [
+                    {
+                        {% include 'DataType/VEIS_CWECodeableConcept' mapping: 'CodeSystem/VEIS_ParticipationType', CWE: "SPRF" -%}
+                        "text": "{{ Parctipant_Type_Text }}",
+                    }
+                ],
+                "actor":
+                {
+                    "reference": "Practitioner/{{Practitioner_GUID_SCH_20}}",
+                    "type": "Practitioner",
+                },
+            },
+            {% endif -%}
+            {% if Practitioner_ID_AIP_3 -%}
+            {
+                "type":
+                [
+                    {
+                        {% include 'DataType/VEIS_CWECodeableConcept' mapping: 'CodeSystem/VEIS_ParticipationType', CWE: "ATND" -%}
+                        "text": "{{ Parctipant_Type_Text }}",
+                    }
+                ],
+                "actor":
+                {
+                    "reference": "Practitioner/{{Practitioner_ID_AIP_3}}",
+                    "type": "Practitioner",
+                },
+                "status": "{{ AIP.12.value | get_property: 'CodeSystem/VEIS_ParticipationStatus', 'code' }}", {% comment %} Need to implement VEIS_ParticipationStatus code table further {% endcomment %}
+                "period": {
+                    {% if AIP.6 and AIP.9 -%}
+                    "start": "{{ AIP.6.Value | format_as_date_time}}",
+                    {% include "Util/DateTimeAddMinutes" dateValue: AIP.6.Value, minutesDelta: AIP.9.Value, fieldName: "end" -%},
+                    {% endif -%}
+                }
+            },
+            {% endif -%}
+            {% if Location_GUID -%}
+            {
+                "type":
+                [
+                    {
+                        "text": "{{ Parctipant_Type_Text }}",
+                    }
+                ],
+                "actor":
+                {
+                    "reference":"Location/{{ Location_GUID }}",
+                    "type": "Location",
+                    "display": "{{ Location_ID.value }}",
+                },
+                "status": "accepted",
+                "period": {
+                    {% if AIG.8 and AIG.11 -%}
+                    "start": "{{ AIG.8.value | format_as_date_time }}",
+                    {% include "Util/DateTimeAddMinutes" dateValue: AIG.8.Value, minutesDelta: AIG.11.Value, fieldName: "end" -%},
+                    {% endif -%}
+                },
+            },
+            {% endif -%}
+            {% if AIG.3 and HealthcareService_GUID -%}
+            {
+                "type":
+                [
+                    {
+                        "text": "{{ Parctipant_Type_Text }}",
+                    }
+                ],
+                "actor":
+                {
+                    "reference":"HealthcareService/{{ HealthcareService_GUID }}",
+                    "type": "HealthcareService",
+                    "display":"{{ AIG.3.value }}",
+                },
+                "status": "accepted",
+                "period": {
+                    {% if AIG.8 and AIG.11 -%}
+                    "start": "{{ AIG.8.value | format_as_date_time }}",
+                    {% include "Util/DateTimeAddMinutes" dateValue: AIG.8.Value, minutesDelta: AIG.11.Value, fieldName: "end" -%},
+                    {% endif -%}
+                },
+            },
+            {% endif -%}
+            {% if PID.3 and Patient_ID_PID_3 -%}
+            {
+                "type":
+                [
+                    {
+                        "text": "{{ Parctipant_Type_Text }}",
+                    }
+                ],
+                "actor": 
+                {
+                    "reference":"Patient/{{ Patient_ID_PID_3 }}",
+                    "type": "Patient",
+                },
+                "status": "accepted",
+            },    
+            {% endif -%}  
+        ],
+    },
+    "request":{
+        "method":"PUT",
+        "url":"Appointment/{{ ID }}",
+    },
+},

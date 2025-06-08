@@ -1,0 +1,428 @@
+﻿//Library Name: mcs_TSA.OnLoad.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_TSA_OnLoad = {};
+
+//Global Variables
+MCS.mcs_TSA_OnLoad.FormType;
+MCS.mcs_TSA_OnLoad.EntityName;
+MCS.mcs_TSA_OnLoad.GroupAppt;
+MCS.mcs_TSA_OnLoad.Type;
+MCS.mcs_TSA_OnLoad.EntityId;
+
+MCS.mcs_TSA_OnLoad.TSAName;
+MCS.mcs_TSA_OnLoad.MTSAName;
+
+MCS.mcs_TSA_OnLoad.relatedProviderSiteId;
+MCS.mcs_TSA_OnLoad.relatedProviderSiteName;
+
+MCS.mcs_TSA_OnLoad.relatedPatientSiteId;
+MCS.mcs_TSA_OnLoad.relatedPatientSiteName;
+
+MCS.mcs_TSA_OnLoad.relatedPatientFacilityId;
+MCS.mcs_TSA_OnLoad.relatedPatientFacilityName;
+
+MCS.mcs_TSA_OnLoad.ProvResourcesCreated = new Boolean;
+
+MCS.SiteEmergencyPhone;
+MCS.SiteMainPhone;
+MCS.TCTPhone;
+MCS.SiteLocal911Phone;
+
+//Compare for Audit cleanup
+MCS.mcs_TSA_OnLoad.Capacity;
+MCS.mcs_TSA_OnLoad.InitialPatientAppointment;
+MCS.mcs_TSA_OnLoad.InitalStatus;
+MCS.mcs_TSA_OnLoad.OtherAdmissionCriteria;
+MCS.mcs_TSA_OnLoad.OtherDischargeCriteria;
+MCS.mcs_TSA_OnLoad.StartActivitiesEvery;
+
+MCS.mcs_TSA_OnLoad.OnLoad = function () {
+    MCS.mcs_TSA_OnLoad.CheckForMTSA();
+
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+        return;
+    //Actually set all the values used in the library
+    MCS.mcs_TSA_OnLoad.FormType = Xrm.Page.ui.getFormType();
+    MCS.mcs_TSA_OnLoad.EntityName = Xrm.Page.data.entity.getEntityName();
+    MCS.mcs_TSA_OnLoad.GroupAppt = (Xrm.Page.getAttribute("cvt_groupappointment") != null) ? Xrm.Page.getAttribute("cvt_groupappointment").getValue() : false;
+    MCS.mcs_TSA_OnLoad.Type = (Xrm.Page.getAttribute("cvt_type") != null) ? Xrm.Page.getAttribute("cvt_type").getValue() : false;
+    MCS.mcs_TSA_OnLoad.EntityId = Xrm.Page.data.entity.getId();
+
+    if (MCS.mcs_TSA_OnLoad.FormType == MCS.cvt_Common.FORM_TYPE_CREATE) {
+        Xrm.Page.getAttribute("cvt_startevery").setValue(30);
+        MCS.cvt_Common.DateTime('cvt_beginngtime', 8, 00);
+    }
+
+    MCS.cvt_Common.EnableOtherDetails("cvt_admissioncriteria", "cvt_otheradmissioncriteriadetails", "917290002");
+    MCS.cvt_Common.EnableOtherDetails("cvt_dischargecriteria", "cvt_otherdischargecriteriadetails", "917290002");
+    MCS.cvt_Common.EnableDependentLookup("cvt_servicetype", "cvt_servicesubtype");
+
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() != null) {
+        Xrm.Page.getControl("cvt_relatedmasterid").setDisabled(true);
+    }
+
+    Xrm.Page.getControl("mcs_name").setFocus(); //To bring to the top
+   
+    Xrm.Page.getAttribute("cvt_relatedpatientsiteid").setSubmitMode("always");
+    //Capture values to compare to clean up audit
+    if (MCS.mcs_TSA_OnLoad.FormType != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        MCS.mcs_TSA_OnLoad.Capacity = (Xrm.Page.getAttribute("mcs_capacity") != null) ? Xrm.Page.getAttribute("mcs_capacity").getValue() : null;
+        MCS.mcs_TSA_OnLoad.InitialPatientAppointment = (Xrm.Page.getAttribute("cvt_duration") != null) ? Xrm.Page.getAttribute("cvt_duration").getValue() : null;
+        //MCS.mcs_TSA_OnLoad.InitalStatus = (Xrm.Page.getAttribute("cvt_initialstatus") != null) ? Xrm.Page.getAttribute("cvt_initialstatus").getValue() : null;
+        MCS.mcs_TSA_OnLoad.OtherAdmissionCriteria = (Xrm.Page.getAttribute("cvt_otheradmissioncriteriadetails") != null) ? Xrm.Page.getAttribute("cvt_otheradmissioncriteriadetails").getValue() : null;
+        MCS.mcs_TSA_OnLoad.OtherDischargeCriteria = (Xrm.Page.getAttribute("cvt_otherdischargecriteriadetails") != null) ? Xrm.Page.getAttribute("cvt_otherdischargecriteriadetails").getValue() : null;
+        MCS.mcs_TSA_OnLoad.StartActivitiesEvery = (Xrm.Page.getAttribute("cvt_startevery") != null) ? Xrm.Page.getAttribute("cvt_startevery").getValue() : null;
+    }
+};
+
+MCS.mcs_TSA_OnLoad.BulkEdit = function () {
+    //Not Bulk Edit
+    if (MCS.mcs_TSA_OnLoad.FormType != 6) {
+        //Hide the Bulk Edit section on all forms
+        Xrm.Page.ui.tabs.get('tab_patient').sections.get('tab_7_section_Bulk').setVisible(false);
+
+        //Set all sections to hidden on form.  Show all sections
+        //TSA tab
+        Xrm.Page.ui.tabs.get('tab_7').setVisible(true); 
+        
+        //General section
+        Xrm.Page.ui.tabs.get('tab_6').sections.get('tab_6_section_3').setVisible(true);
+        
+        //Set Emergency IFRAME true
+        Xrm.Page.getControl('IFRAME_EmergencyContactViewer').setVisible(true)
+        //Provider Grids sections
+        Xrm.Page.ui.tabs.get('tab_4').sections.get('tab_provresourcesSelect All').setVisible(true);
+        Xrm.Page.ui.tabs.get('tab_4').sections.get('tab_ProvResourcesAllRequired').setVisible(true);
+
+        //Patient Grids sections
+        Xrm.Page.ui.tabs.get('tab_patient').sections.get('tab_patientresourcesselectall').setVisible(true);
+        Xrm.Page.ui.tabs.get('tab_patient').sections.get('tab_patientresourcesselect1').setVisible(true);
+
+        //Admin tab
+        Xrm.Page.ui.tabs.get('tab_3').setVisible(true);
+        
+    }
+};
+
+//Getting Attributes needed for Quick Create Buttons
+MCS.mcs_TSA_OnLoad.GetAttributes = function () {
+    //TSA
+    //if (MCS.mcs_TSA_OnLoad.EntityName == "mcs_services") {
+        MCS.mcs_TSA_OnLoad.TSAName = Xrm.Page.getAttribute("mcs_name").getValue();
+
+        var provSiteField = Xrm.Page.getAttribute("cvt_relatedprovidersiteid");
+        var patSiteField = Xrm.Page.getAttribute("cvt_relatedpatientsiteid");
+        switch (MCS.mcs_TSA_OnLoad.GroupAppt) {           
+            case false:
+                if (patSiteField.getValue() != null) {
+                    var relatedPatientSite = patSiteField.getValue();
+                    MCS.mcs_TSA_OnLoad.relatedPatientSiteId = relatedPatientSite[0].id;
+                    MCS.mcs_TSA_OnLoad.relatedPatientSiteName = relatedPatientSite[0].name;
+                }
+                if (provSiteField.getValue() != null) {
+                    var relatedProviderSite = provSiteField.getValue();
+                    MCS.mcs_TSA_OnLoad.relatedProviderSiteId = relatedProviderSite[0].id;
+                    MCS.mcs_TSA_OnLoad.relatedProviderSiteName = relatedProviderSite[0].name;
+                }
+                break;
+
+            case true:
+                if (provSiteField.getValue() != null) {
+                    var relatedProviderSite = provSiteField.getValue();
+                    MCS.mcs_TSA_OnLoad.relatedProviderSiteId = relatedProviderSite[0].id;
+                    MCS.mcs_TSA_OnLoad.relatedProviderSiteName = relatedProviderSite[0].name;
+                }
+                var patFacilityField = Xrm.Page.getAttribute("cvt_patientfacility");
+                if (patFacilityField.getValue() != null) {
+                    MCS.mcs_TSA_OnLoad.relatedPatientFacilityId = patFacilityField.getValue()[0].id;
+                    MCS.mcs_TSA_OnLoad.relatedPatientFacilityName = patFacilityField.getValue()[0].name;
+                }
+                break;
+        }
+    //}       
+    //else { //MTSA
+    //    MCS.mcs_TSA_OnLoad.MTSAName = Xrm.Page.getAttribute("cvt_name").getValue();
+    //}
+};
+
+MCS.mcs_TSA_OnLoad.LoadProvResources = function (executionObj) {
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+        return;
+    var mtsaId = Xrm.Page.getAttribute("cvt_relatedmasterid").getValue()[0].id;
+   
+    if ((mtsaId != null) && (MCS.mcs_TSA_OnLoad.FormType == 1) && (MCS.mcs_TSA_OnLoad.ProvResourcesCreated == false)) {
+
+        //Looking up the Prov Site Resources related to the MTSA we came from.     
+        //var columns = "<attribute name='cvt_providerresourcegroupid'/><attribute name='cvt_tsaresourcetype'/>";
+        var columns = [
+            'cvt_providerresourcegroupid',
+            'cvt_tsaresourcetype'
+        ];
+        var conditions = [
+            "<condition attribute='cvt_relatedmastertsaid' operator='eq' uitype='cvt_mastertsa' value='" + mtsaId + "' />",
+            "<condition attribute= 'statecode' operator='in'><value>0</value><value>3</value></condition>"
+        ];
+        var fetchXml = MCS.cvt_Common.CreateFetch('cvt_providerresourcegroup', columns, conditions, null);
+
+        XrmSvcToolkit.fetch({
+            fetchXml: fetchXml,
+            async: true,
+            successCallback: function (result) {
+                countValue = result.entities.length;
+                if (countValue > 0) {
+                    for (var i = 0; i < countValue; i++) {
+                        var provResourceId = result.entities[i].cvt_providerresourcegroupid;
+                        var tsaResourceType = result.entities[i].cvt_tsaresourcetype.Value;
+                        
+                        //Single Resource
+                        if (tsaResourceType == 1) {
+                            CrmRestKit.Retrieve('cvt_providerresourcegroup', provResourceId, ['cvt_name', 'cvt_TSAResourceType', 'cvt_Type', 'cvt_RelatedResourceId', 'cvt_relatedsiteid'], false)
+                                     .fail(function () { alert("Retrieve Failed") })
+                                     .done(function (data) {
+                                         Name = data.d.cvt_name;
+                                         Type = data.d.cvt_Type.Value;
+                                         TSAType = data.d.cvt_TSAResourceType.Value;
+                                         RelatedSite = data.d.cvt_relatedsiteid;
+                                         Resource = data.d.cvt_RelatedResourceId;                                      
+                                     })
+                            var provResource = {
+                                'cvt_name': Name,
+                                'cvt_TSAResourceType': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: TSAType },
+                                'cvt_Type': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: Type },
+                               // 'cvt_RelatedTSAid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: EntityId, LogicalName: EntityName },                             
+                                'cvt_RelatedResourceId': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: Resource.Id, LogicalName: Resource.LogicalName },
+                                'cvt_relatedsiteid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: RelatedSite.Id, LogicalName: RelatedSite.LogicalName },
+                                'cvt_mtsaguid': mtsaId
+                            };
+                            CrmRestKit.Create('cvt_providerresourcegroup', provResource, true)
+                            .fail(function () { alert("Create failed") })
+                            .done()
+                        }
+
+                        //Resource Group
+                        if (tsaResourceType == 0) {
+                            CrmRestKit.Retrieve('cvt_providerresourcegroup', provResourceId, ['cvt_name', 'cvt_TSAResourceType', 'cvt_Type', 'cvt_RelatedResourceGroupid', 'cvt_relatedsiteid'], false)
+                                     .fail(function () { alert("Retrieve Failed") })
+                                     .done(function (data) {
+                                         Name = data.d.cvt_name;
+                                         Type = data.d.cvt_Type.Value;
+                                         TSAType = data.d.cvt_TSAResourceType.Value;
+                                         RelatedSite = data.d.cvt_relatedsiteid;
+                                         ResourceGroup = data.d.cvt_RelatedResourceGroupid;                                        
+                                     })
+                            var provResource = {
+                                'cvt_name': Name,
+                                'cvt_TSAResourceType': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: TSAType },
+                                'cvt_Type': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: Type },
+                              //  'cvt_RelatedTSAid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: EntityId, LogicalName: EntityName },
+                                'cvt_RelatedResourceGroupid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: ResourceGroup.Id, LogicalName: ResourceGroup.LogicalName },                                
+                                'cvt_relatedsiteid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: RelatedSite.Id, LogicalName: RelatedSite.LogicalName },
+                                'cvt_mtsaguid': mtsaId
+                            };
+                            CrmRestKit.Create('cvt_providerresourcegroup', provResource, true)
+                            .fail(function () { alert("Create failed") })
+                            .done()
+                        }
+
+                        //Provider
+                        if (tsaResourceType == 2) {
+                            CrmRestKit.Retrieve('cvt_providerresourcegroup', provResourceId, ['cvt_name', 'cvt_TSAResourceType', 'cvt_RelatedUserId', 'cvt_relatedsiteid'], false)
+                                     .fail(function () { alert("Retrieve Failed") })
+                                     .done(function (data) {
+                                         Name = data.d.cvt_name;
+                                         TSAType = data.d.cvt_TSAResourceType.Value;
+                                         RelatedSite = data.d.cvt_relatedsiteid;
+                                         User = data.d.cvt_RelatedUserId;
+                                     })
+                            var provResource = {
+                                'cvt_name': Name,
+                                'cvt_TSAResourceType': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: TSAType },                               
+                              //  'cvt_RelatedTSAid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: EntityId, LogicalName: EntityName },                                
+                                'cvt_RelatedUserId': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: User.Id, LogicalName: User.LogicalName },                               
+                                'cvt_relatedsiteid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: RelatedSite.Id, LogicalName: RelatedSite.LogicalName },
+                                'cvt_mtsaguid': mtsaId
+                            };
+                            CrmRestKit.Create('cvt_providerresourcegroup', provResource, true)
+                            .fail(function () { alert("Create failed") })
+                            .done()
+                        }
+                    }
+                }
+            },
+            errorCallback: function (error) {
+                throw error;
+            }
+        });      
+    }
+};
+
+MCS.mcs_TSA_OnLoad.AssignProvResources = function (executionObj) {
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+        return;
+    var mtsaId = Xrm.Page.getAttribute("cvt_relatedmasterid").getValue()[0].id;
+    var EntityId;
+    var EntityName;
+
+    if ((mtsaId != null) && (MCS.mcs_TSA_OnLoad.FormType == 2)) {
+        if (typeof (MCS.mcs_TSA_OnLoad) != "undefined") {
+            EntityId = MCS.mcs_TSA_OnLoad.EntityId;
+            EntityName = MCS.mcs_TSA_OnLoad.EntityName;
+        }
+        else {
+            EntityId = window.parent.MCS.mcs_TSA_OnLoad.EntityId;
+            EntityName = window.parent.MCS.mcs_TSA_OnLoad.EntityName;
+        }
+
+        //Looking up the Prov Site Resources related to the MTSA we came from. 
+        var columns = [
+            'cvt_providerresourcegroupid',
+            'cvt_tsaresourcetype'
+        ];
+        var conditions = [
+            "<condition attribute='cvt_mtsaguid' value='" + mtsaId + "' operator='eq'/>",
+            "<condition attribute= 'statecode' operator='in'><value>0</value><value>3</value></condition>"
+        ];
+        var fetchXml = MCS.cvt_Common.CreateFetch('cvt_providerresourcegroup', columns, conditions, null);
+
+        XrmSvcToolkit.fetch({
+            fetchXml: fetchXml,
+            async: false,
+            successCallback: function (result) {
+                countValue = result.entities.length;
+                if (countValue > 0) {
+                    for (var i = 0; i < countValue; i++) {
+                        var provResourceId = result.entities[i].cvt_providerresourcegroupid;
+
+                        var provResource = {
+                            'cvt_RelatedTSAid': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: EntityId, LogicalName: EntityName },
+                            'cvt_mtsaguid': ''
+                        };
+                        CrmRestKit.Update('cvt_providerresourcegroup', provResourceId, provResource, false)
+                                        .fail(function () { alert("Update Failed") })
+                                        .done(function () {
+                                        })
+                    }
+                }
+            },
+            errorCallback: function (error) {
+                throw error;
+            }
+        });
+    }
+};
+
+MCS.mcs_TSA_OnLoad.RefreshGridAgain = function () {
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+        return;
+    var mtsaId = Xrm.Page.getAttribute("cvt_relatedmasterid").getValue()[0].id;
+    if ((mtsaId != null) && (MCS.mcs_TSA_OnLoad.FormType == 2)) {
+
+        var ProvSiteResourcesGrid = document.getElementById("provgroups");
+        if (ProvSiteResourcesGrid == null) {
+            setTimeout(function () { MCS.mcs_TSA_OnLoad.RefreshGridAgain(); }, 500);
+            return;
+        }
+        setTimeout(function () {
+
+            if (ProvSiteResourcesGrid.control.Refresh != undefined) {
+                ProvSiteResourcesGrid.control.Refresh()
+            }
+            else {
+                ProvSiteResourcesGrid.control.refresh()
+            }
+        }, 3000);
+
+        setTimeout(function () {
+
+            if (ProvSiteResourcesGrid.control.Refresh != undefined) {
+                ProvSiteResourcesGrid.control.Refresh()
+            }
+            else {
+                ProvSiteResourcesGrid.control.refresh()
+            }
+        }, 3000);
+
+        setTimeout(function () {
+
+            if (ProvSiteResourcesGrid.control.Refresh != undefined) {
+                ProvSiteResourcesGrid.control.Refresh()
+            }
+            else {
+                ProvSiteResourcesGrid.control.refresh()
+            }
+        }, 3000);
+
+        setTimeout(function () {
+
+            if (ProvSiteResourcesGrid.control.Refresh != undefined) {
+                ProvSiteResourcesGrid.control.Refresh()
+            }
+            else {
+                ProvSiteResourcesGrid.control.refresh()
+            }
+        }, 3000);
+    }
+};
+
+MCS.mcs_TSA_OnLoad.showEmergencyContactViewer = function () {
+    if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+        return;
+    if (MCS.mcs_TSA_OnLoad.FormType == MCS.cvt_Common.FORM_TYPE_CREATE || MCS.mcs_TSA_OnLoad.GroupAppt == true || MCS.mcs_TSA_OnLoad.Type == true) {
+        Xrm.Page.getControl("IFRAME_EmergencyContactViewer").setVisible(false);
+        return;
+    }
+    if (Xrm.Page.getAttribute("cvt_relatedpatientsiteid").getValue() == null) {
+        alert("Please select a Patient Site.");
+        Xrm.Page.getControl("IFRAME_EmergencyContactViewer").setVisible(false);
+        return;
+    }
+    var siteId = Xrm.Page.getAttribute("cvt_relatedpatientsiteid").getValue()[0];
+    CrmRestKit.Retrieve('mcs_site', siteId.id, ["cvt_Local911", "cvt_UrgentEmergencyPhone", "cvt_phone", "cvt_LeadTCT"], false).fail(
+        function (err) {
+            //throw new Exception;
+        }).done(function (data) {
+            var resultFields = data.d;
+            var tct = resultFields["cvt_LeadTCT"];
+            MCS.SiteLocal911Phone = resultFields["cvt_Local911"];
+            MCS.SiteEmergencyPhone = resultFields["cvt_UrgentEmergencyPhone"];
+            MCS.SiteMainPhone = resultFields["cvt_phone"];
+
+            if (tct != null) {
+                CrmRestKit.Retrieve('SystemUser', tct.Id, ["cvt_officephone", "MobilePhone"], false).fail(function (err) {
+                    //throw new Exception;
+                }).done(function (data2) {
+                    var office = data2.d["cvt_officephone"];
+                    var mobile = data2.d["MobilePhone"];
+                    MCS.TCTPhone = mobile == null ? office : mobile;
+                });
+            }
+            else {
+                MCS.TCTPhone = "";
+            }
+        });
+    //var org = Xrm.Page.context.getOrgUniqueName();
+    //if (org != "CVT-DEV2015") { //PSSC
+    //    org = "";
+    //}
+
+    //var urlBuilder = org + "/WebResources/cvt_EmergencyContactViewer.html";
+    var urlBuilder = "/WebResources/cvt_EmergencyContactViewer.html";
+    var IFrame = Xrm.Page.ui.controls.get("IFRAME_EmergencyContactViewer");
+
+    //Append the parameters to the new page URL
+    var newTarget = urlBuilder;
+    // Use the setSrc method so that the IFRAME uses the new page with the existing parameters
+    IFrame.setSrc(newTarget);
+};
+
+MCS.mcs_TSA_OnLoad.CheckForMTSA = function () {
+    //Check if formType = create
+    if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE) {
+        //Check for MTSA - //No MTSA - must be created from one.
+        if (Xrm.Page.getAttribute("cvt_relatedmasterid").getValue() == null)
+            MCS.cvt_Common.closeWindow("A TSA must be created from a MTSA.\n\nPlease close this TSA form and start from a MTSA.");
+    }
+};

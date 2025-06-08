@@ -1,0 +1,73 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "usgovarizona"
+        },
+        "subscriptionID": {
+            "value": "c0eb1fa5-dd86-490c-bd98-217a85aaa1c9"
+        },
+        "resourceGroupName": {
+            "value": "EIS-PREPROD-INT-SOUTHWEST-EIS-RG"
+        },
+        "logicAppName": {
+            "value": "myCustomDevOpsLogicAppPREPROD"
+        },
+       "workflows_test1_name": {
+            "value": "va-eis-tmp-worker-preprod"
+        },           
+        
+        "namespaces_vaeistmpservicebusdev_name": {
+            "value": "vaeistmpservicebuspreprod"
+        },
+        "environment_name" : {
+            "value": "PREPROD"
+        },
+        "location_name" : {
+            "value": "USGov Arizona"
+        },
+        "topic_name" : {
+            "value": "servicetopicpreprod"
+        },
+        "subscription_name" : {
+            "value": "demosub"
+        },
+        "integrationAccounts_va_eis_tmp_ig_dev_name": {
+            "value": "va-eis-tmp-ig-preprod"
+        },
+        "integrationServiceEnvironments_eis_devtest_southwest_ise_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-PREPROD-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Logic/integrationServiceEnvironments/eis-nprod-southwest-ise"
+        },
+        "workflows_va_eis_tmp_orchestrator_dev_name": {
+            "value": "va-eis-tmp-orchestrator-preprod"
+        },
+        "integrationAccounts_va_eis_tmp_ig_dev_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-PREPROD-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Logic/integrationAccounts/va-eis-tmp-ig-preprod"
+        },
+        "connections_servicebus_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-PREPROD-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Web/connections/servicebus"
+        },                
+        "namespaces_vaeistmpservicebusdev_name": {
+            "value": "vaeistmpservicebuspreprod"
+        },
+        "environment_name" : {
+            "value": "PREPROD"
+        },
+        "location_name" : {
+            "value": "USGov Arizona"
+        },
+        "topic_name" : {
+            "value": "servicetopicpreprod"
+        },
+        "subscription_name" : {
+            "value": "demosub"
+        },
+        "iseName" : {
+            "value": "eis-nprod-southwest-ise"
+        },
+        "iseResourceGroup" : {
+            "value": "EIS-PREPROD-INT-SOUTHWEST-EIS-RG"
+        }         
+    }
+}

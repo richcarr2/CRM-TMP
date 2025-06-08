@@ -1,0 +1,6 @@
+﻿{% capture identifiers -%}
+{% if MSH.10 %}{{MSH.10.Value}}
+{% elsif MSH -%}{{MSH.Value}}
+{% endif -%}
+{% endcapture -%}
+{{ identifiers | generate_id_input: 'Provenance', true, baseId | generate_uuid }}

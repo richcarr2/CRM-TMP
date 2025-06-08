@@ -1,0 +1,80 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.cvt_MTSA_OnChange = {};
+
+//Group
+MCS.cvt_MTSA_OnChange.Group = function () {
+    var IsGroup = (Xrm.Page.getAttribute("cvt_groupappointment").getValue() != null) ? Xrm.Page.getAttribute("cvt_groupappointment").getValue() : false;
+
+    if (!IsGroup) {
+        Xrm.Page.getAttribute("cvt_capacity").setValue(1);
+        Xrm.Page.getControl("cvt_capacity").setDisabled(true);
+        Xrm.Page.getAttribute("cvt_capacity").setSubmitMode("dirty");
+    }
+    else {
+        if (Xrm.Page.getAttribute("cvt_capacity").getValue() == null)
+            Xrm.Page.getAttribute("cvt_capacity").setValue(1);
+        Xrm.Page.getControl("cvt_capacity").setDisabled(false);
+    }
+};
+//Home/Mobile
+MCS.cvt_MTSA_OnChange.Type = function () {
+    var Type = (Xrm.Page.getAttribute("cvt_type").getValue()) ? Xrm.Page.getAttribute("cvt_type").getValue() : false;
+
+    if (Type == false) { //Clinic Based
+        if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE) {
+            //Add Text to Patient Staff Emergency Responsibilities
+            var patString = "Patient site staff will activate pre-defined local emergency protocols. \n" +
+    "Patient site staff will not leave the Veteran patient alone during an emergency. \n" +
+    "Patient site staff will keep the visit Provider informed of disposition of the emergency/Veteran patient.";
+            Xrm.Page.getAttribute("cvt_patientstaffemergencyresponsibilities").setValue(patString);
+        }
+
+        Xrm.Page.getControl("cvt_groupappointment").setVisible(true);
+        Xrm.Page.getControl("cvt_responsetimestoreforward").setVisible(true);
+        Xrm.Page.getControl("cvt_patientstaffemergencyresponsibilities").setVisible(true);
+        if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE) {
+            //Xrm.Page.getControl("cvt_capacity").setDisabled(false);
+            Xrm.Page.getControl("cvt_availabletelehealthmodalities").setDisabled(false);
+        }
+    }
+    else { //true //CVT to Home
+        if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE) {
+            Xrm.Page.getAttribute("cvt_patientstaffemergencyresponsibilities").setValue("");
+            Xrm.Page.getAttribute("cvt_groupappointment").setValue(false);  //Make sure not group
+            Xrm.Page.getAttribute("cvt_groupappointment").fireOnChange();
+            //Xrm.Page.getAttribute("cvt_capacity").setValue(1);
+            //Xrm.Page.getAttribute("cvt_capacity").setSubmitMode("always");           
+            Xrm.Page.getAttribute("cvt_availabletelehealthmodalities").setValue(917290000);
+            Xrm.Page.getAttribute("cvt_availabletelehealthmodalities").setSubmitMode("always");
+            Xrm.Page.getAttribute("cvt_availabletelehealthmodalities").fireOnChange(); //Make sure the form displays the correct fields
+        }
+        
+        Xrm.Page.getControl("cvt_groupappointment").setVisible(false);
+        Xrm.Page.getControl("cvt_groupappointment").setDisabled(true);
+        Xrm.Page.getControl("cvt_patientstaffemergencyresponsibilities").setVisible(false);
+        Xrm.Page.getControl("cvt_responsetimestoreforward").setVisible(false);
+        Xrm.Page.getControl("cvt_availabletelehealthmodalities").setDisabled(true);
+    }
+};
+//Store Forward
+MCS.cvt_MTSA_OnChange.StoreForward = function () {
+    //Check if this TSA is store forward
+    var SFT = Xrm.Page.getAttribute("cvt_availabletelehealthmodalities").getValue() == 917290001;
+    Xrm.Page.getControl("cvt_groupappointment").setVisible(!SFT);
+    Xrm.Page.getControl("cvt_responsetimeroutineconsultations").setVisible(!SFT);
+    Xrm.Page.getControl("cvt_responsetimestoreforward").setVisible(SFT);
+    Xrm.Page.getControl("cvt_providerstaffemergencyresponsibilities").setVisible(!SFT);
+    Xrm.Page.getControl("cvt_informationrequiredbeforevisit").setVisible(!SFT);
+    Xrm.Page.ui.tabs.get("tab_details").sections.get("tab_details_section_5").setVisible(!SFT);
+    if (SFT) {
+        if (Xrm.Page.getAttribute("cvt_servicelevels").getValue() == null)
+            Xrm.Page.getAttribute("cvt_servicelevels").setValue(917290000);
+        if (Xrm.Page.getAttribute("cvt_dischargecriteria").getValue() == null)
+            Xrm.Page.getAttribute("cvt_dischargecriteria").setValue(917290000);
+        if (Xrm.Page.getAttribute("cvt_returningpatientappointmentlength").getValue() == null)
+            Xrm.Page.getAttribute("cvt_returningpatientappointmentlength").setValue(45);
+    }
+};

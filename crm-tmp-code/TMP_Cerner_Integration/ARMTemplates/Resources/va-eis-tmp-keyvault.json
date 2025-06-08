@@ -1,0 +1,506 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-nprod"
+        },
+        "vaults_keyvault_name": {
+            "defaultValue": "[concat('va-eis-tmp-keyvault', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_worker_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-worker', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_outbound_worker_name": {
+            "defaultValue": "[concat('va-eis-tmp-outbound-worker', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_outbound_orchestrator_name": {
+            "defaultValue": "[concat('va-eis-tmp-outbound-orchestrator', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_FHIRworker_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-FHIRworker', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_dataverseprocessingS12_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-dataverseprocessingS12', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_dataverseprocessingS13_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-dataverseprocessingS13', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_dataverseprocessingS15_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-dataverseprocessingS15', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_dataverseprocessingS23_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-dataverseprocessingS23', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_dataverseprocessingS24_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-dataverseprocessingS24', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_inbound_PreemptiveTMPResourceSync_name": {
+            "defaultValue": "[concat('va-eis-tmp-inbound-PreemptiveTMPResourceSync', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_datalakewrapper_name": {
+            "defaultValue": "[concat('va-eis-tmp-DataLakeAPIWrapper', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_OrchestratorApp_name": {
+            "defaultValue": "[concat('va-eis-tmp-OrchestratorApp', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "workflow_AzureManagementAPIWrapper_name": {
+            "defaultValue": "[concat('va-eis-tmp-AzureManagementAPIWrapper', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "DEVOPS_SPN_Id": {
+            "defaultValue": "2fe005eb-fe39-4de2-8cbe-bd170bdb5ea6",
+            "type": "String"
+        }        
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2019-09-01",
+            "name": "[parameters('vaults_keyvault_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "standard"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Allow",
+                    "ipRules": [
+                        {
+                            "value": "152.133.0.0/16"
+                        },
+                        {
+                            "value": "152.129.0.0/16"
+                        },
+                        {
+                            "value": "152.130.0.0/16"
+                        },
+                        {
+                            "value": "152.131.0.0/16"
+                        },
+                        {
+                            "value": "152.132.0.0/16"
+                        }
+                    ],
+                    "virtualNetworkRules": [
+                    ]
+                },
+                "accessPolicies": [
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_worker_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_worker_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_outbound_worker_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_outbound_worker_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    }, 
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_outbound_orchestrator_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_outbound_orchestrator_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_FHIRworker_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_FHIRworker_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS12_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS12_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS13_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS13_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS15_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS15_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS23_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS23_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS24_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_dataverseprocessingS24_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_PreemptiveTMPResourceSync_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_inbound_PreemptiveTMPResourceSync_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_datalakewrapper_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_datalakewrapper_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_OrchestratorApp_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_OrchestratorApp_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_AzureManagementAPIWrapper_name')), '2017-07-01', 'Full').identity.tenantId]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', parameters('workflow_AzureManagementAPIWrapper_name')), '2017-07-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "4ce6286e-3db2-40ce-aced-4579e92b02c8",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ],
+                            "storage": []
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "e7f69987-a5c0-4c46-aa3d-e1d0c9fd288a",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "Decrypt",
+                                "Encrypt",
+                                "UnwrapKey",
+                                "WrapKey",
+                                "Verify",
+                                "Sign",
+                                "Purge"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "Purge"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers",
+                                "Purge"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "0f954f06-2bb0-495b-94b6-f00ad79d153f",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "91a613d8-738f-4437-898d-ace5d77437dc",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "[parameters('DEVOPS_SPN_Id')]",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enableRbacAuthorization": false,
+                "vaultUri": "[concat('https://', parameters('vaults_keyvault_name'), '.vault.usgovcloudapi.net/')]",
+                "provisioningState": "Succeeded"
+            }
+        }
+
+    ]
+}

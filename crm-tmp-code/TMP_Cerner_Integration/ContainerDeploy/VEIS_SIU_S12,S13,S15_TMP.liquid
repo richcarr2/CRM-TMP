@@ -1,0 +1,54 @@
+
+{% assign firstSegments = hl7v2Data | get_first_segments: 'MSH|PID|SCH|AIL' -%}
+
+{
+    {% evaluate patientICN using 'ID/VEIS_Patient_Logical' PID: firstSegments.PID, type: 'AssigningAuthority', authority: 'ICN' -%}
+    {% evaluate patientEDIPI using 'ID/VEIS_Patient_Logical' PID: firstSegments.PID, type: 'AssigningAuthority', authority: 'EDIPI' -%}
+
+    "cernerMessageType": {% if firstSegments.MSH.9 -%} "{{ firstSegments.MSH.9.value }}", {% else -%} null {% endif -%},
+    "cernerAppointmentId": {% if firstSegments.SCH.1 -%} "{{ firstSegments.SCH.1.value }}", {% else -%} null {% endif -%},
+    "TMPAppointmentId": {% if firstSegments.SCH.2 -%} "{{ firstSegments.SCH.2.value }}", {% else -%} null {% endif -%},
+    "scheduledStart": {% if firstSegments.SCH.11.4 -%} "{{ firstSegments.SCH.11.4.Value | format_as_date_time}}", {% else -%} null {% endif -%},
+    "scheduledEnd": {% if firstSegments.SCH.11.5 -%} "{{ firstSegments.SCH.11.5.Value | format_as_date_time}}", {% else -%} null {% endif -%},
+    "scheduledDurationMinutes": {% if firstSegments.SCH.9 -%} {{ firstSegments.SCH.9.value }}, {% else -%} null {% endif -%},
+    "patientEDIPI": {% if patientEDIPI -%} "{{ patientEDIPI }}" {% else -%} null {% endif -%},
+    "patientICN": {% if patientICN -%} "{{ patientICN }}" {% else -%} null {% endif -%},
+    "cernerSchedulerUserEDIPI": {% if firstSegments.SCH.20 -%}  "{{ firstSegments.SCH.20.1.value }}" {% else -%} null {% endif -%},
+    "cernerLocationId": {% if firstSegments.AIL.3.1 -%} "{{ firstSegments.AIL.3.1.value }}", {% else -%} null {% endif -%},
+    "cernerFacilityId": {% if fioprstSegments.AIL.3.4 -%} "{{ firstSegments.AIL.3.4.value }}", {% else -%} null {% endif -%},
+    "cernerComments": {% if firstSegments.SCH.6.4 -%} "{{ firstSegments.SCH.6.4.value }}", {% else -%} null {% endif -%},
+    {% assign AIPSegmentLists = hl7v2Data | get_segment_lists: 'AIP' -%}
+    {% assign AIGSegmentLists = hl7v2Data | get_segment_lists: 'AIG' -%}
+    {% if AIPSegmentLists.size > 0 or AIGSegmentLists.size > 0 -%}
+    "cernerResources": [
+        {% for AIGSegment in AIGSegmentLists.AIG -%}
+        {
+            
+            {% if AIGSegment.3 -%} 
+                "id":"{{ AIGSegment.3.value }}",
+            {% else -%} 
+                "id":null,
+            {% endif -%},
+            "resourceType": "Equipment",
+        },
+        {% endfor -%}
+        {% for AIPSegment in AIPSegmentLists.AIP -%}
+        {% comment -%} Return EDIPI if found, else return null{% endcomment -%}
+        {% evaluate cernerProviderEDIPI using 'ID/VEIS_Practitioner_Logical' XCN: AIPSegment.3, type: 'AssigningAuthority', authority: 'EDIPI' -%}
+        {
+            {% if cernerProviderEDIPI == "null" -%} 
+                "id":null,
+            {% elsif cernerProviderEDIPI == null -%}
+                "id":null,
+            {% else -%} 
+                "id":"{{ cernerProviderEDIPI }}" 
+            {% endif -%},
+            "resourceType": "Provider",
+        },
+        {% endfor -%}
+    ],
+    {% else -%}
+        "cernerResources": null,
+    {% endif -%}
+}
+

@@ -1,0 +1,30 @@
+﻿//Library Name: cvt_QualityCheck.OnLoad.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.QualityCheck_OnLoad = {};
+
+//Check Status to make entire form readonly.
+MCS.QualityCheck_OnLoad.OnLoad = function () {
+    if (Xrm.Page.ui.getFormType() == 1) {
+        Xrm.Page.getControl("statuscode").setDisabled(true);
+    }
+
+    var statusReason = (Xrm.Page.data.entity.attributes.get('statuscode').getValue() != null) ? Xrm.Page.data.entity.attributes.get('statuscode').getSelectedOption().value : null;
+    if (statusReason == 917290000) {      
+        Xrm.Page.getControl("cvt_flag").setDisabled(true);
+        Xrm.Page.getControl("cvt_type").setDisabled(true);
+        Xrm.Page.getControl("cvt_facilityid").setDisabled(true);
+        Xrm.Page.getControl("statuscode").setDisabled(true);
+        //Xrm.Page.getControl("cvt_questionsresponses").setDisabled(true);
+        Xrm.Page.getControl("cvt_tssprivilegingid").setDisabled(true);
+        Xrm.Page.getControl("ownerid").setDisabled(true);
+
+        var notificationsList = Sys.Application.findComponent('crmNotifications');
+        if (notificationsList) {
+            notificationsList.AddNotification('noteId1', 3, 'namespace', 'FPPE/OPPE record has already been submitted.');
+            //Please "Share" this record with other AOs at your site and service line.
+        }
+    }
+};

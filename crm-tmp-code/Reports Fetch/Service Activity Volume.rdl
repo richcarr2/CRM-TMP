@@ -1,0 +1,336 @@
+<?xml version="1.0"?><Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner"><DataSources><DataSource Name="CRM"><ConnectionProperties><IntegratedSecurity>true</IntegratedSecurity><ConnectString>data source=localhost;initial catalog=Adventure_Works_Cycle_MSCRM</ConnectString><DataProvider>SQL</DataProvider></ConnectionProperties><rd:DataSourceID>05ddfd4d-9c76-4724-9731-e23b1c5b9e0f</rd:DataSourceID></DataSource></DataSources><BottomMargin>0.5in</BottomMargin><RightMargin>0.5in</RightMargin><PageWidth>11in</PageWidth><ReportParameters><ReportParameter Name="CRM_FilteredServiceAppointment"><DataType>String</DataType><DefaultValue><Values><Value>select  [serviceappointment0].*  from  FilteredServiceAppointment as "serviceappointment0" join (select top 1 dbo.fn_LastXMonth(GetUTCDate(), 12) as scheduledstart1,GetUTCDate() as scheduledstart2 order by scheduledstart1,scheduledstart2) as scheduledstartdtc on 1=1  where  ( serviceappointment0.scheduledstartutc &gt;= scheduledstartdtc.scheduledstart1 and serviceappointment0.scheduledstartutc &lt;= scheduledstartdtc.scheduledstart2 )</Value></Values></DefaultValue><Prompt>CRM_FilteredServiceAppointment</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FilterText"><DataType>String</DataType><Nullable>true</Nullable><AllowBlank>true</AllowBlank><Prompt>CRM_FilterText</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_FullName"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><DataSetReference><DataSetName>UserInfo</DataSetName><ValueField>fullname</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_FullName</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_URL"><DataType>String</DataType><Nullable>true</Nullable><AllowBlank>true</AllowBlank><Prompt>CRM_URL</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="DisplayBy"><DataType>String</DataType><Nullable>true</Nullable><DefaultValue><Values><Value>count</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>Display</Prompt><ValidValues><ParameterValues><ParameterValue><Value>duration</Value><Label>Activity Duration</Label></ParameterValue><ParameterValue><Value>count</Value><Label>Activity Count</Label></ParameterValue></ParameterValues></ValidValues></ReportParameter><ReportParameter Name="GroupBy"><DataType>String</DataType><DefaultValue><Values><Value>mm</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>Group By</Prompt><ValidValues><ParameterValues><ParameterValue><Value>mm</Value><Label>Month</Label></ParameterValue><ParameterValue><Value>wk</Value><Label>Week</Label></ParameterValue><ParameterValue><Value>dy</Value><Label>Day</Label></ParameterValue><ParameterValue><Value>userid</Value><Label>User</Label></ParameterValue><ParameterValue><Value>facilityid</Value><Label>Facility/Equipment</Label></ParameterValue><ParameterValue><Value>serviceid</Value><Label>Service</Label></ParameterValue><ParameterValue><Value>siteid</Value><Label>Site</Label></ParameterValue><ParameterValue><Value>customerid</Value><Label>Customer</Label></ParameterValue><ParameterValue><Value>statuscode</Value><Label>Status Reason</Label></ParameterValue></ParameterValues></ValidValues></ReportParameter><ReportParameter Name="CRM_NumberLanguageCode"><DataType>String</DataType><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>NumberLanguageCode</ValueField></DataSetReference></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_NumberLanguageCode</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_CalendarType"><DataType>String</DataType><DefaultValue><DataSetReference><DataSetName>DSNumandCurrency</DataSetName><ValueField>CalendarType</ValueField></DataSetReference></DefaultValue><Prompt>CRM_CalendarType</Prompt><Hidden>true</Hidden></ReportParameter><ReportParameter Name="CRM_UserTimeZoneName"><DataType>String</DataType><DefaultValue><Values><Value>Central Standard Time</Value></Values></DefaultValue><AllowBlank>true</AllowBlank><Prompt>CRM_UserTimeZoneName</Prompt><Hidden>true</Hidden></ReportParameter></ReportParameters><rd:DrawGrid>true</rd:DrawGrid><InteractiveWidth>8.5in</InteractiveWidth><rd:GridSpacing>0.03125in</rd:GridSpacing><rd:SnapToGrid>true</rd:SnapToGrid><Body><ReportItems><Textbox Name="txtNoData"><Left>3.65625in</Left><Top>6.78125in</Top><ZIndex>12</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.71875in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>No Service Activity Data</Value></Textbox><Rectangle Name="rectangle4"><ReportItems><Textbox Name="txtFilterSummaryValue"><Left>0.125in</Left><Top>0.34375in</Top><ZIndex>1</ZIndex><Visibility><ToggleItem>txtFilterSummary</ToggleItem><Hidden>true</Hidden></Visibility><Width>3.53125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#313336</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>=Parameters!CRM_FilterText.Value</Value></Textbox><Textbox Name="txtFilterSummary"><Left>0.125in</Left><Top>0.03125in</Top><Width>3.53125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>12pt</FontSize><Color>#313336</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.25in</Height><Value>Filter Summary</Value></Textbox></ReportItems><Top>0.5625in</Top><ZIndex>11</ZIndex><Visibility><Hidden>=IIF(IsNothing(Parameters!CRM_FilterText.Value ) or ( Parameters!CRM_FilterText.Value ) = "" or (Parameters!CRM_FilterText.Value) = " ",True,False)</Hidden></Visibility><Style><BackgroundColor>#deddcf</BackgroundColor></Style><Height>0.63725in</Height></Rectangle><Rectangle Name="rectangle2"><ReportItems><Textbox Name="txtGroupingCountTimeSeries"><Left>8.34375in</Left><Top>0.07812in</Top><ZIndex>4</ZIndex><Width>0.90625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Format>N0</Format><Color>#666666</Color><PaddingRight>2pt</PaddingRight><FontStyle>Italic</FontStyle><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=IIF( Parameters!GroupBy.Value = "mm", CountDistinct(Fields!Year.Value &amp; ":" &amp; Fields!Month.Value, "DSServiceActivities"), 
+IIF( Parameters!GroupBy.Value = "wk", CountDistinct(Fields!Year.Value &amp; ":" &amp; Fields!Week.Value, "DSServiceActivities"), 
+IIF( Parameters!GroupBy.Value = "dy", CountDistinct(Fields!ScheduledStart.Value, "DSServiceActivities"), IIF( Parameters!DisplayBy.Value = "count", CountDistinct(IIF(IsNothing(Fields!resourceid.Value), "_CRM_NOTSPECIFIED",Fields!resourceid.Value), "DSSnapshotCount"), 
+CountDistinct(IIF(IsNothing(Fields!resourceid.Value), "_CRM_NOTSPECIFIED", Fields!resourceid.Value), "DSSnapshotDuration")
+))))</Value></Textbox><Textbox Name="txtGroupingLabel"><Left>6.53125in</Left><Top>0.07812in</Top><ZIndex>3</ZIndex><Width>1.78125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><FontStyle>Italic</FontStyle><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=Parameters!GroupBy.Label</Value></Textbox><Textbox Name="txtServiceActivityLabel"><Left>6.53125in</Left><Top>0.26563in</Top><ZIndex>2</ZIndex><Width>1.78125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><FontStyle>Italic</FontStyle><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>="Total Service " &amp; Parameters!DisplayBy.Label</Value></Textbox><Textbox Name="txtActivityCount1"><Left>8.34375in</Left><Top>0.26563in</Top><ZIndex>1</ZIndex><Width>0.90625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Format>=IIF(Parameters!DisplayBy.Value = "count", First(Fields!NumberFormat_0_Precision.Value, "DSNumandCurrency"), First(Fields!NumberFormat_2_Precision.Value, "DSNumandCurrency"))</Format><Color>#666666</Color><PaddingRight>2pt</PaddingRight><FontStyle>Italic</FontStyle><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=IIF( (Parameters!GroupBy.Value = "mm" or Parameters!GroupBy.Value = "wk" or Parameters!GroupBy.Value = "dy") and Parameters!DisplayBy.Value = "count", Sum(Fields!totalcount.Value, "DSServiceActivities"), IIF((Parameters!GroupBy.Value = "mm" or Parameters!GroupBy.Value = "wk" or Parameters!GroupBy.Value = "dy") and Parameters!DisplayBy.Value = "duration", Sum(Fields!totalDurationHours.Value, "DSServiceActivities") , IIF(Parameters!DisplayBy.Value = "duration", First(Fields!totaldurationhours.Value, "DSSnapshotDuration") , First(Fields!totalcount.Value, "DSSnapshotCount") )))</Value></Textbox><Textbox Name="txtReportHeaderLabel"><CanShrink>true</CanShrink><Top>0.09375in</Top><Width>6.375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>14pt</FontSize><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.28125in</Height><Value>="Service Activity Volume" &amp; ": " &amp; 
+IIF(Parameters!GroupBy.Value = "mm" or Parameters!GroupBy.Value = "wk" or Parameters!GroupBy.Value = "dy", "Timeseries", "Snapshot")  &amp; 
+" by " &amp; Parameters!DisplayBy.Label</Value></Textbox></ReportItems><ZIndex>10</ZIndex><Style><BackgroundColor>#deddcf</BackgroundColor></Style><Height>0.5625in</Height></Rectangle><Textbox Name="txtShowAll"><Left>4.84375in</Left><Top>6.75in</Top><ZIndex>9</ZIndex><Action><Drillthrough><ReportName>Service Activity Volume Detail</ReportName><Parameters><Parameter Name="CRM_FilteredServiceAppointment"><Value>= Parameters!CRM_FilteredServiceAppointment.Value</Value></Parameter><Parameter Name="CRM_DisplayByLabel"><Value>= Parameters!DisplayBy.Label</Value></Parameter><Parameter Name="CRM_GroupByLabel"><Value>=Parameters!GroupBy.Label</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>= Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>= Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>showall</Value></Parameter><Parameter Name="CRM_DisplayBy"><Value>= Parameters!DisplayBy.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Width>0.625in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>Blue</Color><TextDecoration>Underline</TextDecoration><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.2in</Height><Value>Show All</Value></Textbox><Chart Name="chartSnapshotCount"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title><Caption>Service Activity Volume</Caption></Title><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>5.375in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.03125in</Left><ThreeDProperties><Rotation>30</Rotation><Inclination>30</Inclination><Shading>Simple</Shading><WallThickness>50</WallThickness></ThreeDProperties><DataSetName>DSSnapshotCount</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>Count</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>1.25in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>No. of Service Activities</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><ZIndex>8</ZIndex><Visibility><Hidden>=IIF((Parameters!GroupBy.value&lt;&gt;"mm" and Parameters!GroupBy.value&lt;&gt;"wk" and Parameters!GroupBy.value&lt;&gt;"dy" ) and
+(Parameters!DisplayBy.value="count"), false,true)</Hidden></Visibility><Type>Column</Type><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="chartSnapshotCount_CategoryGroup1"><GroupExpressions><GroupExpression>=Fields!resourceid.Value</GroupExpression></GroupExpressions></Grouping><Label>=IIF(IsNothing( Fields!resourceidname.Value ),ReportItems!txtNotSpecified.Value,IIF( Fields!resourceidname.Value = "_CRM_OTHER",ReportItems!txtother.value, Left(Fields!resourceidname.Value, 30 )))</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>=Fields!quantity.Value</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Service Activity Volume Detail</ReportName><Parameters><Parameter Name="CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_FullName"><Value>=Parameters!CRM_FullName.Value</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_DisplayByLabel"><Value>=Parameters!DisplayBy.Label</Value></Parameter><Parameter Name="CRM_FilterList"><Value>=IIF(IsNothing( Fields!resourceid.Value ), "_CRM_NOTSPECIFIED", Fields!resourceid.Value )</Value></Parameter><Parameter Name="CRM_FilterListDisplay"><Value>=IIF(IsNothing( Fields!resourceidname.Value ),ReportItems!txtNotSpecified.Value,IIF( Fields!resourceidname.Value = "_CRM_OTHER",ReportItems!txtother.value, Fields!resourceidname.Value ))</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>= Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_GroupByLabel"><Value>= Parameters!GroupBy.Label</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_DisplayBy"><Value>= Parameters!DisplayBy.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart><Chart Name="ChartCountTimeSeries"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title><Caption>Service Activity Volume</Caption></Title><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>5.375in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.03125in</Left><ThreeDProperties><Rotation>30</Rotation><Inclination>30</Inclination><Shading>Simple</Shading><WallThickness>50</WallThickness></ThreeDProperties><DataSetName>DSServiceActivities</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>Count</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>1.28125in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>No. of Service Activities</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><ZIndex>7</ZIndex><Visibility><Hidden>=IIF((Parameters!GroupBy.value="mm" or Parameters!GroupBy.value = "wk" or Parameters!GroupBy.value = "dy" ) and
+(Parameters!DisplayBy.value="count"), false,true)</Hidden></Visibility><Type>Column</Type><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="CountChart_CategoryGroup1"><GroupExpressions><GroupExpression>=IIF(Parameters!GroupBy.Value="mm",
+(Fields!Year.Value &amp; ":" &amp; Fields!Month.Value),
+
+IIF(Parameters!GroupBy.Value="wk",
+(Fields!Year.Value &amp; ":" &amp; Fields!Week.Value),
+
+Fields!ScheduledStart.Value
+))</GroupExpression></GroupExpressions></Grouping><Sorting><SortBy><SortExpression>= Fields!Year.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!Month.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!Week.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!ScheduledStart.Value</SortExpression><Direction>Ascending</Direction></SortBy></Sorting><Label>=IIF(Parameters!GroupBy.Value="mm",
+CDate(Fields!FirstDayOfThisMonth.Value).ToString("y", System.Globalization.CultureInfo.CreateSpecificCulture(Parameters!CRM_NumberLanguageCode.Value)),
+
+IIF(Parameters!GroupBy.Value="wk",
+
+Format(Fields!FirstDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")) &amp; "-" &amp; Format(Fields!LastDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")),
+
+Format(Fields!ScheduledStart.Value, First(Fields!DateFormat.Value, "DSNumandCurrency"))
+))</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>= first(Fields!totalcount.Value)</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Service Activity Volume Detail</ReportName><Parameters><Parameter Name="CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_FullName"><Value>=Parameters!CRM_FullName.Value</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_Year"><Value>=Fields!Year.Value</Value></Parameter><Parameter Name="CRM_DisplayByLabel"><Value>=Parameters!DisplayBy.Label</Value></Parameter><Parameter Name="CRM_FilterList"><Value>=IIF(Parameters!GroupBy.Value="mm",
+Fields!Month.Value,
+IIF(Parameters!GroupBy.Value="wk",
+Fields!Week.Value,
+Fields!ScheduledStart.Value
+))</Value></Parameter><Parameter Name="CRM_FilterListDisplay"><Value>
+						  =IIF(Parameters!GroupBy.Value="mm",
+CDate(Fields!FirstDayOfThisMonth.Value).ToString("y", System.Globalization.CultureInfo.CreateSpecificCulture(Parameters!CRM_NumberLanguageCode.Value)),
+
+IIF(Parameters!GroupBy.Value="wk",
+
+Format(Fields!FirstDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")) &amp; "-" &amp; format(Fields!LastDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")),
+
+Format(Fields!ScheduledStart.Value, First(Fields!DateFormat.Value, "DSNumandCurrency"))
+						  ))</Value></Parameter><Parameter Name="CRM_FirstDayOfWk"><Value>=Fields!FirstDayOfWeek.Value</Value></Parameter><Parameter Name="CRM_LastDayOfWk"><Value>=Fields!LastDayOfWeek.Value</Value></Parameter><Parameter Name="CRM_FirstDayOfMonth"><Value>=Fields!FirstDayOfThisMonth.Value</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>= Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_GroupByLabel"><Value>= Parameters!GroupBy.Label</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_DisplayBy"><Value>= Parameters!DisplayBy.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart><Chart Name="ChartDurationTimeSeries"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title><Caption>Service Activity Volume</Caption></Title><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>5.375in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.03125in</Left><ThreeDProperties><Rotation>30</Rotation><Inclination>30</Inclination><Shading>Simple</Shading><WallThickness>50</WallThickness></ThreeDProperties><DataSetName>DSServiceActivities</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>Hours</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>1.28125in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>Duration of Service Activities (Hours)</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><ZIndex>6</ZIndex><Visibility><Hidden>=IIF((Parameters!GroupBy.value="mm" or Parameters!GroupBy.value = "wk" or Parameters!GroupBy.value = "dy" ) and
+(Parameters!DisplayBy.value="duration"), false,true)</Hidden></Visibility><Type>Column</Type><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="chart0_CategoryGroup1"><GroupExpressions><GroupExpression>=IIF(Parameters!GroupBy.Value="mm",
+(Fields!Year.Value &amp; ":" &amp; Fields!Month.Value),
+
+IIF(Parameters!GroupBy.Value="wk",
+(Fields!Year.Value &amp; ":" &amp; Fields!Week.Value),
+
+Fields!ScheduledStart.Value
+))</GroupExpression></GroupExpressions></Grouping><Sorting><SortBy><SortExpression>= Fields!Year.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!Month.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!Week.Value</SortExpression><Direction>Ascending</Direction></SortBy><SortBy><SortExpression>=Fields!ScheduledStart.Value</SortExpression><Direction>Ascending</Direction></SortBy></Sorting><Label>=IIF(Parameters!GroupBy.Value="mm",
+CDate(Fields!FirstDayOfThisMonth.Value).ToString("y", System.Globalization.CultureInfo.CreateSpecificCulture(Parameters!CRM_NumberLanguageCode.Value)),
+
+IIF(Parameters!GroupBy.Value="wk",
+
+Format(Fields!FirstDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")) &amp; "-" &amp; Format(Fields!LastDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")),
+
+Format(Fields!ScheduledStart.Value, First(Fields!DateFormat.Value, "DSNumandCurrency"))
+))</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>= first(Fields!totalDurationHours.Value)</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Service Activity Volume Detail</ReportName><Parameters><Parameter Name="CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_FullName"><Value>=Parameters!CRM_FullName.Value</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_Year"><Value>=Fields!Year.Value</Value></Parameter><Parameter Name="CRM_DisplayByLabel"><Value>=Parameters!DisplayBy.Label</Value></Parameter><Parameter Name="CRM_FilterList"><Value>=IIF(Parameters!GroupBy.Value="mm",
+Fields!Month.Value,
+IIF(Parameters!GroupBy.Value="wk",
+Fields!Week.Value,
+Fields!ScheduledStart.Value
+))</Value></Parameter><Parameter Name="CRM_FilterListDisplay"><Value>=IIF(Parameters!GroupBy.Value="mm",
+CDate(Fields!FirstDayOfThisMonth.Value).ToString("y", System.Globalization.CultureInfo.CreateSpecificCulture(Parameters!CRM_NumberLanguageCode.Value)),
+
+IIF(Parameters!GroupBy.Value="wk",
+Format(Fields!FirstDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")) &amp; "-" &amp; Format(Fields!LastDayOfWeek.Value, First(Fields!DateFormat.Value, "DSNumandCurrency")),
+
+Format(Fields!ScheduledStart.Value, First(Fields!DateFormat.Value, "DSNumandCurrency"))
+))</Value></Parameter><Parameter Name="CRM_FirstDayOfWk"><Value>=Fields!FirstDayOfWeek.Value</Value></Parameter><Parameter Name="CRM_LastDayOfWk"><Value>=Fields!LastDayOfWeek.Value</Value></Parameter><Parameter Name="CRM_FirstDayOfMonth"><Value>=Fields!FirstDayOfThisMonth.Value</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>= Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_GroupByLabel"><Value>= Parameters!GroupBy.Label</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_DisplayBy"><Value>= Parameters!DisplayBy.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart><Chart Name="chartSnapshotDuration"><Legend><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style><Position>RightCenter</Position></Legend><Subtype>Plain</Subtype><Title><Caption>Service Activity Volume</Caption></Title><NoRows>=ReportItems!txtNoData.Value</NoRows><Height>5.375in</Height><CategoryAxis><Axis><Title><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Visible>true</Visible></Axis></CategoryAxis><PointWidth>0</PointWidth><Left>0.03125in</Left><ThreeDProperties><Rotation>30</Rotation><Inclination>30</Inclination><Shading>Simple</Shading><WallThickness>50</WallThickness></ThreeDProperties><DataSetName>DSSnapshotDuration</DataSetName><SeriesGroupings><SeriesGrouping><StaticSeries><StaticMember><Label>Sum</Label></StaticMember></StaticSeries></SeriesGrouping></SeriesGroupings><Top>1.28125in</Top><PlotArea><Style><BorderStyle><Default>Solid</Default></BorderStyle><BackgroundColor>White</BackgroundColor></Style></PlotArea><ValueAxis><Axis><Title><Caption>Duration of Service Activities (hours)</Caption><Style><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize></Style></Title><MajorGridLines><ShowGridLines>true</ShowGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle><BorderColor><Default>Silver</Default></BorderColor></Style></MajorGridLines><MinorGridLines><Style><BorderStyle><Default>Solid</Default></BorderStyle></Style></MinorGridLines><Min>0</Min><Margin>true</Margin><Visible>true</Visible><Scalar>true</Scalar></Axis></ValueAxis><ZIndex>5</ZIndex><Visibility><Hidden>=IIF((Parameters!GroupBy.value&lt;&gt;"mm" and Parameters!GroupBy.value&lt;&gt;"wk" and Parameters!GroupBy.value&lt;&gt;"dy" ) and
+(Parameters!DisplayBy.value="duration"), false,true)</Hidden></Visibility><Type>Column</Type><CategoryGroupings><CategoryGrouping><DynamicCategories><Grouping Name="chartSnapshotDuration_CategoryGroup1"><GroupExpressions><GroupExpression>=Fields!resourceid.Value</GroupExpression></GroupExpressions></Grouping><Label>=IIF(IsNothing( Fields!resourceidname.Value ),ReportItems!txtNotSpecified.Value,IIF( Fields!resourceidname.Value = "_CRM_OTHER",ReportItems!txtother.value, Left(Fields!resourceidname.Value, 30) ))</Label></DynamicCategories></CategoryGrouping></CategoryGroupings><Palette>Pastel</Palette><ChartData><ChartSeries><DataPoints><DataPoint><DataValues><DataValue><Value>= Fields!DurationHours.Value</Value></DataValue></DataValues><DataLabel><Style><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize></Style><Visible>true</Visible></DataLabel><Action><Drillthrough><ReportName>Service Activity Volume Detail</ReportName><Parameters><Parameter Name="CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></Parameter><Parameter Name="CRM_FilterText"><Value>=Parameters!CRM_FilterText.Value</Value></Parameter><Parameter Name="CRM_FullName"><Value>=Parameters!CRM_FullName.Value</Value></Parameter><Parameter Name="CRM_URL"><Value>=Parameters!CRM_URL.Value</Value></Parameter><Parameter Name="CRM_DisplayByLabel"><Value>=Parameters!DisplayBy.Label</Value></Parameter><Parameter Name="CRM_FilterList"><Value>=IIF(IsNothing( Fields!resourceid.Value ), "_CRM_NOTSPECIFIED", Fields!resourceid.Value )</Value></Parameter><Parameter Name="CRM_FilterListDisplay"><Value>=IIF(IsNothing( Fields!resourceidname.Value ),ReportItems!txtNotSpecified.Value,IIF( Fields!resourceidname.Value = "_CRM_OTHER",ReportItems!txtother.value, Fields!resourceidname.Value ))</Value></Parameter><Parameter Name="CRM_GroupBy"><Value>= Parameters!GroupBy.Value</Value></Parameter><Parameter Name="CRM_GroupByLabel"><Value>= Parameters!GroupBy.Label</Value></Parameter><Parameter Name="CRM_ShowAll"><Value>notshowall</Value></Parameter><Parameter Name="CRM_DisplayBy"><Value>= Parameters!DisplayBy.Value</Value></Parameter><Parameter Name="CRM_UserTimeZoneName"><Value>=Parameters!CRM_UserTimeZoneName.Value</Value></Parameter></Parameters></Drillthrough></Action><Marker><Size>6pt</Size></Marker></DataPoint></DataPoints></ChartSeries></ChartData><Style><BackgroundColor>White</BackgroundColor></Style></Chart><Textbox Name="txtNotSpecified"><Left>7.9375in</Left><Top>6.78125in</Top><ZIndex>3</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.8125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontSize>8pt</FontSize><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>Not Specified</Value></Textbox><Textbox Name="txtDateTimeFormat"><Left>7.375in</Left><Top>6.78125in</Top><ZIndex>2</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.4375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontSize>8pt</FontSize><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=First(Fields!DateFormat.Value, "DSNumandCurrency") &amp; " " &amp; First(Fields!TimeFormat.Value, "DSNumandCurrency")</Value></Textbox><Textbox Name="txtfullname"><Left>6.78125in</Left><Top>6.78125in</Top><ZIndex>1</ZIndex><Visibility><Hidden>true</Hidden></Visibility><Width>0.53125in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontSize>8pt</FontSize><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.1875in</Height><Value>=First(Fields!fullname.Value, "UserInfo")</Value></Textbox><Textbox Name="txtother"><Left>6.125in</Left><Top>6.78125in</Top><Visibility><Hidden>true</Hidden></Visibility><Width>0.59375in</Width><Style><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><BackgroundColor>Yellow</BackgroundColor><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.15625in</Height><Value>Other</Value></Textbox></ReportItems><Height>7in</Height></Body><rd:ReportID>9001b3e4-a23b-44d7-bb1e-8ef5de5f94f3</rd:ReportID><LeftMargin>0.5in</LeftMargin><DataSets><DataSet Name="UserInfo"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>select fullname from FilteredSystemUser where systemuserid = dbo.fn_FindUserGuid()</CommandText><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="fullname"><rd:TypeName>System.String</rd:TypeName><DataField>fullname</DataField></Field></Fields></DataSet><DataSet Name="DSServiceActivities"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>Declare @SQL nVarchar(max)
+
+-- If an nVarchar(max) var is assigned using a concatenation of constant-length values, the result will be truncated to maintain
+-- backward compatibility with SQL Server 2000.  SQL's recommended workaround is to ensure that one of the concatenated values
+-- is of type nVarchar(max).  To address this, use @EmptyNvarcharMax in all assignments of @SQL1 and @SQL2 (proactively, in the
+-- case they aren't already assigned using concatenation).
+Declare @EmptyNvarcharMax nVarchar(max)
+Set @EmptyNvarcharMax = ''
+
+If @GroupBy = 'mm' 
+Set @SQL = @EmptyNvarcharMax + '
+select 
+	count(subject) as totalcount,
+	sum(scheduleddurationminutes / 60.0) as totalDurationHours,
+	datepart(yyyy,scheduledstart) as Year,
+	datepart(mm,scheduledstart) as Month,
+	dbo.fn_FirstDayOfMonth(scheduledstart, datepart(mm, scheduledstart)) as FirstDayOfThisMonth,
+	0 as Week,
+	null as FirstDayOfWeek,
+	null as LastDayOfWeek,
+	null as scheduledstart
+
+from ('+ @CRM_FilteredServiceAppointment +') as fa
+where statecode &lt;&gt; 2
+group by datepart(yyyy,scheduledstart), datepart(mm,scheduledstart), dbo.fn_FirstDayOfMonth(scheduledstart, datepart(mm, scheduledstart))
+order by scheduledstart
+ '
+
+Else If @GroupBy = 'wk' 
+Set @SQL = @EmptyNvarcharMax + '
+Declare @WeekStartDay int
+select @WeekStartDay= og.weekstartdaycode
+from FilteredOrganization og, FilteredSystemUser su
+where su.systemuserid = dbo.fn_FindUserGuid() and og.organizationid = su.organizationid
+
+select 
+	count(subject) as totalcount,
+	sum(scheduleddurationminutes / 60.0) as totalDurationHours,
+	datepart(yyyy,scheduledstart) as Year,
+	1 as Month,
+	null as FirstDayOfThisMonth,	
+	datepart(wk, scheduledstart)	 as Week,
+	convert(datetime, convert(nvarchar,dateadd(dd, 0 - (7 + ( dbo.fn_NTDayOfWeek(fa.scheduledstart) - @WeekStartDay)) %7, fa.scheduledstart), 112)) AS FirstDayOfWeek,
+	convert(datetime, convert(nvarchar, dateadd(dd, 6 - (7 + ( dbo.fn_NTDayOfWeek(fa.scheduledstart) - @WeekStartDay)) %7, fa.scheduledstart), 112)) AS LastDayOfWeek,
+	null as scheduledstart
+
+from ('+ @CRM_FilteredServiceAppointment +') as fa
+where statecode &lt;&gt; 2
+group by datepart(yyyy,scheduledstart), datepart(wk, scheduledstart),
+convert(datetime, convert(nvarchar, dateadd(dd, 0 - (7 + ( dbo.fn_NTDayOfWeek(fa.scheduledstart) - @WeekStartDay)) %7, fa.scheduledstart), 112)),
+convert(datetime, convert(nvarchar, dateadd(dd, 6 - (7 + ( dbo.fn_NTDayOfWeek(fa.scheduledstart) - @WeekStartDay)) %7, fa.scheduledstart), 112))
+order by scheduledstart	
+ '
+Else If @GroupBy = 'dy' 
+Set @SQL = @EmptyNvarcharMax + '
+select 
+	count(subject) as totalcount,
+	sum(scheduleddurationminutes / 60.0) as totalDurationHours,
+	1 as Year,
+	1 as Month,
+	null as FirstDayOfThisMonth,	
+	1 as Week,
+	null as FirstDayOfWeek,
+	null as LastDayOfWeek,
+	convert(datetime, convert(nvarchar, scheduledstart, 112)) AS scheduledstart
+
+from ('+ @CRM_FilteredServiceAppointment +') as fa
+where statecode &lt;&gt; 2
+group by convert(datetime, convert(nvarchar, scheduledstart, 112))
+order by scheduledstart '
+
+else
+Set @SQL = @EmptyNvarcharMax + 'select 0 as totalcount,  0 as  totalDurationHours,
+	0 as Year, 1 as Month, null as FirstDayOfThisMonth, 0 as Week, null as FirstDayOfWeek, null as LastDayOfWeek, null as scheduledstart'
+
+Exec(@SQL)</CommandText><QueryParameters><QueryParameter Name="@GroupBy"><Value>=Parameters!GroupBy.Value</Value></QueryParameter><QueryParameter Name="@CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></QueryParameter></QueryParameters><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="totalcount"><rd:TypeName>System.Int32</rd:TypeName><DataField>totalcount</DataField></Field><Field Name="totalDurationHours"><rd:TypeName>System.Int32</rd:TypeName><DataField>totalDurationHours</DataField></Field><Field Name="Year"><rd:TypeName>System.Int32</rd:TypeName><DataField>Year</DataField></Field><Field Name="Month"><rd:TypeName>System.Int32</rd:TypeName><DataField>Month</DataField></Field><Field Name="FirstDayOfThisMonth"><rd:TypeName>System.Int32</rd:TypeName><DataField>FirstDayOfThisMonth</DataField></Field><Field Name="Week"><rd:TypeName>System.Int32</rd:TypeName><DataField>Week</DataField></Field><Field Name="FirstDayOfWeek"><rd:TypeName>System.Int32</rd:TypeName><DataField>FirstDayOfWeek</DataField></Field><Field Name="LastDayOfWeek"><rd:TypeName>System.Int32</rd:TypeName><DataField>LastDayOfWeek</DataField></Field><Field Name="ScheduledStart"><rd:TypeName>System.Int32</rd:TypeName><DataField>scheduledstart</DataField></Field></Fields></DataSet><DataSet Name="DSSnapshotDuration"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>if(@DisplayBy = 'duration') and (@GroupBy &lt;&gt; 'mm' and @GroupBy &lt;&gt; 'wk' and @GroupBy &lt;&gt; 'dy')
+begin
+
+DECLARE @SQL nVarchar(max)
+DECLARE @WhereStr nvarchar(100)
+DECLARE @JoinTableStr nvarchar(200)
+DECLARE @GroupbyID nvarchar(100)
+DECLARE @GroupbyIDName nvarchar(100)
+
+-- If an nVarchar(max) var is assigned using a concatenation of constant-length values, the result will be truncated to maintain
+-- backward compatibility with SQL Server 2000.  SQL's recommended workaround is to ensure that one of the concatenated values
+-- is of type nVarchar(max).  To address this, use @EmptyNvarcharMax in all assignments of @SQL1 and @SQL2 (proactively, in the
+-- case they aren't already assigned using concatenation).
+Declare @EmptyNvarcharMax nVarchar(max)
+Set @EmptyNvarcharMax = ''
+
+If (@GroupBy = 'userid')
+begin
+set @JoinTableStr = ' Left JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 10 and partyobjecttypecode = 8) '
+set  @WhereStr = '  ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'facilityid')
+begin
+set @JoinTableStr = ' Left JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 10 and partyobjecttypecode = 4000) '
+set  @WhereStr = ' ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'customerid')
+begin
+set @JoinTableStr = ' LEFT JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 11 and partyobjecttypecode in (1,2)) '
+set  @WhereStr = ' ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'siteid')
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' fsa.siteid '
+set @GroupbyIDName = ' fsa.siteidname '
+end
+
+Else If (@GroupBy = 'serviceid') 
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' fsa.serviceid '
+set @GroupbyIDName = ' fsa.serviceidname '
+end
+
+Else If (@GroupBy = 'statuscode')
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' cast(fsa.statuscode as nVarchar(5)) '
+set @GroupbyIDName = ' fsa.statuscodename '
+end
+
+SET @SQL = @EmptyNvarcharMax + 
+'
+Declare @TotalDuration float
+Select @TotalDuration = Sum(scheduleddurationminutes/60.0)
+From ('+ @CRM_FilteredServiceAppointment +') as fsa
+
+Declare @Temp1 table (resourceid nVarchar(100), resourceidname nVarchar(max), durationhours float)
+Insert into @Temp1 
+SELECT ' + @GroupbyID + ' as resourceid, ' + @GroupbyIDName + ' as resourceidname, sum(scheduleddurationminutes / 60.0) as durationhours
+From ('+ @CRM_FilteredServiceAppointment +') as fsa '
++ @JoinTableStr 
++ @WhereStr + ' 
+Group By ' + @GroupbyID + ', ' + @GroupbyIDName + '
+
+Declare @total float
+set @total = (select SUM(durationhours) from @Temp1)
+
+Declare @Top15 table (resourceid nVarchar(100), resourceidname nVarchar(max), durationhours float)
+Insert Into @Top15 
+Select top 15 resourceid,resourceidname, durationhours 
+From @Temp1 
+Order by durationhours desc, resourceidname asc
+
+SELECT *, @TotalDuration as totaldurationhours FROM (
+select resourceid,resourceidname, durationhours from @Top15
+Union All
+select ''_CRM_OTHER'' as resourceid, ''_CRM_OTHER'' as resourceidname, @total-(select Sum(durationhours) from @Top15)
+) AS QQ
+WHERE durationhours &lt;&gt; 0 '
+
+EXEC(@SQL)
+end
+else 
+select null as resourceid, null as resourceidname, 0.0 as durationhours</CommandText><QueryParameters><QueryParameter Name="@DisplayBy"><Value>=Parameters!DisplayBy.Value</Value></QueryParameter><QueryParameter Name="@GroupBy"><Value>=Parameters!GroupBy.Value</Value></QueryParameter><QueryParameter Name="@CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></QueryParameter></QueryParameters><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="resourceid"><rd:TypeName>System.String</rd:TypeName><DataField>resourceid</DataField></Field><Field Name="resourceidname"><rd:TypeName>System.String</rd:TypeName><DataField>resourceidname</DataField></Field><Field Name="DurationHours"><rd:TypeName>System.Double</rd:TypeName><DataField>durationhours</DataField></Field><Field Name="totaldurationhours"><rd:TypeName>System.Double</rd:TypeName><DataField>totaldurationhours</DataField></Field></Fields></DataSet><DataSet Name="DSSnapshotCount"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>if(@DisplayBy = 'count') and (@GroupBy &lt;&gt; 'mm' and @GroupBy &lt;&gt; 'wk' and @GroupBy &lt;&gt; 'dy')
+			begin
+
+DECLARE @SQL nVarchar(max)
+DECLARE @WhereStr nvarchar(100)
+DECLARE @JoinTableStr nvarchar(200)
+DECLARE @GroupbyID nvarchar(100)
+DECLARE @GroupbyIDName nvarchar(100)
+
+-- If an nVarchar(max) var is assigned using a concatenation of constant-length values, the result will be truncated to maintain
+-- backward compatibility with SQL Server 2000.  SQL's recommended workaround is to ensure that one of the concatenated values
+-- is of type nVarchar(max).  To address this, use @EmptyNvarcharMax in all assignments of @SQL1 and @SQL2 (proactively, in the
+-- case they aren't already assigned using concatenation).
+Declare @EmptyNvarcharMax nVarchar(max)
+Set @EmptyNvarcharMax = ''
+
+If (@GroupBy = 'userid')
+begin
+set @JoinTableStr = ' Left JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 10 and partyobjecttypecode = 8) '
+set  @WhereStr = '  ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'facilityid')
+begin
+set @JoinTableStr = ' Left JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 10 and partyobjecttypecode = 4000) '
+set  @WhereStr = ' ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'customerid')
+begin
+set @JoinTableStr = ' LEFT JOIN FilteredActivityParty fap on (fap.activityid = fsa.activityid and fsa.statecode &lt;&gt; 2 and participationtypemask = 11 and partyobjecttypecode in (1,2)) '
+set  @WhereStr = ' ' 
+set @GroupbyID = ' fap.partyid '
+set @GroupbyIDName = ' fap.partyidname '
+end
+
+Else If (@GroupBy = 'siteid')
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' fsa.siteid '
+set @GroupbyIDName = ' fsa.siteidname '
+end
+
+Else If (@GroupBy = 'serviceid') 
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' fsa.serviceid '
+set @GroupbyIDName = ' fsa.serviceidname '
+end
+
+Else If (@GroupBy = 'statuscode')
+begin
+set @JoinTableStr = ''
+set  @WhereStr = ' where fsa.statecode &lt;&gt; 2 ' 
+set @GroupbyID = ' cast(fsa.statuscode as nVarchar(5)) '
+set @GroupbyIDName = ' fsa.statuscodename '
+end
+
+SET @SQL = @EmptyNvarcharMax + 
+'
+Declare @TotalCount int
+Select @TotalCount = Count(*)
+From ('+ @CRM_FilteredServiceAppointment +') as fsa
+
+Declare @Temp1 table (resourceid nVarchar(100), resourceidname nVarchar(max), quantity int)
+Insert into @Temp1 
+SELECT ' + @GroupbyID + ' as resourceid, ' + @GroupbyIDName + ' as resourceidname, count(*) as servicecount
+From ('+ @CRM_FilteredServiceAppointment +') as fsa '
++ @JoinTableStr 
++ @WhereStr + ' 
+Group By ' + @GroupbyID + ', ' + @GroupbyIDName + '
+
+Declare @total int
+set @total = (select SUM(quantity) from @Temp1)
+
+Declare @Top15 table (resourceid nVarchar(100), resourceidname nVarchar(max), quantity int)
+Insert Into @Top15 
+Select top 15 resourceid, resourceidname, quantity 
+From @Temp1 
+Order by quantity desc, resourceidname asc
+
+SELECT *, @TotalCount as totalcount FROM (
+select resourceid, resourceidname, quantity from @Top15
+Union All
+select ''_CRM_OTHER'' as resourceid, ''_CRM_OTHER'' as resourceidname, @total-(select Sum(quantity) from @Top15)
+) AS QQ
+WHERE quantity &lt;&gt; 0 '
+
+EXEC(@SQL)
+end
+else 
+select null as resourceid, null as resourceidname, 0 as quantity</CommandText><QueryParameters><QueryParameter Name="@DisplayBy"><Value>=Parameters!DisplayBy.Value</Value></QueryParameter><QueryParameter Name="@GroupBy"><Value>=Parameters!GroupBy.Value</Value></QueryParameter><QueryParameter Name="@CRM_FilteredServiceAppointment"><Value>=Parameters!CRM_FilteredServiceAppointment.Value</Value></QueryParameter></QueryParameters><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="resourceid"><rd:TypeName>System.Int32</rd:TypeName><DataField>resourceid</DataField></Field><Field Name="resourceidname"><rd:TypeName>System.Int32</rd:TypeName><DataField>resourceidname</DataField></Field><Field Name="quantity"><rd:TypeName>System.Int32</rd:TypeName><DataField>quantity</DataField></Field><Field Name="totalcount"><rd:TypeName>System.Int32</rd:TypeName><DataField>totalcount</DataField></Field></Fields></DataSet><DataSet Name="DSNumandCurrency"><Query><rd:UseGenericDesigner>true</rd:UseGenericDesigner><CommandText>select * from dbo.fn_GetFormatStrings()</CommandText><DataSourceName>CRM</DataSourceName></Query><Fields><Field Name="DateFormat"><rd:TypeName>System.String</rd:TypeName><DataField>DateFormat</DataField></Field><Field Name="TimeFormat"><rd:TypeName>System.String</rd:TypeName><DataField>TimeFormat</DataField></Field><Field Name="NumberLanguageCode"><rd:TypeName>System.String</rd:TypeName><DataField>NumberLanguageCode</DataField></Field><Field Name="CalendarType"><rd:TypeName>System.String</rd:TypeName><DataField>CalendarType</DataField></Field><Field Name="NumberFormat_0_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_0_Precision</DataField></Field><Field Name="NumberFormat_1_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_1_Precision</DataField></Field><Field Name="NumberFormat_2_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_2_Precision</DataField></Field><Field Name="NumberFormat_3_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_3_Precision</DataField></Field><Field Name="NumberFormat_4_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_4_Precision</DataField></Field><Field Name="NumberFormat_5_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>NumberFormat_5_Precision</DataField></Field><Field Name="CurrencyFormat_0_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_0_Precision</DataField></Field><Field Name="CurrencyFormat_1_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_1_Precision</DataField></Field><Field Name="CurrencyFormat_2_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_2_Precision</DataField></Field><Field Name="CurrencyFormat_3_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_3_Precision</DataField></Field><Field Name="CurrencyFormat_4_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_4_Precision</DataField></Field><Field Name="CurrencyFormat_5_Precision"><rd:TypeName>System.String</rd:TypeName><DataField>CurrencyFormat_5_Precision</DataField></Field></Fields></DataSet></DataSets><Width>9.3125in</Width><CustomProperties><CustomProperty><Name>Custom</Name><Value>&lt;MSCRM xmlns="mscrm"&gt;&amp;lt;ReportFilter&amp;gt;&amp;lt;ReportEntity paramname="CRM_FilteredServiceAppointment"&amp;gt;&amp;lt;fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false"&amp;gt;&amp;lt;entity name="serviceappointment"&amp;gt;&amp;lt;all-attributes /&amp;gt;&amp;lt;filter type="and"&amp;gt;&amp;lt;condition attribute="scheduledstart" operator="last-x-months" value="12" /&amp;gt;&amp;lt;/filter&amp;gt;&amp;lt;/entity&amp;gt;&amp;lt;/fetch&amp;gt;&amp;lt;/ReportEntity&amp;gt;&amp;lt;/ReportFilter&amp;gt;&lt;/MSCRM&gt;</Value></CustomProperty></CustomProperties><InteractiveHeight>11in</InteractiveHeight><Language>=Parameters!CRM_NumberLanguageCode.Value</Language><PageFooter><ReportItems><Textbox Name="txtPageCount"><Left>7in</Left><Top>0.04125in</Top><ZIndex>2</ZIndex><Width>2.0625in</Width><Style><TextAlign>Right</TextAlign><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>=String.Format("Page {0} of {1}", Format(Globals!PageNumber, "#,##0"), Format(Globals!TotalPages, "#,##0"))</Value></Textbox><Textbox Name="txtUserIDLabel"><Left>3.65625in</Left><Top>0.04125in</Top><ZIndex>1</ZIndex><Width>2.5625in</Width><Style><TextAlign>Center</TextAlign><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>="Prepared by: " &amp; Parameters!CRM_FullName.Value</Value></Textbox><Textbox Name="txtExecutionDateTimeLabel"><Left>0.15625in</Left><Top>0.04125in</Top><Width>2.375in</Width><Style><TextAlign>Left</TextAlign><PaddingLeft>2pt</PaddingLeft><PaddingBottom>2pt</PaddingBottom><FontFamily>tahoma</FontFamily><FontWeight>700</FontWeight><FontSize>8pt</FontSize><Color>#666666</Color><PaddingRight>2pt</PaddingRight><PaddingTop>2pt</PaddingTop><Format>=ReportItems!txtDateTimeFormat.Value</Format><Calendar>=Parameters!CRM_CalendarType.Value</Calendar></Style><CanGrow>true</CanGrow><Height>0.21875in</Height><Value>=CDate(Microsoft.Crm.Reporting.RdlHelper.DateTimeUtility.ConvertUtcToLocalTime(DateTime.UtcNow, Parameters!CRM_UserTimeZoneName.Value))</Value></Textbox></ReportItems><Height>0.375in</Height><PrintOnLastPage>true</PrintOnLastPage><PrintOnFirstPage>true</PrintOnFirstPage><Style><BackgroundColor>#deddcf</BackgroundColor></Style></PageFooter><TopMargin>0.5in</TopMargin><PageHeight>8.25in</PageHeight><CodeModules><CodeModule>Microsoft.Crm.Reporting.RdlHelper, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35</CodeModule></CodeModules></Report>

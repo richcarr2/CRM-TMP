@@ -1,0 +1,546 @@
+//If the SDK namespace object is not defined, create it.
+if (typeof MCS === "undefined") MCS = {};
+// Create Namespace container for functions in this library;
+MCS.mcs_TSA_Buttons = {};
+
+//Page Scope Variables
+MCS.mcs_TSA_Buttons.EntityName;
+MCS.mcs_TSA_Buttons.EntityId;
+MCS.mcs_TSA_Buttons.site = [];
+MCS.mcs_TSA_Buttons.GroupAppt = false;
+MCS.mcs_TSA_Buttons.
+async = false;
+MCS.mcs_TSA_Buttons.patientsite = [];
+
+//HELPER - Unsupported method of re-creating Multi-select Lookup window in order to Create a different type of record than you are looking up
+MCS.mcs_TSA_Buttons.buildshowStandardDialog = function (executionContext, entityName, viewName, side, isGroupAppt) {
+    var formContext = executionContext.getFormContext();
+    MCS.mcs_TSA_Buttons.gatherParameters();
+    var otcCode = MCS.cvt_Common.getObjectTypeCode(entityName);
+
+    if (MCS.mcs_TSA_Buttons.site !== null) {
+        var customViewId = MCS.mcs_TSA_Buttons.site[0].id;
+        var customView;
+        var site = "";
+        var facility = "";
+        var viewLocation = "Site";
+        if (side === "Provider") {
+            site = MCS.mcs_TSA_Buttons.site;
+            //Check for SFT here
+            if (formContext.getAttribute("cvt_availabletelehealthmodalities").getValue() === 917290001) {
+                if (viewName === "Resources By Site") {
+                    //Prevent users from adding Provider Side Resources
+                    alert("Per Business Rules, you should enter only a Provider or Provider Group on this SFT TSA.");
+                    return;
+                }
+            }
+        }
+        else { //Patient
+            if (MCS.mcs_TSA_Buttons.GroupAppt === 0) { //Individual
+                site = MCS.mcs_TSA_Buttons.patientsite;
+                if (site === null) {
+                    alert("A TSA must have a designated Patient Site.");
+                    return;
+                }
+            }
+            else { //Group, so Facility
+                viewLocation = "Facility";
+                facility = MCS.mcs_TSA_OnLoad.relatedPatientFacilityId;
+                if (facility === null) {
+                    alert("A Group TSA must have a designated Patient Facility.");
+                    return;
+                }
+
+                if (viewName !== "Resource Groups By Site") {
+                    //Prevent users from adding Patient Side Resources or Users
+                    alert("Per Business Rules, you should enter Patient Side All Required Groups on this Group TSA.");
+                    return;
+                }
+            }
+        }
+
+        switch (viewName) {
+        case "Users By Site":
+            // object located in Lookup.js : function CustomView(id, iRecordTypeId, sName, sFetchXml, sLayoutXml)
+            customView = new CustomView(customViewId, otcCode, "Users By " + viewLocation, getUserFetchXml(site, facility), getUserLayout(otcCode));
+            break;
+        case "Resource Groups By Site":
+            if (side === "Patient" && isGroupAppt) customView = new CustomView(customViewId, otcCode, "All Required Resource Groups By " + viewLocation, getResourceGroupFetchXml(site, facility, true), getResourceGroupLayout(otcCode));
+            else customView = new CustomView(customViewId, otcCode, "Resource Groups By " + viewLocation, getResourceGroupFetchXml(site, facility, false), getResourceGroupLayout(otcCode));
+            break;
+        case "Resources By Site":
+            customView = new CustomView(customViewId, otcCode, "Resources By " + viewLocation, getResourceFetchXml(site, facility), getResourceLayout(otcCode));
+            break;
+        }
+
+        // object located in Lookup.js : function LookupArgsClass()
+        // use the args object when passing complex objects to the openStdDlg()
+        var args = new LookupArgsClass;
+
+        // limit the list of Views to only the custom view
+        args.customViews = new Array(customView);
+
+        // located in Global.js: Mscrm.CrmUri.create
+        var oUrl = Mscrm.CrmUri.create("/_controls/lookup/lookupinfo.aspx");
+        oUrl.get_query()["LookupStyle"] = "multi";
+        oUrl.get_query()["browse"] = "0";
+        oUrl.get_query()["objecttypes"] = otcCode;
+
+        // set the default view to the custom view created above
+        oUrl.get_query()["DefaultViewId"] = customViewId;
+
+        // generic object that contains the height and width
+        var oFeatures = {
+            width: 600,
+            height: 700
+        };
+
+        // Fixed for CRM2015
+        var lookupItems = new Mscrm.CrmDialog(oUrl, args, oFeatures.width, oFeatures.height);
+        return lookupItems;
+    }
+};
+
+//HELPER - called by showStandard Dialog used to populate the global variables containing data about the TSA (or MTSA)
+MCS.mcs_TSA_Buttons.gatherParameters = function () {
+    "use strict";
+    if (typeof(CrmRestKit) === "undefined") CrmRestKit = window.parent.CrmRestKit;
+    if (typeof(MCS.cvt_Common) === "undefined") MCS = window.parent.MCS;
+    if (typeof(Xrm) === "undefined") Xrm = window.parent.Xrm;
+
+    //Determine if TSA/MTSA, variable names are different
+    if (typeof(MCS.mcs_TSA_OnLoad) !== "undefined") {
+        //TSA
+        MCS.mcs_TSA_Buttons.EntityId = MCS.mcs_TSA_OnLoad.EntityId;
+        MCS.mcs_TSA_Buttons.EntityName = MCS.mcs_TSA_OnLoad.EntityName;
+        MCS.mcs_TSA_Buttons.GroupAppt = MCS.mcs_TSA_OnLoad.GroupAppt;
+        MCS.mcs_TSA_Buttons.site[0] = {
+            name: MCS.mcs_TSA_OnLoad.relatedProviderSiteName,
+            id: MCS.mcs_TSA_OnLoad.relatedProviderSiteId
+        };
+        MCS.mcs_TSA_Buttons.patientsite[0] = {
+            name: MCS.mcs_TSA_OnLoad.relatedPatientSiteName,
+            id: MCS.mcs_TSA_OnLoad.relatedPatientSiteId
+        };
+        //Patient Facility?
+    }
+    else {
+        //MTSA
+        MCS.mcs_TSA_Buttons.EntityId = MCS.cvt_MTSA_OnLoad.EntityId;
+        MCS.mcs_TSA_Buttons.EntityName = MCS.cvt_MTSA_OnLoad.EntityName;
+        MCS.mcs_TSA_Buttons.GroupAppt = MCS.cvt_MTSA_OnLoad.GroupAppt;
+        MCS.mcs_TSA_Buttons.site[0] = {
+            name: MCS.cvt_MTSA_OnLoad.relatedProviderSiteName,
+            id: MCS.cvt_MTSA_OnLoad.relatedProviderSiteId
+        };
+    }
+};
+
+//HELPER - called by BuildRelationship Runners to refresh the grids, displaying the updated information
+MCS.mcs_TSA_Buttons.refreshGrids = function (executionContext, side) {
+    "use strict";
+    var formContext = executionContext.getFormContext();
+    var ProvSiteResourcesGrid = formContext.getControl("provgroupsselectall");
+    var PatSiteResourcesGrid = formContext.getControl("patgroupsselectall");
+
+    switch (side) {
+    case "Provider":
+        ProvSiteResourcesGrid.refresh();
+        break;
+    case "Patient":
+        PatSiteResourcesGrid.refresh();
+        break;
+    }
+};
+
+//TSA Only - Called By Ribbon Button - Add Pat Site Resources
+MCS.mcs_TSA_Buttons.BuildRelationshipPatResourceBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipResourceRunner("mcs_resource", "Patient", selectedControl);
+};
+
+//TSA Only - Called by Ribbon Button - Add Pat Site Resource Groups
+MCS.mcs_TSA_Buttons.BuildRelationshipPatResourceGroupBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipResourceRunner("mcs_resourcegroup", "Patient", selectedControl);
+};
+
+//TSA Only - Called by Ribbon Button - Add Pat Site Users.
+MCS.mcs_TSA_Buttons.BuildRelationshipPatTelepresenterBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipUserRunner("Patient", selectedControl);
+};
+
+//Called by Ribbon Buttons - Add Prov Site Resources
+MCS.mcs_TSA_Buttons.BuildRelationshipProvResourceBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipResourceRunner("mcs_resource", "Provider", selectedControl);
+};
+
+//Called by Ribbon Buttons - Add Prov Site Resource Groups
+MCS.mcs_TSA_Buttons.BuildRelationshipProvResourceGroupBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipResourceRunner("mcs_resourcegroup", "Provider", selectedControl);
+};
+
+//Called by Ribbon Buttons - Add Prov Site Users
+MCS.mcs_TSA_Buttons.BuildRelationshipProvProviderBySite = function (selectedControl) {
+    "use strict";
+    MCS.mcs_TSA_Buttons.BuildRelationshipUserRunner("Provider", selectedControl);
+};
+
+//HELPER - Add Resource by Site (Patient or Provider AND Resource or Resource Group)
+MCS.mcs_TSA_Buttons.BuildRelationshipResourceRunner = function (executionContext, entityName, patientOrProvider, selectedControl) {
+    "use strict";
+    var formContext = executionContext.getFormContext();
+    //Fields to make this function robust
+    var siteField = 'mcs_RelatedSiteId';
+    var isGroup = false;
+    var TSAResourceType = 1;
+    var title = "Resources";
+    var table = "cvt_providerresourcegroup";
+    var isGroupAppt = false;
+
+    //Value storing fields
+    var resourcename, type, relatedSite, relatedSiteName, resourcespecguid, constraintgroupguid;
+    if (patientOrProvider === "Patient") table = "cvt_patientresourcegroup";
+
+    if (entityName === "mcs_resourcegroup") {
+        isGroup = true;
+        siteField = 'mcs_relatedSiteId';
+        TSAResourceType = 0;
+        title = "Resource Groups";
+        isGroupAppt = formContext.getAttribute("cvt_groupappointment").getValue() ? true : false;
+    }
+    var lookupItems = MCS.mcs_TSA_Buttons.buildshowStandardDialog(entityName, title + " By Site", patientOrProvider, isGroupAppt);
+    lookupItems.setCallbackReference(function (results) {
+        if ((results !== null) && (results !== undefined)) {
+            var returnedItems = results;
+            if (typeof(results) === "string") returnedItems = JSON.parse(results);
+            if (returnedItems !== null) {
+                for (i = 0; i < returnedItems.items.length; i++) {
+                    var ResourceId = returnedItems.items[i].id;
+                    var resourcename, type, relatedSite, relatedSiteName, resourcespecguid, constraintgroupguid;
+                    Xrm.WebApi.retrieveRecord(entityName, ResourceId, "?$select=mcs_name,mcs_Type, siteField,mcs_resourcespecguid,mcs_constraintgroupguid").then(
+                    function success(result) {
+                        resourcename = result.mcs_name;
+                        type = result.mcs_Type.Value;
+                        relatedSite = isGroup ? result.mcs_relatedSiteId : result.mcs_RelatedSiteId;
+                        resourcespecguid = result.mcs_resourcespecguid;
+                        constraintgroupguid = result.mcs_constraintgroupguid;
+                    },
+                    function (error) {
+                        alert("Failed retrieved" + MCS.cvt_Common.RestError(error));
+                    });
+
+                    //CrmRestKit.Retrieve(entityName, ResourceId, ['mcs_name', 'mcs_Type', siteField, 'mcs_resourcespecguid', 'mcs_constraintgroupguid'], MCS.mcs_TSA_Buttons.async)
+                    //.fail(function (err) { alert("Failed retrieved" + MCS.cvt_Common.RestError(err)); })
+                    //.done(function (data) {
+                    //    resourcename = data.d.mcs_name;
+                    //    type = data.d.mcs_Type.Value;
+                    //    relatedSite = isGroup ? data.d.mcs_relatedSiteId : data.d.mcs_RelatedSiteId;
+                    //    resourcespecguid = data.d.mcs_resourcespecguid;
+                    //    constraintgroupguid = data.d.mcs_constraintgroupguid;
+                    //});
+                    var newResource = {
+                        'cvt_name': returnedItems.items[i].name,
+                        'cvt_TSAResourceType': {
+                            __metadata: {
+                                type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue"
+                            },
+                            Value: TSAResourceType
+                        },
+                        'cvt_relatedsiteid': {
+                            __metadata: {
+                                type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                            },
+                            Id: relatedSite.Id,
+                            LogicalName: relatedSite.LogicalName
+                        },
+                        'cvt_resourcespecguid': resourcespecguid,
+                        'cvt_constraintgroupguid': constraintgroupguid
+                    };
+                    var resID = {
+                        __metadata: {
+                            type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                        },
+                        Id: ResourceId,
+                        LogicalName: returnedItems.items[i].typename
+                    };
+                    if (patientOrProvider === "Patient") newResource.cvt_type = {
+                        __metadata: {
+                            type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue"
+                        },
+                        Value: type
+                    };
+                    else newResource.cvt_Type = {
+                        __metadata: {
+                            type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue"
+                        },
+                        Value: type
+                    };
+                    if (isGroup) newResource.cvt_RelatedResourceGroupid = resID;
+                    else newResource.cvt_RelatedResourceId = resID;
+                    if (MCS.mcs_TSA_Buttons.EntityName === "mcs_services") newResource.cvt_RelatedTSAid = {
+                        __metadata: {
+                            type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                        },
+                        Id: MCS.mcs_TSA_Buttons.EntityId,
+                        LogicalName: MCS.mcs_TSA_Buttons.EntityName
+                    };
+                    else newResource.cvt_RelatedMasterTSAId = {
+                        __metadata: {
+                            type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                        },
+                        Id: MCS.mcs_TSA_Buttons.EntityId,
+                        LogicalName: MCS.mcs_TSA_Buttons.EntityName
+                    };
+
+                    Xrm.WebApi.createRecord(table, newResource).then(
+                    function success(result) {
+                        //Nothing here for now. Moved the Subgrid Refresh outside of loop to only run once all resources are created.
+                    },
+                    function (error) {
+                        if (type === 251920002) {
+                            alert(MCS.cvt_Common.RestError(error));
+                        }
+                        else {
+                            alert(MCS.cvt_Common.RestError(error));
+                        }
+                    });
+
+                    //CrmRestKit.Create(table, newResource, MCS.mcs_TSA_Buttons.async)
+                    //.fail(function (err) {
+                    //    if (type == 251920002) {
+                    //        alert(MCS.cvt_Common.RestError(err));
+                    //    }
+                    //    else {
+                    //        alert(MCS.cvt_Common.RestError(err));
+                    //    }
+                    //})
+                    //.done(function () {
+                    //    //Nothing here for now. Moved the Subgrid Refresh outside of loop to only run once all resources are created.
+                    //});
+                }
+                MCS.mcs_TSA_Buttons.refreshGrids(patientOrProvider);
+                selectedControl.refresh();
+            }
+        }
+        else return null;
+    });
+    lookupItems.show();
+};
+
+//HELPER - Add User by Site (Patient or Provider)
+MCS.mcs_TSA_Buttons.BuildRelationshipUserRunner = function (patientOrProvider, selectedControl) {
+    "use strict";
+    var TSAResourceType = 2;
+    var entityName = "cvt_providerresourcegroup";
+    if (patientOrProvider === "Patient") {
+        TSAResourceType = 3;
+        entityName = "cvt_patientresourcegroup";
+    }
+
+    var systemUser = {};
+    var lookupItems = MCS.mcs_TSA_Buttons.buildshowStandardDialog('systemuser', "Users By Site", patientOrProvider, false);
+    lookupItems.setCallbackReference(function (results) {
+        if ((results !== null) && (results !== undefined)) {
+            var returnedItems = results;
+            if (typeof(results) === "string") returnedItems = JSON.parse(results);
+            if (returnedItems !== null) {
+                for (i = 0; i < returnedItems.items.length; i++) {
+                    var TelepresenterId = returnedItems.items[i].id;
+                    var relatedSite;
+                    Xrm.WebApi.retrieveRecord("SystemUser", TelepresenterId, "?$select=cvt_site").then(
+                    function success(result) {
+                        relatedSite = result.cvt_site;
+                    },
+                    function (error) {
+                        //console.log(error.message);
+                        // handle error conditions
+                    });
+
+                    //CrmRestKit.Retrieve('SystemUser', TelepresenterId, ['cvt_site'], MCS.mcs_TSA_Buttons.async)
+                    //            .fail(function () {
+                    //                //alert("Retrieve Failed")
+                    //            })
+                    //            .done(function (data) {
+                    //                relatedSite = data.d.cvt_site;
+                    //            });
+                    if (patientOrProvider === "Patient" || MCS.mcs_TSA_Buttons.EntityName === "mcs_services") {
+                        systemUser = {
+                            'cvt_name': returnedItems.items[i].name,
+                            'cvt_TSAResourceType': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue"
+                                },
+                                Value: TSAResourceType
+                            },
+                            'cvt_RelatedTSAid': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: MCS.mcs_TSA_Buttons.EntityId,
+                                LogicalName: MCS.mcs_TSA_Buttons.EntityName
+                            },
+                            'cvt_RelatedUserId': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: returnedItems.items[i].id,
+                                LogicalName: returnedItems.items[i].typename
+                            },
+                            'cvt_relatedsiteid': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: relatedSite.Id,
+                                LogicalName: relatedSite.LogicalName
+                            }
+                        };
+                    }
+                    else {
+                        systemUser = {
+                            'cvt_name': returnedItems.items[i].name,
+                            'cvt_TSAResourceType': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue"
+                                },
+                                Value: TSAResourceType
+                            },
+                            'cvt_RelatedMasterTSAId': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: MCS.mcs_TSA_Buttons.EntityId,
+                                LogicalName: MCS.mcs_TSA_Buttons.EntityName
+                            },
+                            'cvt_RelatedUserId': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: returnedItems.items[i].id,
+                                LogicalName: returnedItems.items[i].typename
+                            },
+                            'cvt_relatedsiteid': {
+                                __metadata: {
+                                    type: "Microsoft.Crm.Sdk.Data.Services.EntityReference"
+                                },
+                                Id: relatedSite.Id,
+                                LogicalName: relatedSite.LogicalName
+                            }
+                        };
+                    }
+                    Xrm.WebApi.createRecord(entityName, systemUser).then(
+                    function success(result) {},
+                    function (error) {});
+                    // CrmRestKit.Create(entityName, systemUser, MCS.mcs_TSA_Buttons.async);
+                }
+                MCS.mcs_TSA_Buttons.refreshGrids(patientOrProvider);
+                selectedControl.refresh();
+            }
+        }
+        else return null;
+    });
+    lookupItems.show();
+};
+
+//HELPER - creates the fetchXML to be used in grid views
+//The sample Fetch and layout I used above… standard stuff you are already doing
+function getResourceFetchXml(site, facility) {
+    "use strict";
+    var columns = ['mcs_resourceid', 'mcs_name', 'createdon'];
+
+    var conditions = ['<condition attribute="statecode" operator="eq" value="0"/>', buildSiteConditions(site, facility, "R")];
+
+    fetchXml = MCS.cvt_Common.CreateFetch('mcs_resource', columns, conditions, ['mcs_name', false]);
+
+    return fetchXml;
+};
+
+//HELPER - sets the FetchXML view layout
+function getResourceLayout(otc) {
+    "use strict";
+    return '<grid name="resultset" object="' + otc + '" jump="mcs_name" select="1" icon="0" preview="0"><row name="result" id="mcs_resourceid"><cell name="mcs_name" width="300" /><cell name="mcs_relatedsiteid" width="200" /><cell name="mcs_type" width="100" /><cell name="mcs_businessunitid" width="100" /><cell name="ownerid" width="150" /><cell name="modifiedon" width="125" /><cell name="createdon" width="125" /></row></grid>';
+};
+
+function getResourceGroupFetchXml(site, facility, isAllReqd) {
+    "use strict";
+    var columns = ['mcs_name', 'mcs_type', 'mcs_relatedsiteid', 'modifiedon', 'createdon', 'mcs_resourcegroupid'];
+    var conditions = [];
+
+    if (isAllReqd) {
+        conditions = ['<condition attribute="statecode" operator="eq" value="0"/>', '<condition attribute="mcs_type" operator="eq" value="917290000"/>', buildSiteConditions(site, facility, "RG")];
+    }
+    else {
+        conditions = ['<condition attribute="statecode" operator="eq" value="0"/>', buildSiteConditions(site, facility, "RG")];
+    }
+
+    fetchXml = MCS.cvt_Common.CreateFetch('mcs_resourcegroup', columns, conditions, ['mcs_name', false]);
+
+    return fetchXml;
+};
+
+function getResourceGroupLayout(otc) {
+    "use strict";
+    return '<grid name="resultset" object="' + otc + '" jump="mcs_name" select="1" icon="0" preview="0"><row name="result" id="mcs_resourcegroupid"><cell name="mcs_name" width="300" /><cell name="mcs_relatedsiteid" width="300" /><cell name="mcs_type" width="150" /><cell name="modifiedon" width="125" /><cell name="createdon" width="125" /></row></grid>';
+};
+
+function getUserFetchXml(site, facility) {
+    "use strict";
+    fetchXml = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false"><entity name="systemuser"><attribute name="fullname"/><attribute name="businessunitid"/><attribute name="cvt_type"/><attribute name="domainname"/><attribute name="jobtitle"/><attribute name="internalemailaddress"/><attribute name="modifiedon"/><attribute name="cvt_site"/><attribute name="cvt_facility"/><attribute name="systemuserid"/><order attribute="fullname" descending="false"/><filter type="and"><condition attribute="isdisabled" operator="eq" value="0"/><condition attribute="accessmode" operator="ne" value="3"/>';
+    fetchXml += buildSiteConditions(site, facility, "U");
+    fetchXml += '</filter><link-entity name="team" from="teamid" to="cvt_primaryteam" visible="false" link-type="outer" alias="a_8f34fae9459de2118b0978e3b511a629"><attribute name="name"/></link-entity></entity></fetch>';
+    return fetchXml;
+};
+
+function getUserLayout(otc) {
+    "use strict";
+    return '<grid name="resultset" object="8" jump="fullname" select="1" icon="0" preview="0"><row name="result" id="systemuserid"><cell name="fullname" width="200" /><cell name="jobtitle" width="150" /><cell name="domainname" width="200" /><cell name="internalemailaddress" width="150" /><cell name="cvt_type" width="125" /><cell name="cvt_facility" width="150" /><cell name="cvt_site" width="200" /><cell name="a_8f34fae9459de2118b0978e3b511a629.name" width="150" disableSorting="1" /><cell name="businessunitid" width="150" /><cell name="modifiedon" width="100" /></row></grid>';
+};
+
+function buildSiteConditions(site, FacilityId, type) {
+    "use strict";
+    var siteXml = '';
+    switch (type) {
+    case "U":
+        siteXml = '<condition attribute="cvt_site" operator="in">';
+        break;
+    default:
+        siteXml = '<condition attribute="mcs_relatedsiteid" operator="in">';
+        break;
+    }
+    if (site) {
+        siteXml += '<value uiname="' + MCS.cvt_Common.formatXML(site[0].mcs_name) + '" uitype="mcs_site">' + site[0].id + '</value>';
+    }
+    else { //Query for sites based on Facility
+        var childSites = [];
+        var filter = "statuscode/Value eq 1 and mcs_FacilityId/Id eq (Guid'" + FacilityId + "')";
+
+        Xrm.WebApi.retrieveMultipleRecords("mcs_site", "?$select=mcs_name,mcs_siteId,mcs_FacilityId&$filter=" + filter).then(
+        function success(result) {
+            for (var i = 0; i < result.entities.length; i++) {
+                childSites = result.entities[i];
+            }
+        },
+        function (error) {});
+        //calls = CrmRestKit.ByQuery("mcs_site", ['mcs_name', 'mcs_siteId', 'mcs_FacilityId'], filter, false);
+        //calls.fail(
+        //        function (error) {
+        //        })
+        //calls.done(function (data) {
+        //    if (data && data.d.results && data.d.results.length > 0) {
+        //        childSites = data.d.results;
+        //    }
+        //});
+        if (childSites.length > 0) {
+            for (record in childSites) {
+                siteXml += '<value uiname="' + MCS.cvt_Common.formatXML(childSites[record].mcs_name) + '" uitype="mcs_site">' + childSites[record].mcs_siteId + '</value>';
+            }
+        }
+        else //Facility has no sites
+        siteXml += '<value uiname="NoSites" uitype="mcs_site">' + MCS.cvt_Common.BlankGUID + '</value>';
+    }
+    siteXml += '</condition>';
+    return siteXml;
+};

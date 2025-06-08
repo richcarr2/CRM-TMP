@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SystemConfig>
+  <CVTtoHome>
+    <PatientTabletName>CVT Patient Tablet</PatientTabletName>
+    <PatientTabletId>a38df422-83b0-e411-9dd3-00155d175d00</PatientTabletId>
+  </CVTtoHome>
+</SystemConfig>

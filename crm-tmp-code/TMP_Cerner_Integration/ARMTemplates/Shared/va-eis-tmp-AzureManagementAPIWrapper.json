@@ -1,0 +1,438 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-prod"
+        },
+        "OAuthAuthenticator-Name": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat('va-eis-tmp-OAuthAuthenticator', parameters('Target-Env'))]"
+        },
+        "workflows_OAuthAuthenticator_externalid": {
+            "defaultValue": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Logic/workflows/', parameters('OAuthAuthenticator-Name'))]",
+            "type": "String"
+        },
+        "ISEResourceGroup": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "ISEName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "eis-prod-southwest-ise"
+        },
+        "mgmt-api-base-url-arm": {
+                "defaultValue": "[concat('https://management.usgovcloudapi.net/subscriptions/', subscription().subscriptionId)]",
+                "type": "String"
+        },
+        "LogicAppName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat('va-eis-tmp-AzureManagementAPIWrapper', parameters('Target-Env'))]"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicAppName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "LogicApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISEName')]",
+                    "id": "[resourceId(parameters('ISEResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISEName'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "mgmt-api-base-url": {
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "ClientId": {
+                                            "type": "string"
+                                        },
+                                        "ClientSecret": {
+                                            "type": "string"
+                                        },
+                                        "Data": {
+                                            "properties": {
+                                                "ResourceGroup": {
+                                                    "type": "string"
+                                                },
+                                                "WorkflowId": {
+                                                    "type": "string"
+                                                },
+                                                "WorkflowName": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "GrantType": {
+                                            "type": "string"
+                                        },
+                                        "Operation": {
+                                            "type": "string"
+                                        },
+                                        "Scope": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Initialize_Header_variable": {
+                            "runAfter": {
+                                "Switch": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "HeaderVariable",
+                                        "type": "string",
+                                        "value": "@{if(or(variables('WarningFlag'), variables('ErrorFlag')),'{','')}\n@{if(variables('WarningFlag'),'\"Warning\":\"199 - \\\"Some logic app steps were skipped or timed out. See outputs in body.\\\"\"','')}\n@{concat(if(variables('WarningFlag'),',',''),if(variables('ErrorFlag'),'\"Warning\":\"199 - \\\"Some logic app steps failed. See outputs in body.\\\"\"',''))}\n@{if(or(variables('WarningFlag'), variables('ErrorFlag')),'}','')}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_error_flag_variable": {
+                            "runAfter": {
+                                "Parse_out_bearer_token": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorFlag",
+                                        "type": "boolean",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_warning_flag_variable": {
+                            "runAfter": {
+                                "Initialize_error_flag_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "WarningFlag",
+                                        "type": "boolean",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        },
+                        "OAuthAuthenticator": {
+                            "runAfter": {},
+                            "type": "Workflow",
+                            "inputs": {
+                                "body": {
+                                    "ClientId": "@triggerBody()?['ClientId']",
+                                    "ClientSecret": "@triggerBody()?['ClientSecret']",
+                                    "GrantType": "@triggerBody()?['GrantType']",
+                                    "Scope": "@triggerBody()?['Scope']"
+                                },
+                                "host": {
+                                    "triggerName": "manual",
+                                    "workflow": {
+                                        "id": "[parameters('workflows_OAuthAuthenticator_externalid')]"
+                                    }
+                                }
+                            }
+                        },
+                        "Parse_OAuthAuthenticator_Response": {
+                            "runAfter": {
+                                "OAuthAuthenticator": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('OAuthAuthenticator')",
+                                "schema": {
+                                    "properties": {
+                                        "HTTPResponse": {
+                                            "type": "string"
+                                        },
+                                        "LogicAppHTTPOutputs": {
+                                            "properties": {
+                                                "HTTPOutput": {
+                                                    "type": "string"
+                                                },
+                                                "OauthParseOutput": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "Parse_out_bearer_token": {
+                            "runAfter": {
+                                "Parse_OAuthAuthenticator_Response": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "BearerToken",
+                                        "type": "string",
+                                        "value": "@{json(base64ToString(body('Parse_OAuthAuthenticator_Response')?['HTTPResponse'])).access_token}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Response_to_client": {
+                            "runAfter": {
+                                "Initialize_Header_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@body('HTTP')",
+                                "headers": "@if(contains(variables('HeaderVariable'),'{'),json(variables('HeaderVariable')),null)",
+                                "statusCode": "@outputs('HTTP')['statusCode']"
+                            }
+                        },
+                        "Switch": {
+                            "runAfter": {
+                                "Initialize_warning_flag_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "cases": {
+                                "Case": {
+                                    "case": "GetWorkflowActions",
+                                    "actions": {
+                                        "For_each": {
+                                            "foreach": "@body('Parse_JSON')?['value']",
+                                            "actions": {
+                                                "Check_logic_app_output_status_code": {
+                                                    "runAfter": {},
+                                                    "cases": {
+                                                        "Failed": {
+                                                            "case": "Failed",
+                                                            "actions": {
+                                                                "Set_variable_-_Failed": {
+                                                                    "runAfter": {},
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "ErrorFlag",
+                                                                        "value": true
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "Skipped": {
+                                                            "case": "Skipped",
+                                                            "actions": {
+                                                                "Set_variable_-_Skipped": {
+                                                                    "runAfter": {},
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "WarningFlag",
+                                                                        "value": true
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "TimedOut": {
+                                                            "case": "TimedOut",
+                                                            "actions": {
+                                                                "Set_variable_-_TimedOut": {
+                                                                    "runAfter": {},
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "WarningFlag",
+                                                                        "value": true
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "default": {
+                                                        "actions": {}
+                                                    },
+                                                    "expression": "@coalesce(items('For_each')?['properties']?['status'],'')",
+                                                    "type": "Switch"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Parse_JSON": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach",
+                                            "runtimeConfiguration": {
+                                                "concurrency": {
+                                                    "repetitions": 1
+                                                }
+                                            }
+                                        },
+                                        "HTTP": {
+                                            "runAfter": {},
+                                            "type": "Http",
+                                            "inputs": {
+                                                "headers": {
+                                                    "Authorization": "Bearer @{variables('BearerToken')}"
+                                                },
+                                                "method": "GET",
+                                                "uri": "@{parameters('mgmt-api-base-url')}/resourceGroups/@{triggerBody()?['Data']?['ResourceGroup']}/providers/Microsoft.Logic/workflows/@{triggerBody()?['Data']?['WorkflowName']}/runs/@{triggerBody()?['Data']?['WorkflowId']}/actions?api-version=2016-06-01"
+                                            }
+                                        },
+                                        "Parse_JSON": {
+                                            "runAfter": {
+                                                "HTTP": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ParseJson",
+                                            "inputs": {
+                                                "content": "@body('HTTP')",
+                                                "schema": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "properties": {
+                                                                        "properties": {
+                                                                            "correlation": {
+                                                                                "properties": {
+                                                                                    "actionTrackingId": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "clientTrackingId": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            },
+                                                                            "endTime": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "inputsLink": {
+                                                                                "properties": {
+                                                                                    "contentHash": {
+                                                                                        "properties": {
+                                                                                            "algorithm": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "value": {
+                                                                                                "type": "string"
+                                                                                            }
+                                                                                        },
+                                                                                        "type": "object"
+                                                                                    },
+                                                                                    "contentSize": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "contentVersion": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "uri": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            },
+                                                                            "startTime": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "status": {
+                                                                                "default": "",
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "properties",
+                                                                    "id",
+                                                                    "name",
+                                                                    "type"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "default": {
+                                "actions": {}
+                            },
+                            "expression": "@triggerBody()?['Operation']",
+                            "type": "Switch"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "mgmt-api-base-url": {
+                        "value": "[parameters('mgmt-api-base-url-arm')]"
+                    }
+                }
+            }
+        }
+    ]
+}

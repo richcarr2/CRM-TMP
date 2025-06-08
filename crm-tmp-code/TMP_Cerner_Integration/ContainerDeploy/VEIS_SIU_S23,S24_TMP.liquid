@@ -1,0 +1,38 @@
+
+{% assign firstSegments = hl7v2Data | get_first_segments: 'MSH|PID|SCH|AIL|AIP|AIG' -%}
+
+{
+    {% assign AIPSegmentLists = hl7v2Data | get_segment_lists: 'AIP' -%}
+    {% assign AIGSegmentLists = hl7v2Data | get_segment_lists: 'AIG' -%}
+    
+    {% if AIPSegmentLists.size > 0 or AIGSegmentLists.size > 0-%}
+    "cernerResources": [
+    {% for AIPSegment in AIPSegmentLists.AIP -%}
+        {% evaluate cernerProviderEDIPI using 'ID/VEIS_Practitioner_Logical' XCN: AIPSegment.3, type: 'EDIPI' -%}
+        {
+        "id": "{{ cernerProviderEDIPI }}",
+        "blockId": "{{ AIPSegment.11.value }}",
+        "resourceType": "Provider",
+        "scheduledStart": "{{ AIPSegment.6.value | format_as_date_time }}",
+        {% include "Util/DateTimeAddMinutes" dateValue: AIPSegment.6.value, minutesDelta: AIPSegment.9.value, fieldName: "scheduledEnd" -%},
+        "scheduledDurationMinutes": "{{ AIPSegment.9.value }}",
+        "rawHL7": "{{ AIPSegment.value }}"
+        },
+    {% endfor -%}
+    {% for AIGSegment in AIGSegmentLists.AIG -%}
+    {
+        "id": "{{ AIGSegment.3.value }}",
+        "blockId": "{{ AIGSegment.13.value }}",
+        "resourceType": "Equipment",
+        "scheduledStart": "{{ AIGSegment.8.value | format_as_date_time }}",
+        {% include "Util/DateTimeAddMinutes" dateValue: AIGSegment.8.value, minutesDelta: AIGSegment.11.value, fieldName: "scheduledEnd" -%},
+        "scheduledDurationMinutes": "{{ AIGSegment.11.value }}",
+        "rawHL7": "{{ AIGSegment.value }}"
+    },
+    {% endfor -%}
+    ],
+    {% else -%}
+    "cernerResources": null,
+    {% endif -%} 
+}
+

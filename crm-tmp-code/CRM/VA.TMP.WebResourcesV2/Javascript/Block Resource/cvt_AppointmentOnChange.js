@@ -1,0 +1,250 @@
+//If the MCS namespace object is not defined, create it.
+//SD: web-use-strict-equality-operators
+if (typeof MCS === "undefined") {
+    MCS = {};
+}
+// Create Namespace container for functions in this library;
+MCS.Appointment = {};
+MCS.Appointment.Util = {};
+MCS.Appointment.DisplayFields = {};
+
+MCS.Appointment.FORM_TYPE_CREATE = 1;
+MCS.Appointment.FORM_TYPE_UPDATE = 2;
+MCS.Appointment.FORM_TYPE_READ_ONLY = 3;
+MCS.Appointment.FORM_TYPE_DISABLED = 4;
+
+MCS.Appointment.populateResources = function (executionContext) {
+    //SD - Start
+    //web-use-strict-mode
+    "use strict";
+    //SD - End
+    var formContext = executionContext.getFormContext();
+    var attendeesObj = formContext.getAttribute("requiredattendees");
+    var newAttendee = formContext.getAttribute("cvt_resourcegroup").getValue();
+    if (newAttendee == null) return;
+    var participants = new Array();
+    var relatedEquipment = new Array();
+    var filter = "_mcs_relatedresourcegroupid_value eq '" + newAttendee[0].id.replace('{', '').replace('}', '') + "'&$expand=mcs_relatedresourceid($select=_mcs_relatedresourceid_value)";
+    //siteObj[0].id = result._mcs_relatedsiteid_value;
+    //siteObj[0].name = result['_mcs_relatedsiteid_value@OData.Community.Display.V1.FormattedValue'];
+    debugger;
+    try {
+        Xrm.WebApi.retrieveMultipleRecords("mcs_groupresource", "?$filter=" + filter).then(
+            function success(result) {
+                //alert("Successful RG call.");
+                for (var i = 0; i < result.entities.length; i++) {
+                    if (result.entities[i].mcs_relatedresourceid != null && result.entities[i].mcs_relatedresourceid._mcs_relatedresourceid_value != null) {
+                        relatedEquipment[i] = new Object();
+                        relatedEquipment[i].id = '{' + result.entities[i].mcs_relatedresourceid._mcs_relatedresourceid_value + '}';
+                        relatedEquipment[i].name = result.entities[i]['_mcs_relatedresourceid_value@OData.Community.Display.V1.FormattedValue'];
+                        relatedEquipment[i].entityType = "equipment";
+                        //relatedEquipment[i].keyValues = "\"\"";
+                    }
+                    else if (result.entities[i]._mcs_relateduserid_value != null) {
+                        relatedEquipment[i] = new Object();
+                        relatedEquipment[i].id = result.entities[i]._mcs_relateduserid_value;
+                        relatedEquipment[i].name = result.entities[i]['_mcs_relateduserid_value@OData.Community.Display.V1.FormattedValue'];
+                        relatedEquipment[i].entityType = "systemuser";
+                        //relatedEquipment[i].keyValues = "\"\"";
+                    }
+                }
+                debugger;
+                attendeesObj.setValue(relatedEquipment);
+            },
+            function (error) {
+            //    alert("Failed RG call. Error: " + error.message);
+            //    console.log(error.message);
+                appInsights.trackException(error);
+            }
+        );
+
+    } catch (ex) {
+        appInsights.trackException(ex);
+    }
+    // query where group.relatedresoucegroupid == newAttendee.id
+    //var filter = "mcs_relatedResourceGroupId/Id eq guid'" + newAttendee[0].id + "'";
+    //CrmRestKit.ByQuery('mcs_groupresource', ['mcs_relatedResourceGroupId','mcs_RelatedResourceId','mcs_RelatedUserId'], filter, true).fail(
+    //    function(err){
+    //        alert("unable to retrieve group" + err);
+    //        return;
+    //    }).done(
+    //    function(groups){
+    //        //got all group resources, now need to get all equipment where equipment,relatedResource == group.relatedresource
+    //        for (var i = 0; groups.d.results.length > i; i++){
+    //            //do query instead of retreive bc we dont know id of equipment, just id of related resource which is also unique,
+    //            //although ByQuery returns a list, there will always just be 1 result in this instance
+    //            var id = groups.d.results[i].mcs_RelatedResourceId.Id;
+    //            var filter = "";
+    //            if (id != null){
+    //                filter = "mcs_relatedresource/Id eq guid'{" + id + "}'";
+    //                CrmRestKit.ByQuery('Equipment', ['EquipmentId', 'Name'], filter, false).fail(
+    //                    function (err2) {
+    //                        alert("unable to get equipment " + err2);
+    //                        return;
+    //                    }).done(
+    //                    function (equipment) {
+    //                        //Populate Equipment field
+    //                        relatedEquipment[i] = new Object();
+    //                        relatedEquipment[i].id = '{' + equipment.d.results[0].EquipmentId + '}';
+    //                        relatedEquipment[i].name = equipment.d.results[0].Name;
+    //                        relatedEquipment[i].entityType = "equipment";
+    //                    });
+    //            }
+    //            else if (groups.d.results[i].mcs_RelatedUserId != null) {
+    //                CrmRestKit.Retrieve('SystemUser', groups.d.results[i].mcs_RelatedUserId.Id, ['SystemUserId', 'FullName'], false).fail(
+    //                    function (err2) {
+    //                        alert("unable to get User");
+    //                        return;
+    //                    }).done(
+    //                    function (user) {
+    //                        //we are still calling the object relatedEquipment even if its a user so we don't have to add another variable for no logical reason
+    //                        relatedEquipment[i] = new Object();
+    //                        relatedEquipment[i].id = user.d.SystemUserId;
+    //                        relatedEquipment[i].name = user.d.FullName;
+    //                        relatedEquipment[i].entityType = "systemuser";
+    //                    });
+    //            }
+    //        }
+    //        attendeesObj.setValue(relatedEquipment);
+    //    });
+};
+
+MCS.Appointment.populateSite = function (executionContext) {
+    var formContext = executionContext.getFormContext();
+    var newAttendee = formContext.getAttribute("cvt_resourcegroup").getValue();
+    if (newAttendee == null) return;
+    try {
+        Xrm.WebApi.retrieveRecord("mcs_resourcegroup", newAttendee[0].id).then(
+            function success(result) {
+                var siteObj = new Array();
+                siteObj[0] = new Object();
+                siteObj[0].id = result._mcs_relatedsiteid_value;
+                siteObj[0].name = result['_mcs_relatedsiteid_value@OData.Community.Display.V1.FormattedValue'];
+                //siteObj[0].name = result['mcs_relatedSiteId_value'];
+                siteObj[0].entityType = 'mcs_site';
+                formContext.getAttribute("cvt_site").setValue(siteObj);
+            },
+            function (error) {
+                MCS.Appointment.ShowAlertDialog("Ok", "error...", error2);
+                appInsights.trackException(ex);
+            });
+
+    } catch (ex) {
+        appInsights.trackException(ex);
+    }
+    //CrmRestKit.Retrieve('mcs_resourcegroup', newAttendee[0].id, ['mcs_relatedSiteId'], true).fail(
+    //    function (err) {
+    //        return;
+    //    }).done(
+    //    function (data) {
+    //        var siteObj = new Array();
+    //        siteObj[0] = new Object();
+    //        siteObj[0].id = data.d.mcs_relatedSiteId.Id;
+    //        siteObj[0].name = data.d.mcs_relatedSiteId.Name;
+    //        siteObj[0].entityType = 'mcs_site';
+    //        Xrm.Page.getAttribute("cvt_site").setValue(siteObj);
+    //    });
+};
+
+MCS.Appointment.VeteranOnChange = function (executionContext) {
+    var formContext = executionContext.getFormContext();
+    var veteranObj = formContext.getAttribute("optionalattendees");
+    var currentVeterans = veteranObj != null ? veteranObj.getValue() : [];
+
+    var wasDuplicate = MCS.Appointment.CheckDuplicateVeterans(MCS.Patients, currentVeterans, formContext)
+
+    if (wasDuplicate) {
+        alert("This patient has already been added to the Reserve Resource.");
+    }
+};
+
+MCS.Appointment.CheckDuplicateVeterans = function (newVeteranID, currentVeterans, formContext) {
+    var wasDuplicate = false;
+    var count = 0;
+
+    for (var i in currentVeterans) {
+        var id = MCS.cvt_Common.TrimBookendBrackets(currentVeterans[i].id.toLowerCase());
+        if (id === newVeteranID) {
+            count++;
+        }
+    }
+
+    if (count > 1) {
+        wasDuplicate = true;
+
+        currentVeterans.splice(0, 1);//new veterans are added to the front of the array
+
+        formContext.getAttribute("optionalattendees").setValue(currentVeterans);
+    }
+
+    return wasDuplicate;
+};
+
+MCS.Appointment.blockAddPatient = function (executionContext) {
+    var formContext = executionContext.getFormContext();
+    var patientObj = formContext.getAttribute("optionalattendees");
+    var patients = patientObj != null ? patientObj.getValue() : [];
+    var newPatsAdded = MCS.Appointment.compareArrays(MCS.Patients, patients);
+    if (newPatsAdded.length == 0) {
+        //Determine if we want to re-build the cached patients list after removing a veteran -
+        //scenario: if you remove a veteran - click away - and then try to add a new one, should the one that got removed get added back or not?
+        //    MCS.Patients = Xrm.Page.getAttribute("optionalattendees").getValue();
+        return;
+    }
+    else {
+        alert("You can only add patients through the Patient Search.  Not adding: " + newPatsAdded);
+        patientObj.setValue(MCS.Patients);
+    }
+};
+
+MCS.Appointment.compareArrays = function (cachedPatients, newPatients) {
+    var newPats = [];
+    var newPatString = "";
+    if (newPatients == null) return "";
+    for (var i in newPatients) {
+        var alreadyExists = false;
+        var newPatIdObj = newPatients[i];
+        if (newPatIdObj != null) {
+            var newPatId = MCS.cvt_Common.TrimBookendBrackets(newPatIdObj.id.toLowerCase());
+            for (var j in cachedPatients) {
+                var cachedPatientObj = cachedPatients[j];
+                var cachedPatientObjId = MCS.cvt_Common.TrimBookendBrackets(cachedPatientObj.toLowerCase());
+                if (cachedPatientObj != null && newPatId == cachedPatientObjId) {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+        }
+        if (!alreadyExists) {
+            newPats.push(newPatIdObj.name);
+        }
+    }
+    if (newPats.length > 0) {
+
+        for (var pat in newPats) {
+            newPatString += newPats[pat] + "; ";
+        }
+        newPatString = newPatString.substr(0, newPatString.length - 2);
+    }
+    return newPatString;
+};
+
+//8-25 added to show the alert dialog for UCI
+MCS.Appointment.ShowAlertDialog = function (confirmButtonLabel, text, title) {
+    var alertStrings = {
+        confirmButtonLabel: confirmButtonLabel,
+        text: text,
+        title: title
+    };
+    var alertOptions = {
+        height: 120,
+        width: 260
+    };
+    Xrm.Navigation.openAlertDialog(alertStrings, alertOptions).then(
+    function success(result) {
+
+},
+    function (error) {
+
+});
+}

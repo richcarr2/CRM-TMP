@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="DEVTEST-GOV-INTERNAL">
+  <AppService Name="vmr-ec-dev-tmp" ResourceGroup="VEIS-DEVTEST-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="VmrUrl" Value="https://VASBYEVNAPPCVT1.VHA.MED.VA.GOV/UcManagerService" />
+        <AppSetting Key="RequiresClientCertificate" Value="true" />
+        <AppSetting Key="CertificateUrl" Value="https://vadevteastveiskv1.vault.usgovcloudapi.net/secrets/vmr-ec-dev-tmp-devtest-vaec-va-gov/61b7745b09ef446a8947da1c192152af" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="InstrumentationKey" Value="575cebfe-8828-fc25-9213-00855608c74e" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="C291898230CE48AD428D0CBC24F59BAC3BE9BD7F" />
+      </AppSettings>    
+  </AppService>
+</Azure>

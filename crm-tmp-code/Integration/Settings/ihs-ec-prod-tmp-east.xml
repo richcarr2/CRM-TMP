@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PROD-GOV-INTERNAL">
+  <AppService Name="ihs-ec-prod-tmp-east" ResourceGroup="VEIS-PROD-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="BaseUri" Value="https://vaauscluhshhl7rtr201.aac.va.gov:9300" />
+        <AppSetting Key="GetConsultsUri" Value="/TMP/{0}/{1}/{2}/{3}" />
+        <AppSetting Key="MakeCancelOutboundUri" Value="/TMP/appointment" />
+        <AppSetting Key="RequiresClientCertificate" Value="true" />
+        <AppSetting Key="CertificateUrl" Value="https://vaprodeastveiskv1.vault.usgovcloudapi.net/secrets/ihs-ec-prod-tmp-east-prod-vaec-va-gov/99442f49ea7d46899d6bfc72497fe8b0" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting key="InstrumentationKey" Value="" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="3DEC1EF285BE79F9A8BD5D2CA95C0337FA59C71D" />
+      </AppSettings>    
+  </AppService>
+</Azure>

@@ -1,0 +1,41 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_ResourceGroup = {};
+
+MCS.mcs_ResourceGroup.CreateName = function () {
+    var mcs_type = Xrm.Page.getAttribute("mcs_type").getValue();
+    var mcs_usernameinput = Xrm.Page.getAttribute("mcs_usernameinput").getValue();
+    var mcs_relatedsiteid = Xrm.Page.getAttribute("mcs_relatedsiteid").getValue();
+
+    var derivedResultField = "";
+
+     if (mcs_usernameinput != null)
+         derivedResultField += mcs_usernameinput + " : ";
+     
+    if (mcs_type != null) {      
+        derivedResultField += Xrm.Page.getAttribute("mcs_type").getText();
+
+        if (mcs_type != 917290000 && mcs_type != 251920002)
+            derivedResultField += "s";        
+    }
+   
+    derivedResultField += " @ ";
+
+    if (mcs_relatedsiteid != null) {
+        derivedResultField += mcs_relatedsiteid[0].name;
+    }
+
+    Xrm.Page.getAttribute("mcs_name").setSubmitMode("always");
+    Xrm.Page.getAttribute("mcs_name").setValue(derivedResultField);
+};
+
+MCS.mcs_ResourceGroup.MakeFieldsReadOnly = function () {
+    var Formtype = Xrm.Page.ui.getFormType();
+
+    if (Formtype != 1) {
+        Xrm.Page.ui.controls.get("mcs_relatedsiteid").setDisabled(true);
+        Xrm.Page.ui.controls.get("mcs_type").setDisabled(true);
+    }
+};

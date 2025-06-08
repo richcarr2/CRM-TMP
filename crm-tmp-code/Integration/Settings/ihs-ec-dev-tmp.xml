@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="DEVTEST-GOV-INTERNAL">
+  <AppService Name="ihs-ec-dev-tmp" ResourceGroup="VEIS-DEVTEST-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="BaseUri" Value="https://vaausapphsh801.aac.va.gov" />
+        <AppSetting Key="GetConsultsUri" Value="/TMP/{0}/{1}/{2}/{3}" />
+        <AppSetting Key="MakeCancelOutboundUri" Value="/TMP/appointment" />
+        <AppSetting Key="RequiresClientCertificate" Value="false" />
+        <AppSetting Key="CertificateUrl" Value="https://vadevteastveiskv1.vault.usgovcloudapi.net/secrets/ihs-ec-dev-tmp-devtest-vaec-va-gov/8a7c6a62b89646ed8eda902b15293f9d" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting key="InstrumentationKey" Value="575cebfe-8828-fc25-9213-00855608c74e" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="3EFCD429536ABDF25BED5674B270855A5C3AC177" />
+      </AppSettings>    
+  </AppService>
+</Azure>

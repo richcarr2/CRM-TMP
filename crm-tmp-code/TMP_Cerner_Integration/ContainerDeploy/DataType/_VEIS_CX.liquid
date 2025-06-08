@@ -1,0 +1,29 @@
+"value":"{{ CX.1.Value }}",
+"type":
+{
+    {% assign IDType = CX.13.Value | get_property: 'CodeSystem/IDType', 'code' -%}
+    {% if IDType -%}
+    "coding":
+    [
+        {
+            "code": "{{ IDType }}",
+            "display": "{{ CX.13.Value | get_property: 'CodeSystem/IDType', 'display' }}",
+            "system": "{{ CX.13.Value | get_property: 'CodeSystem/IDType', 'system' }}",
+        },
+    ],
+    {% elsif (CX.5.Value | get_property: 'CodeSystem/IDType', 'code')-%}
+    "text": "{{ p.13.Value }}",
+    {% else -%}
+    "coding":
+    [
+        {
+            "code": "{{ CX.5.Value | get_property: 'CodeSystem/IDType', 'code' }}",
+            "system": "{{ CX.5.Value | get_property: 'CodeSystem/IDType', 'system' }}",
+        },
+    ],
+    {% endif -%}
+},
+"type":
+{
+    "text": "{{ CX.4.Value }}",
+},

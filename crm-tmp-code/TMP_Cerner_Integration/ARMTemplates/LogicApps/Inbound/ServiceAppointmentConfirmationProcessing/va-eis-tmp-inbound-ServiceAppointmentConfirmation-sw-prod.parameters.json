@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "value": "va-eis-tmp-inbound-ServiceAppointmentConfirmation-southwest-prod"
+        },
+        "ISE_Name": {
+            "value": "eis-prod-southwest-ise"
+        },
+        "IntegrationAccount_Name": {
+            "value": "va-eis-tmp-integration-acct-sw-prod"
+        },
+        "ServiceBus_Connection_Name": {
+            "value": "va-eis-tmp-servicebus-conn-sw-prod"
+        },
+        "KeyVault_Connection_Name": {
+            "value": "va-eis-tmp-keyvault-conn-sw-prod"
+        },
+        "AzureAPIForFHIR_URL": {
+            "value": "https://va-eis-tmp-fhir-swprod.azurehealthcareapis.us"
+        },
+        "AzureContainerRegistry_ArtifactReference": {
+            "value": "vaeistmpcontainerregswprod.azurecr.us/fhir-converter:main"
+        },
+        "ResponseHandlerLogicApp_Name": {
+            "value": "va-eis-tmp-outbound-responsehandler-southwest-prod"
+        },
+        "Key_Vault_Secret_Name_CDS_Client_Id": {
+          "value": "cds-client-id"
+        },
+        "Key_Vault_Secret_Name_CDS_Client_Secret": {
+          "value": "cds-client-secret"
+        },
+        "Service_Bus_Topic_Name": {
+          "value": "hl7messagetopic"
+        },
+        "CDS_Client_URL": {
+          "value": "https://dvagov-tmp.crm9.dynamics.com"
+        },
+        "CDS_Tenant_Id": {
+          "value": "e95f1b23-abaf-45ee-821d-b7ab251ab3bf"
+        }
+    }
+}

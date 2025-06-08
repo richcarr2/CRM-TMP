@@ -1,0 +1,306 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4BBC4D9F-1DC1-4671-AE32-793735D9798A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VA.TMP.Integration.Plugins</RootNamespace>
+    <AssemblyName>VA.TMP.Integration.Plugins</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\VA.TMP.Integration.VIMT.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.5.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.42\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.42\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Activities" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Text.Encodings.Web, Version=5.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.5.0.1\lib\net461\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=5.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.5.0.2\lib\net461\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CRM\MCSShared\CvtHelper.cs">
+      <Link>Links\CvtHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperData.cs">
+      <Link>Links\CvtHelperData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperEmail.cs">
+      <Link>Links\CvtHelperEmail.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\MCSHelper.cs">
+      <Link>Links\MCSHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\MCSLogger.cs">
+      <Link>Links\MCSLogger.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\MCSSettings.cs">
+      <Link>Links\MCSSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\PluginRunner.cs">
+      <Link>Links\PluginRunner.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\UtilityFunctions.cs">
+      <Link>Links\UtilityFunctions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.DataModel.cs">
+      <Link>Links\VA.TMP.DataModel.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.Xrm.OptionSets.cs">
+      <Link>Links\VA.TMP.Xrm.OptionSets.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Common\HealthShareEnums.cs">
+      <Link>Links\HealthShareEnums.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Common\IntegrationSetting.cs">
+      <Link>Links\IntegrationSetting.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Common\RandomDigits.cs">
+      <Link>Links\RandomDigits.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Common\Serialization.cs">
+      <Link>Links\Serialization.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseRequestMessage.cs">
+      <Link>Messages\TmpBaseRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseResponseMessage.cs">
+      <Link>Messages\TmpBaseResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Cerner\TmpCernerOutboundResponseMessage.cs">
+      <Link>Messages\CernerOutboundResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareGetConsultsRequest.cs">
+      <Link>Messages\HealthShare\TmpHealthShareGetConsultsRequest.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareGetConsultsResponse.cs">
+      <Link>Messages\HealthShare\TmpHealthShareGetConsultsResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeAndCancelAppointmentRequestMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeAndCancelAppointmentRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeAndCancelAppointmentResponseMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeAndCancelAppointmentResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelInboundRequestMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeCancelInboundRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelInboundResponseMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeCancelInboundResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelOutboundRequestMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeCancelOutboundRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelOutboundResponseMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareMakeCancelOutboundResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareUpdateClinicRequestMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareUpdateClinicRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareUpdateClinicResponseMessage.cs">
+      <Link>Messages\HealthShare\TmpHealthShareUpdateClinicResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\GetPersonIdentifiersRequestMessage.cs">
+      <Link>Messages\Mvi\GetPersonIdentifiersRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\GetPersonIdentifiersResponseMessage.cs">
+      <Link>Messages\Mvi\GetPersonIdentifiersResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\PersonSearchRequestMessage.cs">
+      <Link>Messages\Mvi\PersonSearchRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\PersonSearchResponseMessage.cs">
+      <Link>Messages\Mvi\PersonSearchResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\ProxyAddRequestMessage.cs">
+      <Link>Messages\Mvi\ProxyAddRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\ProxyAddResponseMessage.cs">
+      <Link>Messages\Mvi\ProxyAddResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\UnattendedSearchRequest.cs">
+      <Link>Messages\Mvi\UnattendedSearchRequest.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\Shared.cs">
+      <Link>Messages\Vvs\Shared.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitCreateRequestMessage.cs">
+      <Link>Messages\Vvs\VideoVisitCreateRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitCreateResponseMessage.cs">
+      <Link>Messages\Vvs\VideoVisitCreateResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitDeleteRequestMessage.cs">
+      <Link>Messages\Vvs\VideoVisitDeleteRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitDeleteResponseMessage.cs">
+      <Link>Messages\Vvs\VideoVisitDeleteResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitUpdateRequestMessage.cs">
+      <Link>Messages\Vvs\VideoVisitUpdateRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitUpdateResponseMessage.cs">
+      <Link>Messages\Vvs\VideoVisitUpdateResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomCreateRequestMessage.cs">
+      <Link>Messages\Vmr\VirtualMeetingRoomCreateRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomCreateResponseMessage.cs">
+      <Link>Messages\Vmr\VirtualMeetingRoomCreateResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomDeleteRequestMessage.cs">
+      <Link>Messages\Vmr\VirtualMeetingRoomDeleteRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomDeleteResponseMessage.cs">
+      <Link>Messages\Vmr\VirtualMeetingRoomDeleteResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VmrOnDemandCreateRequestMessage.cs">
+      <Link>Messages\Vmr\VmrOnDemandCreateRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VmrOnDemandCreateResponseMessage.cs">
+      <Link>Messages\Vmr\VmrOnDemandCreateResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginRequestMessage.cs">
+      <Link>Messages\Via\ViaLoginRequestMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginResponseMessage.cs">
+      <Link>Messages\Via\ViaLoginResponseMessage.cs</Link>
+    </Compile>
+    <Compile Include="Appointment\AppointmentIntegrationOrchestratorUpdatePostStage.cs" />
+    <Compile Include="Appointment\AppointmentIntegrationOrchestratorUpdatePostStageRunner.cs" />
+    <Compile Include="Appointment\AppointmentUpdatePostStage.cs" />
+    <Compile Include="Appointment\AppointmentUpdatePostStageRunner.cs" />
+    <Compile Include="Appointment\AppointmentUpdateVistaHealthSharePostStageRunner.cs" />
+    <Compile Include="Appointment\AppointmentUpdateVistaPostStage.cs" />
+    <Compile Include="Appointment\AppointmentUpdateVVSPostStage.cs" />
+    <Compile Include="Appointment\AppointmentUpdateVVSPostStageRunner.cs" />
+    <Compile Include="CrmePerson\CrmePersonRetrieveMultiplePostHealthShareGetConsults.cs" />
+    <Compile Include="CrmePerson\CrmePersonRetrieveMultiplePostHealthShareGetConsultsRunner.cs" />
+    <Compile Include="CrmePerson\CrmePersonRetrieveMultiplePostStage.cs" />
+    <Compile Include="CrmePerson\CrmePersonRetrieveMultiplePostStageRunner.cs" />
+    <Compile Include="Helpers\AzureTokenHelper.cs" />
+    <Compile Include="Helpers\CernerHelper.cs" />
+    <Compile Include="Helpers\IntegrationPluginHelpers.cs" />
+    <Compile Include="Helpers\ApiIntegrationSettings.cs" />
+    <Compile Include="Helpers\RestPoster.cs" />
+    <Compile Include="Helpers\Retry.cs" />
+    <Compile Include="IntegrationResult\IntegrationResultUpdatePostStage.cs" />
+    <Compile Include="IntegrationResult\IntegrationResultUpdatePostStageRunner.cs" />
+    <Compile Include="Messages\MessageRegistry.cs" />
+    <Compile Include="Helpers\PersonSearchPluginUtilities.cs" />
+    <Compile Include="Messages\Token\TokenResponse.cs" />
+    <Compile Include="Patient Flag\PatientGetPatientFlagPreStage.cs" />
+    <Compile Include="Patient Flag\PatientGetPatientFlagPreStageRunner.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentCancelPostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentCancelPostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentCreatePostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentCreatePostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentIntegrationOrchestratorPostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentIntegrationOrchestratorPostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentProxyAddUpdatePostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVistaCancelPostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVistaHealthShareCancelPostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVistaHealthShareUpdatePostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVistaUpdatePostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVmrCancelPostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVmrCancelPostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVmrUpdatePostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVmrUpdatePostStageRunner.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVvsUpdatePostStage.cs" />
+    <Compile Include="ServiceAppointment\ServiceAppointmentVvsUpdatePostStageRunner.cs" />
+    <Compile Include="VistaIntegrationResult\VistaIntegrationResultUpdatePostStage.cs" />
+    <Compile Include="VistaIntegrationResult\VistaIntegrationResultUpdatePostStageRunner.cs" />
+    <Compile Include="CvtVod\CvtVodCreatePostStage.cs" />
+    <Compile Include="CvtVod\CvtVodCreatePostStageRunner.cs" />
+    <Compile Include="Helpers\VistaPluginHelpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

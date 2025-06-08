@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ServiceLocation": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "services_va_eis_tmp_fhir_dev_name": {
+            "defaultValue": "va-eis-tmp-azurefhirapi",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.HealthcareApis/services",
+            "apiVersion": "2020-03-30",
+            "name": "[parameters('services_va_eis_tmp_fhir_dev_name')]",
+            "location": "[parameters('ServiceLocation')]",
+            "kind": "fhir-R4",
+            "properties": {
+                "accessPolicies": [],
+                "cosmosDbConfiguration": {
+                    "offerThroughput": 400
+                },
+                "authenticationConfiguration": {
+                    "authority": "[concat('https://login.microsoftonline.com/', subscription().tenantId)]",
+                    "audience": "[concat('https://', parameters('services_va_eis_tmp_fhir_dev_name'), '.azurehealthcareapis.us')]",
+                    "smartProxyEnabled": false
+                },
+                "corsConfiguration": {
+                    "origins": [
+                        "*"
+                    ],
+                    "headers": [
+                        "*"
+                    ],
+                    "methods": [
+                        "DELETE",
+                        "GET",
+                        "OPTIONS",
+                        "PATCH",
+                        "POST",
+                        "PUT"
+                    ],
+                    "maxAge": 600,
+                    "allowCredentials": false
+                },
+                "exportConfiguration": {},
+                "privateEndpointConnections": [],
+                "publicNetworkAccess": "Disabled"
+            }
+        }
+    ]
+}

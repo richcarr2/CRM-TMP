@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "value": "va-eis-tmp-inbound-orchestrator-east-prod"
+    },
+    "ISE_Name": {
+      "value": "eis-prod-east-ise"
+    },
+    "datalake_api_wrapper_LogicAppName": {
+      "value": "va-eis-tmp-DataLakeAPIWrapper-east-prod"
+    },
+    "IntegrationAccount_Name": {
+      "value": "va-eis-tmp-integration-acct-east-prod"
+    },
+    "ServiceBus_Connection_Name": {
+      "value": "va-eis-tmp-servicebus-conn-east-prod"
+    },
+    "Service_Bus_Topic_Name": {
+      "value": "hl7messagetopic"
+    }
+  }
+}

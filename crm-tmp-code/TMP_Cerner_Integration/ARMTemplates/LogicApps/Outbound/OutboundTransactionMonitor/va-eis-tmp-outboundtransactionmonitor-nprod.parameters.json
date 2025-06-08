@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ISE_Name": {
+            "value": "eis-nprod-southwest-ise"
+        },
+        "IntegrationAccount_Name": {
+            "value": "va-eis-tmp-integration-acct-nprod"
+        },
+        "KeyVault_Connection_Name": {
+            "value": "va-eis-tmp-keyvault-conn-nprod"
+        },
+        "LogicApp_Name": {
+            "value": "va-eis-tmp-outboundtransactionmonitor-nprod"
+        },
+        "Office365_Connection_Name": {
+            "value": "office365-4"
+        },
+		"AlertEmailAddressesTemplate": {
+			"value":"astein@microsoft.com;ryanmoore@microsoft.com;Richard.Carr@microsoft.com;john.wilson@catapultsystems.com;rusty.cisney@catapultsystems.com;peter.cisewski@microsoft.com;Peter.Cisewski@va.gov;Richard.Carr2@va.gov; william.cisney@va.gov; john.wilson@va.gov;  Andrew.Stein1@va.gov;Ryan.Moore4@va.gov;Terry.Vantreese@va.gov"
+		}
+    }
+}

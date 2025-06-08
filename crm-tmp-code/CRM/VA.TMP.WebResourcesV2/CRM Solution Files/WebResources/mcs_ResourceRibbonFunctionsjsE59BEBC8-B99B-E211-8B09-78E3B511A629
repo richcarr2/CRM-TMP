@@ -1,0 +1,64 @@
+﻿﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_Resource_Buttons = {};
+
+MCS.mcs_Resource_Buttons.openResourceCalendar = function () {
+
+    var relatedSystemResource = Xrm.Page.getAttribute("mcs_relatedresourceid");
+    var relatedSystemResourceId;
+    var relatedSystemResourceName;
+
+
+    if (relatedSystemResource != null) {
+        var relatedSystemResourceValue = relatedSystemResource.getValue();
+        if (relatedSystemResourceValue[0] != null)
+            relatedSystemResourceId = relatedSystemResourceValue[0].id;
+    }
+
+    Xrm.Utility.openEntityForm("equipment", relatedSystemResourceId);
+};
+
+MCS.mcs_Resource_Buttons.UpdateResourceConnections = function () {
+    var updateResourceConnections = Xrm.Page.getAttribute("cvt_updateresourceconnections");
+    var r = confirm("Please confirm that you would like to update this TMP Resource and all of its connections to MTSA's, TSA's, and Resource Groups. Please Select Ok to continue or Cancel to abort.");
+    if (r == true) {
+        x = alert("All fields on this TMP Resource all now editable (Except for Site & Type). After making changes, click Save or Save & Close to initiate process of updating all connections.")
+        updateResourceConnections.setValue(true);
+    }
+    else {
+        x = "Aborted";
+        updateResourceConnections.setValue(false);
+    }
+};
+
+MCS.mcs_Resource_Buttons.ReplaceResource = function () {
+    if (confirm("Please confirm that you would like to replace this TMP Resource on all MTSA's, TSA's, and Resource Groups. Please Select Ok to continue or Cancel to abort."))
+        MCS.cvt_Common.openDialogOnCurrentRecord("26CDD7B6-7A94-47E2-BC3A-1169722E81F0");
+    else
+        Xrm.Page.getAttribute("cvt_replaceresourceconnections").setValue(false);
+};
+
+MCS.mcs_Resource_Buttons.DeleteResourceConnections = function () {
+    var deleteResourceConnections = Xrm.Page.getAttribute("cvt_deleteresourceconnections");
+    var r = confirm("Please confirm that you would like to remove all connections to MTSA's, TSA's, and Resource Groups for this TMP Resource. Please Select Ok to continue or Cancel to abort.");
+    if (r == true) {
+        x = alert("All connections to MTSA's, TSA's, and Resource Groups for this TMP Resource are being removed. You may also choose to delete this TMP Resource by selecting the delete button in ribbon.")
+        deleteResourceConnections.setValue(true);
+        Xrm.Page.data.entity.save();
+    }
+    else {
+        x = "Aborted";
+        deleteResourceConnections.setValue(false);
+    }
+};
+
+MCS.mcs_Resource_Buttons.openDialogProcess = function (dialogId, EntityName, objectId) {
+    MCS.cvt_Common.openDialogProcess(dialogId, EntityName, objectId);
+};
+
+
+MCS.mcs_Resource_Buttons.runRibbonWorkflow = function (workflowId) {
+    MCS.GlobalFunctions.runWorkflow(Xrm.Page.data.entity.getId(), workflowId, MCS.GlobalFunctions.runWorkflowResponse);
+};

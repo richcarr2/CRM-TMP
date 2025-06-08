@@ -1,0 +1,3952 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "type": "String"
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "type": "string"
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "CKID": "195",
+        "Environment": "PREPROD",
+        "ProjectName": "Veterans Experience Integration Solution",
+        "VAAzureProgram": "EIS",
+        "VAECID": "AZG20181226001"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Compose_failed_logging_message_(Overall)": {
+              "inputs": {
+                "BusinessLogicTerminatingErrors": "@{variables('Terminating Error Message Text')}",
+                "Custom Attributes": {
+                  "ContactId": "@{variables('ContactId')}",
+                  "ReserveResourceId": "@{variables('ReserveResourceId')}",
+                  "ServiceAppointmentId": "@{variables('ServiceAppointmentId')}"
+                },
+                "Errors": [
+                  "@body('Filter_array:_Filter_Errors')"
+                ],
+                "Message": "@{outputs('Compose_human_readable_failure_message_(Overall)')}",
+                "Workflow Name": "@{workflow().name}",
+                "Workflow Run ID": "@{workflow()['run']['name']}",
+                "WorkflowStatus": "Failed"
+              },
+              "runAfter": {
+                "Compose_human_readable_failure_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Compose_human_readable_failure_message_(Overall)": {
+              "inputs": "@coalesce(outputs('Compose_Cerner_failure_message_segment'),outputs('Compose_Vista_failure_message_segment'))",
+              "runAfter": {
+                "Switch_on_message_source_for_composing_error_message": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Compose_human_readable_success_message_(Overall)": {
+              "inputs": "@coalesce(outputs('Compose_Cerner_success_message_segment'),outputs('Compose_Vista_success_message_segment'))",
+              "runAfter": {
+                "Switch_on_message_source_for_composing_success_message": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Compose_successful_logging_message": {
+              "inputs": {
+                "Custom Attributes": {
+                  "ContactId": "@{variables('ContactId')}",
+                  "ReserveResourceId": "@{variables('ReserveResourceId')}",
+                  "ServiceAppointmentId": "@{variables('ServiceAppointmentId')}"
+                },
+                "Errors": [],
+                "Message": "@{outputs('Compose_human_readable_success_message_(Overall)')}",
+                "Workflow Name": "@{workflow().name}",
+                "Workflow Run ID": "@{workflow()['run']['name']}",
+                "WorkflowStatus": "Success"
+              },
+              "runAfter": {
+                "Compose_human_readable_success_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Condition:_Truncate_mcs_name_length_for_error": {
+              "actions": {
+                "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Error)_-_truncate": {
+                  "inputs": {
+                    "name": "Integration Result Name for Overall Logic App",
+                    "value": "Cerner/Vista Response Handler - @{if(variables('IsCerner'),'Cerner','Vista')} Response Processing Failed (@{substring(variables('PatientFullName'),0,10)}) [Error]"
+                  },
+                  "runAfter": {},
+                  "type": "SetVariable"
+                }
+              },
+              "expression": {
+                "and": [
+                  {
+                    "greaterOrEquals": [
+                      "@length(variables('Integration Result Name for Overall Logic App'))",
+                      100
+                    ]
+                  }
+                ]
+              },
+              "runAfter": {
+                "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Error)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If"
+            },
+            "Condition:_Truncate_mcs_name_length_for_success": {
+              "actions": {
+                "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Success)_-_truncate": {
+                  "inputs": {
+                    "name": "Integration Result Name for Overall Logic App",
+                    "value": "Cerner/Vista Response Handler - @{if(variables('IsCerner'),'Cerner','Vista')} Response Processing Succeeded (@{substring(variables('PatientFullName'),0,10)}) [Success]"
+                  },
+                  "runAfter": {},
+                  "type": "SetVariable"
+                }
+              },
+              "expression": {
+                "and": [
+                  {
+                    "greaterOrEquals": [
+                      "@length(variables('Integration Result Name for Overall Logic App'))",
+                      100
+                    ]
+                  }
+                ]
+              },
+              "runAfter": {
+                "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Success)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If"
+            },
+            "Filter_array:_Filter_Errors": {
+              "inputs": {
+                "from": "@result('Try')",
+                "where": "@equals(item().status, 'Failed')"
+              },
+              "runAfter": {
+                "Try": [
+                  "TimedOut",
+                  "Failed",
+                  "Skipped"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Error_Integration_Result_for_Logic_App_Run": {
+              "inputs": {
+                "body": {
+                  "cvt_isclinicintegration": false,
+                  "mcs_appointmentid@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                  "mcs_error": "@{outputs('Compose_human_readable_failure_message_(Overall)')}\r\n@{variables('Terminating Error Message Text')}",
+                  "mcs_name": "@{variables('Integration Result Name for Overall Logic App')}",
+                  "mcs_payload": "@{triggerBody()}",
+                  "mcs_retry": false,
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                  "mcs_status": 803750003,
+                  "mcs_vimtrequest": "outbound-responsehandler-logicapp-level-error",
+                  "mcs_vimtresponse": "@{outputs('Compose_failed_logging_message_(Overall)')}"
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Condition:_Truncate_mcs_name_length_for_error": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "HTTP:_Create_Success_Integration_Result_for_Logic_App_Run": {
+              "inputs": {
+                "body": {
+                  "cvt_isclinicintegration": false,
+                  "mcs_appointmentid@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                  "mcs_error": "@{outputs('Compose_human_readable_success_message_(Overall)')}",
+                  "mcs_name": "@{variables('Integration Result Name for Overall Logic App')}",
+                  "mcs_payload": "@{triggerBody()}",
+                  "mcs_retry": false,
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                  "mcs_status": 803750002,
+                  "mcs_vimtrequest": "outbound-responsehandler-logicapp-level-success",
+                  "mcs_vimtresponse": "@{outputs('Compose_successful_logging_message')}"
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Condition:_Truncate_mcs_name_length_for_success": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "HTTP:_Set_Patient-Level_Integration_Result_Status_to_Error": {
+              "inputs": {
+                "body": {
+                  "mcs_status": 803750003
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "PATCH",
+                "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults(@{variables('Integration Result GUID')})"
+              },
+              "runAfter": {
+                "HTTP:_Create_Error_Integration_Result_for_Logic_App_Run": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Initialize_AllChildrenIntegrationResultsFetchXMLConditions": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AllChildrenIntegrationResultsFetchXMLConditions",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AllChildrenIntegrationResults_array": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_AllChildrenIntegrationResults_array": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AllChildrenIntegrationResults",
+                    "type": "array"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_OutboundWorkerOverallSuccessIntegrationResultId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_AppointmentType_variable": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "AppointmentType",
+                    "type": "integer",
+                    "value": 3
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Initialize_CernerFacilityTypeCode": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "CernerFacilityTypeCode",
+                    "type": "integer",
+                    "value": 917290000
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_VistaFacilityTypeCode": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ContactId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ContactId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AppointmentType_variable": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Integration_Result_GUID": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Integration Result GUID",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Integration_Result_OData_Link": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Integration_Result_Name_for_Overall_Logic_App": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Integration Result Name for Overall Logic App",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_CernerFacilityTypeCode": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Integration_Result_OData_Link": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Integration Result OData Link",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_VistaStatus": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_IsCerner": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "IsCerner",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientFetchCondition": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_IsCernerOnPatientSide": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "IsCernerOnPatientSide",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_IsVistaOnProviderSide": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_IsCernerOnProviderSide": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "IsCernerOnProviderSide",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_IsCernerOnPatientSide": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_IsVistaOnPatientSide": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "IsVistaOnPatientSide",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_AllChildrenIntegrationResultsFetchXMLConditions": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_IsVistaOnProviderSide": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "IsVistaOnProviderSide",
+                    "type": "boolean",
+                    "value": false
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_IsVistaOnPatientSide": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_OutboundWorkerOverallSuccessIntegrationResultId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "OutboundWorkerOverallSuccessIntegrationResultId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_OverallIntegrationResultLogicAppRunId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_OverallIntegrationResultLogicAppRunId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "OverallIntegrationResultLogicAppRunId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_IsCerner": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientClinicIen": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientClinicIen",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientFullName": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientFacilityTypeCode": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientFacilityTypeCode",
+                    "type": "integer"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientStationNumber": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientFetchCondition": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientFetchCondition",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_VisitStatus": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientFullName": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientFullName",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientIcn": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientIcn": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientIcn",
+                    "type": "string",
+                    "value": "@triggerBody()?['PatientICN']"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Integration_Result_GUID": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_PatientStationNumber": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PatientStationNumber",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ProviderStationNumber": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Patient_level_Integration_Result_Search_Lookback_Start_Date": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Patient level Integration Result Search Lookback Start Date",
+                    "type": "string",
+                    "value": "@{addDays(utcNow(),-4,'MM/dd/yyyy')}"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Terminating_Error_Message_Text_": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ProviderClinicIen": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ProviderClinicIen",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientClinicIen": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ProviderStationNumber": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ProviderStationNumber",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ProviderClinicIen": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ReserveResourceId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ReserveResourceId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ServiceAppointmentId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ReserveResource_OData_Lookup": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ReserveResource OData Lookup",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ReserveResourceId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_ServiceAppointmentId": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "ServiceAppointmentId",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ContactId": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_Terminating_Error_Message_Text_": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Terminating Error Message Text",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_Integration_Result_Name_for_Overall_Logic_App": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_VisitStatus": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "VisitStatus",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_PatientFacilityTypeCode": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_VistaFacilityTypeCode": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "VistaFacilityTypeCode",
+                    "type": "integer",
+                    "value": 917290001
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_IsCernerOnProviderSide": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_VistaStatus": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "VistaStatus",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_ReserveResource_OData_Lookup": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Response:_200": {
+              "inputs": {
+                "body": "@outputs('Compose_successful_logging_message')",
+                "statusCode": 200
+              },
+              "kind": "Http",
+              "runAfter": {
+                "HTTP:_Create_Success_Integration_Result_for_Logic_App_Run": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Response:_500": {
+              "inputs": {
+                "body": "@outputs('Compose_failed_logging_message_(Overall)')",
+                "statusCode": 500
+              },
+              "kind": "Http",
+              "runAfter": {
+                "HTTP:_Set_Patient-Level_Integration_Result_Status_to_Error": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Error)": {
+              "inputs": {
+                "name": "Integration Result Name for Overall Logic App",
+                "value": "Cerner/Vista Response Handler - @{if(variables('IsCerner'),'Cerner','Vista')} Response Processing Failed (@{variables('PatientFullName')}) [Error]"
+              },
+              "runAfter": {
+                "Compose_failed_logging_message_(Overall)": [
+                  "Succeeded"
+                ]
+              },
+              "type": "SetVariable"
+            },
+            "Set_variable_Int_Result_Name_for_Overall_Logic_App_(Success)": {
+              "inputs": {
+                "name": "Integration Result Name for Overall Logic App",
+                "value": "Cerner/Vista Response Handler - @{if(variables('IsCerner'),'Cerner','Vista')} Response Processing Succeeded (@{variables('PatientFullName')}) [Success]"
+              },
+              "runAfter": {
+                "Compose_successful_logging_message": [
+                  "Succeeded"
+                ]
+              },
+              "type": "SetVariable"
+            },
+            "Switch_on_message_source_for_composing_error_message": {
+              "cases": {
+                "Case:_Cerner": {
+                  "actions": {
+                    "Compose_Cerner_failure_message_segment": {
+                      "inputs": "An acknowledgement from Cerner in response to a Cerner/VistA, VistA/Cerner, or Cerner/Cerner appointment creation/cancellation was NOT successfully processed for Patient @{variables('PatientFullName')}. This indicates the appointment book or cancel from TMP to Cerner and back to TMP did NOT succeeded end to end. Additional information can be found in the 'Error' field. Please contact technical support.",
+                      "runAfter": {},
+                      "type": "Compose"
+                    }
+                  },
+                  "case": 1
+                }
+              },
+              "default": {
+                "actions": {
+                  "Compose_Vista_failure_message_segment": {
+                    "inputs": "An acknowledgement from VistA in response to a Cerner/VistA, VistA/Cerner, or Cerner/Cerner appointment creation/cancellation was NOT successfully processed for Patient @{variables('PatientFullName')}. This indicates the appointment book or cancel from TMP to VistA and back to TMP did NOT succeeded. Additional information can be found in the 'Error' field. Please contact technical support.",
+                    "runAfter": {},
+                    "type": "Compose"
+                  }
+                }
+              },
+              "expression": "@if(variables('IsCerner'),1,0)",
+              "runAfter": {
+                "Filter_array:_Filter_Errors": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Switch"
+            },
+            "Switch_on_message_source_for_composing_success_message": {
+              "cases": {
+                "Case:_Cerner": {
+                  "actions": {
+                    "Compose_Cerner_success_message_segment": {
+                      "inputs": "An acknowledgement from Cerner in response to a Cerner/Vista, Vista/Cerner, or Cerner/Cerner appointment creation/cancellation was successfully processed for patient @{variables('PatientFullName')}.  This indicates the appointment book or cancel from TMP to Cerner and back to TMP for this patient succeeded end to end. No further action is required.",
+                      "runAfter": {},
+                      "type": "Compose"
+                    }
+                  },
+                  "case": 1
+                }
+              },
+              "default": {
+                "actions": {
+                  "Compose_Vista_success_message_segment": {
+                    "inputs": "An acknowledgement from Vista in response to a Cerner/Vista, Vista/Cerner, or Cerner/Cerner appointment creation/cancellation was successfully processed for patient @{variables('PatientFullName')}.  This indicates the appointment book or cancel from TMP to Vista and back to TMP for this patient succeeded. No further action is required.",
+                    "runAfter": {},
+                    "type": "Compose"
+                  }
+                }
+              },
+              "expression": "@if(variables('IsCerner'),1,0)",
+              "runAfter": {
+                "Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Switch"
+            },
+            "Terminate:_Overall_Error": {
+              "inputs": {
+                "runError": {
+                  "code": "@{outputs('Compose_human_readable_failure_message_(Overall)')}",
+                  "message": "@{outputs('Compose_failed_logging_message_(Overall)')}"
+                },
+                "runStatus": "Failed"
+              },
+              "runAfter": {
+                "Response:_500": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Terminate"
+            },
+            "Terminate:_This_message_is_from_the_NPROD_splitter": {
+              "inputs": {
+                "runStatus": "Cancelled"
+              },
+              "runAfter": {
+                "HTTP:_Create_Error_Integration_Result_for_Logic_App_Run": [
+                  "Failed"
+                ]
+              },
+              "type": "Terminate"
+            },
+            "Try": {
+              "actions": {
+                "Condition:_SA_doesn't_exist": {
+                  "actions": {
+                    "Compose_error_message_9": {
+                      "inputs": "Service appointment with id = @{variables('ServiceAppointmentId')} does not exist in TMP. This is not expected.",
+                      "runAfter": {},
+                      "type": "Compose"
+                    },
+                    "Set_Terminating_Error_Message_Text_9": {
+                      "inputs": {
+                        "name": "Terminating Error Message Text",
+                        "value": "@{outputs('Compose_error_message_9')}"
+                      },
+                      "runAfter": {
+                        "Compose_error_message_9": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    },
+                    "Throw_error_9": {
+                      "inputs": "@int(outputs('Compose_error_message_9'))",
+                      "runAfter": {
+                        "Set_Terminating_Error_Message_Text_9": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@length(array(json(string(body('HTTP:_Get_Service_Appointment')))))",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Get_Service_Appointment": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Create_new_Integration_Result_for_response_based_on_message_source": {
+                  "actions": {
+                    "Create_new_Integration_Result_(Response_from_Cerner_Received)": {
+                      "inputs": {
+                        "body": {
+                          "mcs_error": "This is a placeholder indicating that an acknowledgement was recieved from Cerner in response to a Cerner/Vista, Vista/Cerner, or Cerner/Cerner appointment creation/cancellation initiaited from TMP. It does *not* indicate whether the response was successfully processed by the Response Handler (please see subsequent integration results for that information). This indicates the integration is functioning properly, and no further action is required.",
+                          "mcs_name": "Cerner/Vista Response Handler - Response Received from Cerner for @{variables('PatientFullName')} [Success]",
+                          "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                          "mcs_status": 803750002,
+                          "mcs_vimtresponse": "@{triggerBody()}"
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                          "Prefer": "return=representation"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults"
+                      },
+                      "runAfter": {},
+                      "type": "Http"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Create_new_Integration_Result_(Response_from_VistA_Received)": {
+                        "inputs": {
+                          "body": {
+                            "mcs_error": "This is a placeholder indicating that an acknowledgement was recieved from Vista in response to a Cerner/Vista, Vista/Cerner, or Cerner/Cerner appointment creation/cancellation initiaited from TMP. It does *not* indicate whether the response was successfully processed by the Response Handler (please see subsequent integration results for that information). This indicates the integration is functioning properly, and no further action is required.",
+                            "mcs_name": "Cerner/Vista Response Handler - Response Received from Vista for @{variables('PatientFullName')} [Success]",
+                            "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                            "mcs_status": 803750002,
+                            "mcs_vimtresponse": "@{triggerBody()}"
+                          },
+                          "headers": {
+                            "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                            "Prefer": "return=representation"
+                          },
+                          "method": "POST",
+                          "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@triggerBody()?['MessageSource']",
+                          "Cerner"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_there_are_patient(s),_get_their_information": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Get_Patient_and_Provider_Facilities_Information_(FetchXML)": {
+                  "inputs": "<fetch>\n  <entity name=\"serviceappointment\" >\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ServiceAppointmentId')}\" />\n    </filter>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedprovidersite\" link-type=\"outer\" alias=\"ProviderSite\" >\n      <attribute name=\"mcs_name\" alias=\"ProviderSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"ProviderFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"ProviderFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"ProviderStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"ProviderFacility\" />\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"mcs_relatedsite\" link-type=\"outer\" alias=\"PatientSite\" >\n      <attribute name=\"mcs_name\" alias=\"PatientSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"PatientFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"PatientFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"PatientStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"PatientFacility\" />\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "If_there_is_a_reserve_resource_associated,_get_the_information_for_it_": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Get_Patient_and_Provider_Facilities_Information_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments?fetchXml=@{outputs('Get_Patient_and_Provider_Facilities_Information_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Get_Patient_and_Provider_Facilities_Information_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Get_Reserve_Resource_Information_(FetchXML)": {
+                  "inputs": "<fetch>\n  <entity name=\"activityparty\" >\n    <link-entity name=\"appointment\" from=\"activityid\" to=\"activityid\" >\n      <attribute name=\"activityid\" alias=\"ReserveResourceId\" />\n      <link-entity name=\"serviceappointment\" from=\"activityid\" to=\"cvt_serviceactivityid\" >\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ServiceAppointmentId')}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"contact\" from=\"contactid\" to=\"partyid\" >\n      <link-entity name=\"mcs_personidentifiers\" from=\"mcs_patient\" to=\"contactid\" >\n        <filter>\n          <condition attribute=\"mcs_identifier\" operator=\"eq\" value=\"@{variables('PatientIcn')}\" />\n <condition attribute=\"mcs_identifiertype\" operator=\"eq\" value=\"125150000\" />\n <condition attribute=\"mcs_assigningauthority\" operator=\"eq\" value=\"USVHA\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Create_new_Integration_Result_for_response_based_on_message_source": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Get_Reserve_Resource_Information_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/activityparties?fetchXml=@{outputs('Get_Reserve_Resource_Information_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Get_Reserve_Resource_Information_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Get_secret_-_CDS_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {},
+                  "type": "ApiConnection"
+                },
+                "Get_secret_-_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret_-_CDS_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret_-_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret_-_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret_-_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Get_Patient": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_personidentifierses?fetchXml=@{outputs('Patient_FetchXML')}"
+                  },
+                  "runAfter": {
+                    "Patient_FetchXML": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Get_Service_Appointment": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments(@{variables('ServiceAppointmentId')})"
+                  },
+                  "runAfter": {
+                    "If_message_is_from_Vista,_extract_data_from_Int_Res,_else_from_payload+Int_Res": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "If_message_is_from_Cerner,_set_SA_status_conditionally_based_on_successes": {
+                  "actions": {
+                    "Condition:_If_we_found_an_integration_result_and_mcs_vimtresponse_is_valued": {
+                      "actions": {
+                        "Condition:_check_total_number_of_Int_Res_vs_number_of_complete_Int_Res": {
+                          "actions": {
+                            "Set_SA_status_to_Canceled_or_Reserve_Scheduled": {
+                              "cases": {
+                                "Case:_canceled": {
+                                  "actions": {
+                                    "HTTP:_Set_Service_Appointment_status_to_Canceled,_Clinic_Canceled": {
+                                      "inputs": {
+                                        "body": {
+                                          "statecode": 2,
+                                          "statuscode": 917290000
+                                        },
+                                        "headers": {
+                                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                        },
+                                        "method": "PATCH",
+                                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments(@{variables('ServiceAppointmentId')})"
+                                      },
+                                      "runAfter": {},
+                                      "type": "Http"
+                                    }
+                                  },
+                                  "case": "canceled"
+                                },
+                                "Case:_confirmed": {
+                                  "actions": {
+                                    "HTTP:_Set_Service_Appointment_status_to_Scheduled,_Reserve_Scheduled": {
+                                      "inputs": {
+                                        "body": {
+                                          "statecode": 3,
+                                          "statuscode": 4
+                                        },
+                                        "headers": {
+                                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                        },
+                                        "method": "PATCH",
+                                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments(@{variables('ServiceAppointmentId')})"
+                                      },
+                                      "runAfter": {},
+                                      "type": "Http"
+                                    }
+                                  },
+                                  "case": "confirmed"
+                                }
+                              },
+                              "default": {
+                                "actions": {
+                                  "Compose_error_message_7": {
+                                    "inputs": "TMPCernerIntegrationBusinessLogicError: The VisitStatus \"@{variables('VisitStatus')}\" specified in either the payload from HealthConnect or the JSON sent to HealthConnect for this appointment does not exist.",
+                                    "runAfter": {},
+                                    "type": "Compose"
+                                  },
+                                  "Throw_error_7": {
+                                    "inputs": "@int(outputs('Compose_error_message_7'))",
+                                    "runAfter": {
+                                      "Compose_error_message_7": [
+                                        "Succeeded"
+                                      ]
+                                    },
+                                    "type": "Compose"
+                                  }
+                                }
+                              },
+                              "expression": "@variables('VisitStatus')",
+                              "runAfter": {},
+                              "type": "Switch"
+                            }
+                          },
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@equals(length(variables('AllChildrenIntegrationResults')),length(body('Get_Children_Integration_Results_in_a_Complete_state_(HTTP)')['value']))",
+                                  true
+                                ]
+                              }
+                            ]
+                          },
+                          "runAfter": {
+                            "Get_Children_Integration_Results_in_a_Complete_state_(HTTP)": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "If"
+                        },
+                        "For_each_child_integration_result,_append_to_the_FetchXML": {
+                          "actions": {
+                            "Append_to_AllChildrenIntegrationResultsFetchXMLConditions_variable": {
+                              "inputs": {
+                                "name": "AllChildrenIntegrationResultsFetchXMLConditions",
+                                "value": "<value>@{items('For_each_child_integration_result,_append_to_the_FetchXML')}</value>"
+                              },
+                              "runAfter": {},
+                              "type": "AppendToStringVariable"
+                            }
+                          },
+                          "foreach": "@variables('AllChildrenIntegrationResults')",
+                          "runAfter": {
+                            "Set_variable_AllChildrenIntegrationResults": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Foreach"
+                        },
+                        "Get_Children_Integration_Results_in_a_Complete_state_(FetchXML)": {
+                          "inputs": "<fetch no-lock='true'>\n  <entity name='mcs_integrationresult'>\n    <attribute name='mcs_integrationresultid' />\n    <attribute name='mcs_status' />\n    <filter>\n      <condition attribute='mcs_status' operator='eq' value='803750002' />\n      <condition attribute='mcs_integrationresultid' operator='in'>\n       @{variables('AllChildrenIntegrationResultsFetchXMLConditions')}\n      </condition>\n    </filter>\n  </entity>\n</fetch>",
+                          "runAfter": {
+                            "For_each_child_integration_result,_append_to_the_FetchXML": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose"
+                        },
+                        "Get_Children_Integration_Results_in_a_Complete_state_(HTTP)": {
+                          "inputs": {
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "GET",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults?fetchXml=@{outputs('Get_Children_Integration_Results_in_a_Complete_state_(FetchXML)')}"
+                          },
+                          "runAfter": {
+                            "Get_Children_Integration_Results_in_a_Complete_state_(FetchXML)": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Http"
+                        },
+                        "Parse_mcs_vimtresponse_to_extract_children_Integration_Result_Ids": {
+                          "inputs": {
+                            "content": "@body('Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)')?.value[0]?.mcs_vimtresponse",
+                            "schema": {
+                              "properties": {
+                                "Custom Attributes": {
+                                  "properties": {
+                                    "controlid": {
+                                      "type": "string"
+                                    },
+                                    "integrationresultids": {
+                                      "type": "string"
+                                    },
+                                    "serviceappointmentid": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "Errors": {
+                                  "type": "array"
+                                },
+                                "Message:": {
+                                  "type": "string"
+                                },
+                                "Workflow Name": {
+                                  "type": "string"
+                                },
+                                "Workflow Run ID": {
+                                  "type": "string"
+                                },
+                                "WorkflowStatus": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "runAfter": {},
+                          "type": "ParseJson"
+                        },
+                        "Set_variable_AllChildrenIntegrationResults": {
+                          "inputs": {
+                            "name": "AllChildrenIntegrationResults",
+                            "value": "@split(body('Parse_mcs_vimtresponse_to_extract_children_Integration_Result_Ids')?['Custom Attributes']?['integrationresultids'],',')"
+                          },
+                          "runAfter": {
+                            "Parse_mcs_vimtresponse_to_extract_children_Integration_Result_Ids": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Compose_error_message_6": {
+                            "inputs": "TMPCernerIntegrationBusinessLogicError: Either no integration result could be found associated with the outbound worker's overall successful logic app run id = @{variables('OverallIntegrationResultLogicAppRunId')}, or else \"mcs_vimtresponse\" is not valued for the integration result with id = @{variables('OutboundWorkerOverallSuccessIntegrationResultId')}. Neither condition is expected. It indicates a possible fault or regression in the Outbound Worker.",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_6": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_6')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_6": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_error_message_6": {
+                            "inputs": "@int(outputs('Compose_error_message_6'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_6": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greaterOrEquals": [
+                              "@length(body('Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)')?.value)",
+                              1
+                            ]
+                          },
+                          {
+                            "not": {
+                              "equals": [
+                                "@body('Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)')?.value[0]?.mcs_vimtresponse",
+                                "@null"
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Set_OutboundWorkerOverallSuccessIntegrationResultId": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Get_logic-app_level_successful_Integration_Result_for_SA_(FetchXML)": {
+                      "inputs": "<fetch no-lock='true'>\n  <entity name='mcs_integrationresult'>\n    <attribute name='mcs_integrationresultid' />\n    <attribute name='mcs_vimtresponse' />\n    <filter>\n        <condition attribute='mcs_name' operator='eq' value='Cerner Outbound Worker - Overall Process Completed [Success]' />\n      <condition attribute='mcs_result' operator='eq' value='@{variables('OverallIntegrationResultLogicAppRunId')}' />\n    </filter>\n  </entity>\n</fetch>",
+                      "runAfter": {
+                        "HTTP:_Set_Patient-Level_Integration_Result_Status_to_Complete": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults?fetchXml=@{outputs('Get_logic-app_level_successful_Integration_Result_for_SA_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Get_logic-app_level_successful_Integration_Result_for_SA_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Set_Patient-Level_Integration_Result_Status_to_Complete": {
+                      "inputs": {
+                        "body": {
+                          "mcs_status": 803750002
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "PATCH",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults(@{variables('Integration Result GUID')})"
+                      },
+                      "runAfter": {},
+                      "type": "Http"
+                    },
+                    "Set_OutboundWorkerOverallSuccessIntegrationResultId": {
+                      "inputs": {
+                        "name": "OutboundWorkerOverallSuccessIntegrationResultId",
+                        "value": "@{body('Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)')?.value[0]?.mcs_integrationresultid}"
+                      },
+                      "runAfter": {
+                        "Get_logic-app_level_successful_Integration_Result_for_SA_(HTTP)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@triggerBody()?['MessageSource']",
+                          "Cerner"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_message_is_from_Cerner_and_is_a_cancel,_find_scheduled_Cerner_VIR_and_update": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_Cerner_and_is_a_cancel,_find_scheduled_Cerner_VIR_and_update": {
+                  "actions": {
+                    "Find_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient_(FetchXML)": {
+                      "inputs": "<fetch top='1' no-lock='true'>\n  <entity name='cvt_vistaintegrationresult'>\n    <attribute name='cvt_vistaintegrationresultid' />\n    <filter>\n      <filter>\n        <condition attribute='cvt_veteran' operator='eq' value='@{variables('ContactId')}' />\n        <condition attribute='cvt_vistastatus' operator='eq' value='SCHEDULED' />\n       <condition attribute='cvt_vistareasoncode' operator='eq' value='CERNER' />\n      </filter>\n      <condition attribute='cvt_serviceactivity' operator='eq' value='@{variables('ServiceAppointmentId')}' />\n    </filter>\n    <order attribute='modifiedon' descending='true' />\n  </entity>\n</fetch>",
+                      "runAfter": {},
+                      "type": "Compose"
+                    },
+                    "HTTP:_Find_the_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults?fetchXml=@{outputs('Find_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Find_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "If_there_is_a_matching_prior_Cerner_Vista_Integration_Result,_update_it": {
+                      "actions": {
+                        "HTTP:_Update_prior_Cerner_Vista_Integration_Result": {
+                          "inputs": {
+                            "body": {
+                              "cvt_vistastatus": "@{if(equals(variables('VisitStatus'),'confirmed'),'SCHEDULED','CANCELED')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "PATCH",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults(@{body('HTTP:_Find_the_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient')?.value[0]?['cvt_vistaintegrationresultid']})"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Compose_error_message_5": {
+                            "inputs": "TMPCernerIntegrationBusinessLogicError: Unable to find a prior Vista Integration Result indicating that Patient @{variables('ContactId')} was ever scheduled on the Cerner side for service appointment id @{variables('ServiceAppointmentId')}. This is not expected. ",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_5": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_5')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_5": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_error_5": {
+                            "inputs": "@int(outputs('Compose_error_message_5'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_5": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(body('HTTP:_Find_the_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient')?.value)",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "HTTP:_Find_the_prior_Scheduled_Cerner_Vista_Integration_Result_for_Patient": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@triggerBody()?['MessageSource']",
+                          "Cerner"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@variables('VisitStatus')",
+                          "canceled"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_message_is_from_VistA_and_is_a_cancel,_find_scheduled_VistA_VIR_and_update_it": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_Cerner_and_is_a_schedule,_create_Cerner_VIR": {
+                  "actions": {
+                    "Condition:_Is_Cerner_on_Patient_Side": {
+                      "actions": {
+                        "HTTP_CreatePatientSideVistaIntegrationResult_for_Cerner": {
+                          "inputs": {
+                            "body": {
+                              "cvt_appointment@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                              "cvt_clinicien": "@{variables('PatientClinicIen')}",
+                              "cvt_datetime": "@{formatDateTime(body('HTTP:_Get_Service_Appointment')?['scheduledstart'],'yyyyMMddHHmm')}",
+                              "cvt_facilitycode": "@{variables('PatientStationNumber')}",
+                              "cvt_name": "Cerner Integration Result - @{variables('PatientFullName')} (@{variables('PatientStationNumber')})",
+                              "cvt_parentresult@odata.bind": "@{variables('Integration Result OData Link')}",
+                              "cvt_patientname": "@{variables('PatientFullName')}(@{variables('PatientStationNumber')})",
+                              "cvt_personid": "@{variables('PatientIcn')}",
+                              "cvt_reason": "",
+                              "cvt_serviceactivity@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                              "cvt_veteran@odata.bind": "/contacts(@{variables('ContactId')})",
+                              "cvt_vistareasoncode": "CERNER",
+                              "cvt_vistastatus": "@{if(equals(variables('VisitStatus'),'confirmed'),'SCHEDULED','CANCELED')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "POST",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('IsCernerOnPatientSide')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {},
+                      "type": "If"
+                    },
+                    "Condition:_Is_Cerner_on_Provider_Side": {
+                      "actions": {
+                        "HTTP_CreateProviderSideVistaIntegrationResult_for_Cerner": {
+                          "inputs": {
+                            "body": {
+                              "cvt_appointment@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                              "cvt_clinicien": "@{variables('ProviderClinicIen')}",
+                              "cvt_datetime": "@{formatDateTime(body('HTTP:_Get_Service_Appointment')?['scheduledstart'],'yyyyMMddHHmm')}",
+                              "cvt_facilitycode": "@{variables('ProviderStationNumber')}",
+                              "cvt_name": "Cerner Integration Result - @{variables('PatientFullName')} (@{variables('PatientStationNumber')})",
+                              "cvt_parentresult@odata.bind": "@{variables('Integration Result OData Link')}",
+                              "cvt_patientname": "@{variables('PatientFullName')}(@{variables('ProviderStationNumber')})",
+                              "cvt_personid": "@{variables('PatientIcn')}",
+                              "cvt_reason": "",
+                              "cvt_serviceactivity@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                              "cvt_veteran@odata.bind": "/contacts(@{variables('ContactId')})",
+                              "cvt_vistareasoncode": "CERNER",
+                              "cvt_vistastatus": "@{if(equals(variables('VisitStatus'),'confirmed'),'SCHEDULED','CANCELED')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "POST",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('IsCernerOnProviderSide')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Condition:_Is_Cerner_on_Patient_Side": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@triggerBody()?['MessageSource']",
+                          "Cerner"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@variables('VisitStatus')",
+                          "confirmed"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_message_is_from_Vista_and_is_a_schedule,_create_VistA_VIR": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_VistA_and_is_a_cancel,_find_scheduled_VistA_VIR_and_update_it": {
+                  "actions": {
+                    "Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient_(FetchXML)": {
+                      "inputs": "<fetch top='1' no-lock='true'>\n  <entity name='cvt_vistaintegrationresult'>\n    <attribute name='cvt_vistaintegrationresultid' />\n    <filter>\n      <filter>\n        <condition attribute='cvt_veteran' operator='eq' value='@{variables('ContactId')}' />\n        <condition attribute='cvt_vistastatus' operator='eq' value='SCHEDULED' />\n        <condition attribute='cvt_vistareasoncode' operator='eq' value='VISTA' />\n      </filter>\n      <condition attribute='cvt_serviceactivity' operator='eq' value='@{variables('ServiceAppointmentId')}' />\n    </filter>\n    <order attribute='modifiedon' descending='true' />\n  </entity>\n</fetch>",
+                      "runAfter": {},
+                      "type": "Compose"
+                    },
+                    "HTTP:_Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults?fetchXml=@{outputs('Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "If_there_is_a_matching_prior_Vista_Integration_Result,_update_it;_else_fail": {
+                      "actions": {
+                        "HTTP:_Update_prior_Vista_Integration_Result": {
+                          "inputs": {
+                            "body": {
+                              "cvt_reason": "@{triggerBody()?['failurereason']}",
+                              "cvt_vistastatus": "@{if(equals(variables('VisitStatus'),'confirmed'),'SCHEDULED','CANCELED')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "PATCH",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults(@{body('HTTP:_Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient')?.value[0]?['cvt_vistaintegrationresultid']})"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Compose_error_message_4": {
+                            "inputs": "TMPCernerIntegrationBusinessLogicError: Unable to find a prior Vista Integration Result indicating that Patient @{variables('ContactId')} was ever scheduled on the Vista side for service appointment id @{variables('ServiceAppointmentId')}. This is not expected. ",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_4": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_4')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_4": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_error_4": {
+                            "inputs": "@int(outputs('Compose_error_message_4'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_4": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(body('HTTP:_Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient')?.value[0])",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "HTTP:_Find_the_prior_Scheduled_Vista_Integration_Result_for_this_Patient": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@triggerBody()?['MessageSource']",
+                            "Cerner"
+                          ]
+                        }
+                      },
+                      {
+                        "equals": [
+                          "@variables('VisitStatus')",
+                          "canceled"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_message_is_from_Cerner_and_is_a_schedule,_create_Cerner_VIR": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_Vista,_extract_data_from_Int_Res,_else_from_payload+Int_Res": {
+                  "actions": {
+                    "Condition:_If_Integration_Result_Exists": {
+                      "actions": {
+                        "Parse_Integration_Result_Integration_Request_JSON": {
+                          "inputs": {
+                            "content": "@body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['mcs_integrationrequest']",
+                            "schema": {
+                              "properties": {
+                                "AppointmentID": {
+                                  "type": "string"
+                                },
+                                "AppointmentType": {
+                                  "type": "string"
+                                },
+                                "CancelCode": {
+                                  "type": "string"
+                                },
+                                "CancelReason": {
+                                  "type": "string"
+                                },
+                                "CancelRemarks": {
+                                  "type": "string"
+                                },
+                                "ClinicallyIndicatedDate": {
+                                  "type": "string"
+                                },
+                                "Comments": {
+                                  "type": "string"
+                                },
+                                "ControlId": {
+                                  "type": "string"
+                                },
+                                "Duration": {
+                                  "type": "string"
+                                },
+                                "LogicAppRunId": {
+                                  "type": "string"
+                                },
+                                "MessageId": {
+                                  "type": "string"
+                                },
+                                "PatientFacility": {
+                                  "type": "string"
+                                },
+                                "PatientInfo": {
+                                  "properties": {
+                                    "Identifiers": {
+                                      "items": {
+                                        "properties": {
+                                          "IdentifierType": {
+                                            "type": "string"
+                                          },
+                                          "IdentifierValue": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "IdentifierType",
+                                          "IdentifierValue"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "Name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "PatientResources": {
+                                  "properties": {
+                                    "ConsultId": {
+                                      "type": "string"
+                                    },
+                                    "Facility": {
+                                      "type": "string"
+                                    },
+                                    "ParentRTCId": {
+                                      "type": "string"
+                                    },
+                                    "RTCId": {
+                                      "type": "string"
+                                    },
+                                    "Resources": {
+                                      "items": {
+                                        "properties": {
+                                          "ResourceKey": {
+                                            "type": "string"
+                                          },
+                                          "ResourceName": {
+                                            "type": "string"
+                                          },
+                                          "ResourceType": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "ResourceType",
+                                          "ResourceKey",
+                                          "ResourceName"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "ProviderFacility": {
+                                  "type": "string"
+                                },
+                                "ProviderResources": {
+                                  "properties": {
+                                    "ConsultId": {
+                                      "type": "string"
+                                    },
+                                    "Facility": {
+                                      "type": "string"
+                                    },
+                                    "ParentRTCId": {
+                                      "type": "string"
+                                    },
+                                    "RTCId": {
+                                      "type": "string"
+                                    },
+                                    "Resources": {
+                                      "items": {
+                                        "properties": {
+                                          "ResourceKey": {
+                                            "type": "string"
+                                          },
+                                          "ResourceName": {
+                                            "type": "string"
+                                          },
+                                          "ResourceType": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "ResourceType",
+                                          "ResourceKey",
+                                          "ResourceName"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "SchedulerInfo": {
+                                  "items": {
+                                    "properties": {
+                                      "SchedulerIdentifierType": {
+                                        "type": "string"
+                                      },
+                                      "SchedulerIdentifierValue": {
+                                        "type": "string"
+                                      },
+                                      "SchedulerName": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "SchedulerIdentifierType",
+                                      "SchedulerName",
+                                      "SchedulerIdentifierValue"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "StartTime": {
+                                  "type": "string"
+                                },
+                                "VisitStatus": {
+                                  "type": "string"
+                                },
+                                "VvdUrl": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "runAfter": {},
+                          "type": "ParseJson"
+                        },
+                        "Parse_mcs_vimtresponse_from_Integration_Result_JSON": {
+                          "inputs": {
+                            "content": "@body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['mcs_vimtresponse']",
+                            "schema": {
+                              "properties": {
+                                "Custom Attributes": {
+                                  "properties": {
+                                    "contactid": {
+                                      "type": "string"
+                                    },
+                                    "serviceappointmentid": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "Errors": {
+                                  "type": "array"
+                                },
+                                "Message:": {
+                                  "type": "string"
+                                },
+                                "Workflow Name": {
+                                  "type": "string"
+                                },
+                                "Workflow Run ID": {
+                                  "type": "string"
+                                },
+                                "WorkflowStatus": {
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "runAfter": {
+                            "Parse_Integration_Result_Integration_Request_JSON": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "ParseJson"
+                        },
+                        "Set_ContactId_variable_1": {
+                          "inputs": {
+                            "name": "ContactId",
+                            "value": "@body('Parse_mcs_vimtresponse_from_Integration_Result_JSON')?['Custom Attributes']?['contactid']"
+                          },
+                          "runAfter": {
+                            "Set_ServiceAppointmentId_variable_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_Integration_Result_GUID_1": {
+                          "inputs": {
+                            "name": "Integration Result GUID",
+                            "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['mcs_integrationresultid']}"
+                          },
+                          "runAfter": {
+                            "Set_PatientFetchCondition_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_Integration_Result_OData_Link_1": {
+                          "inputs": {
+                            "name": "Integration Result OData Link",
+                            "value": "/mcs_integrationresults(@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['mcs_integrationresultid']})"
+                          },
+                          "runAfter": {
+                            "Set_Integration_Result_GUID_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_OverallIntegrationResultLogicAppRunId": {
+                          "inputs": {
+                            "name": "OverallIntegrationResultLogicAppRunId",
+                            "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['mcs_payload']}"
+                          },
+                          "runAfter": {
+                            "Set_VisitStatus": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_PatientFetchCondition_1": {
+                          "inputs": {
+                            "name": "PatientFetchCondition",
+                            "value": "<fetch>\n  <entity name=\"mcs_personidentifiers\" >\n    <attribute name= 'mcs_identifier' />\n    <link-entity name=\"contact\" to=\"mcs_patient\" from=\"contactid\" link-type=\"inner\" >\n      <attribute name=\"contactid\" />\n      <attribute name= 'fullname' />\n\t  <filter>\n           <condition attribute=\"contactid\" operator=\"eq\" value=\"@{variables('ContactId')}\" />\n      </filter>\n    </link-entity>\n   <filter>\n <condition attribute=\"mcs_identifiertype\" operator=\"eq\" value=\"125150000\" />\n <condition attribute=\"mcs_assigningauthority\" operator=\"eq\" value=\"USVHA\" />\n  </filter>\n  </entity>\n</fetch>"
+                          },
+                          "runAfter": {
+                            "Set_ContactId_variable_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_ReserveResourceId_1": {
+                          "inputs": {
+                            "name": "ReserveResourceId",
+                            "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['_mcs_appointmentid_value']}"
+                          },
+                          "runAfter": {
+                            "Set_OverallIntegrationResultLogicAppRunId": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_ServiceAppointmentId_variable_1": {
+                          "inputs": {
+                            "name": "ServiceAppointmentId",
+                            "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid').value[0]['_mcs_serviceappointmentid_value']}"
+                          },
+                          "runAfter": {
+                            "Parse_mcs_vimtresponse_from_Integration_Result_JSON": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_VisitStatus": {
+                          "inputs": {
+                            "name": "VisitStatus",
+                            "value": "@{toLower(body('Parse_Integration_Result_Integration_Request_JSON')?['VisitStatus'])}"
+                          },
+                          "runAfter": {
+                            "Set_Integration_Result_OData_Link_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Compose_error_message_1": {
+                            "inputs": "TMPCernerIntegrationBusinessLogicError: Patient-Level Integration Result for ControlId = @{triggerBody()?['controlid']} does not exist. This is not expected.\n\nOdata query was:\n\n@{outputs('Patient-level_Integration_Result_Odata_Search_Query_1')}",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_1": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_1')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_1": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_Error_1": {
+                            "inputs": "@int(outputs('Compose_error_message_1'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_1": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid')['value'])",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_Controlid": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "retryPolicy": {
+                          "type": "none"
+                        },
+                        "uri": "@{outputs('Patient-level_Integration_Result_Odata_Search_Query_1')}"
+                      },
+                      "runAfter": {
+                        "Patient-level_Integration_Result_Odata_Search_Query_1": [
+                          "Succeeded"
+                        ]
+                      },
+                      "runtimeConfiguration": {
+                        "staticResult": {
+                          "name": "HTTP:_Fetch_Integration_Results_via_Controlid0",
+                          "staticResultOptions": "Disabled"
+                        }
+                      },
+                      "type": "Http"
+                    },
+                    "Patient-level_Integration_Result_Odata_Search_Query_1": {
+                      "inputs": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults?$filter=(createdon ge '@{variables('Patient level Integration Result Search Lookback Start Date')}' and cvt_controlid eq '@{triggerBody()?['controlid']}' and mcs_vimtrequest eq 'outbound-worker-patient-level')&$expand=mcs_serviceappointmentid",
+                      "runAfter": {
+                        "Set_IsCerner_=_false": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Set_IsCerner_=_false": {
+                      "inputs": {
+                        "name": "IsCerner",
+                        "value": false
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Condition:_If_Integration_Result_Exists_1": {
+                        "actions": {
+                          "Set_Integration_Result_GUID_2": {
+                            "inputs": {
+                              "name": "Integration Result GUID",
+                              "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA').value[0]['mcs_integrationresultid']}"
+                            },
+                            "runAfter": {},
+                            "type": "SetVariable"
+                          },
+                          "Set_Integration_Result_OData_Link_2": {
+                            "inputs": {
+                              "name": "Integration Result OData Link",
+                              "value": "/mcs_integrationresults(@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA').value[0]?['mcs_integrationresultid']})"
+                            },
+                            "runAfter": {
+                              "Set_Integration_Result_GUID_2": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Set_OverallIntegrationResultLogicAppRunId_1": {
+                            "inputs": {
+                              "name": "OverallIntegrationResultLogicAppRunId",
+                              "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA')?.value[0]?['mcs_payload']}"
+                            },
+                            "runAfter": {
+                              "Set_Integration_Result_OData_Link_2": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Set_ReserveResourceId_2": {
+                            "inputs": {
+                              "name": "ReserveResourceId",
+                              "value": "@{body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA').value[0]?['mcs_appointmentid']}"
+                            },
+                            "runAfter": {
+                              "Set_OverallIntegrationResultLogicAppRunId_1": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "Compose_error_message_2": {
+                              "inputs": "TMPCernerIntegrationBusinessLogicError: Patient-Level Integration Result for PatientICN = @{variables('PatientIcn')} and Service Appointment Id = @{variables('ServiceAppointmentId')} does not exist. This is not expected.\n\nOdata query was :\n\n@{outputs('Patient-level_Integration_Result_Odata_Search_Query_2')}\n",
+                              "runAfter": {},
+                              "type": "Compose"
+                            },
+                            "Set_Terminating_Error_Message_Text_2": {
+                              "inputs": {
+                                "name": "Terminating Error Message Text",
+                                "value": "@{outputs('Compose_error_message_2')}"
+                              },
+                              "runAfter": {
+                                "Compose_error_message_2": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "SetVariable"
+                            },
+                            "Throw_error_2": {
+                              "inputs": "@int(outputs('Compose_error_message_2'))",
+                              "runAfter": {
+                                "Set_Terminating_Error_Message_Text_2": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Compose"
+                            }
+                          }
+                        },
+                        "expression": {
+                          "and": [
+                            {
+                              "greater": [
+                                "@length(body('HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA')['value'])",
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        "runAfter": {
+                          "HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "If"
+                      },
+                      "Get_and_set_PatientFetchCondition_based_on_HTTP_payload": {
+                        "inputs": {
+                          "name": "PatientFetchCondition",
+                          "value": "<fetch>\n  <entity name=\"mcs_personidentifiers\" >\n    <attribute name= 'mcs_identifier' />\n     <link-entity name=\"contact\" to=\"mcs_patient\" from=\"contactid\" link-type=\"inner\" >\n      <attribute name=\"contactid\" />\n      <attribute name= 'fullname' />\n    </link-entity>\n\t<filter>\n           <condition attribute=\"mcs_identifier\" operator=\"eq\" value=\"@{variables('PatientIcn')}\" />\n <condition attribute=\"mcs_identifiertype\" operator=\"eq\" value=\"125150000\" />\n <condition attribute=\"mcs_assigningauthority\" operator=\"eq\" value=\"USVHA\" />\n         </filter>\n\n  </entity>\n</fetch>"
+                        },
+                        "runAfter": {
+                          "Get_and_set_PatientIcn_variable_from_HTTP_payload": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "SetVariable"
+                      },
+                      "Get_and_set_PatientIcn_variable_from_HTTP_payload": {
+                        "inputs": {
+                          "name": "PatientIcn",
+                          "value": "@triggerBody()?['PatientICN']"
+                        },
+                        "runAfter": {
+                          "Get_and_set_ServiceAppointmentId_variable_from_HTTP_payload": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "SetVariable"
+                      },
+                      "Get_and_set_ServiceAppointmentId_variable_from_HTTP_payload": {
+                        "inputs": {
+                          "name": "ServiceAppointmentId",
+                          "value": "@triggerBody()?['ServiceAppointmentId']"
+                        },
+                        "runAfter": {
+                          "Set_IsCerner_=_true": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "SetVariable"
+                      },
+                      "Get_and_set_VisitStatus_from_HTTP_payload": {
+                        "inputs": {
+                          "name": "VisitStatus",
+                          "value": "@{replace(toLower(coalesce(triggerBody()?['VisitStatus'],'')),'scheduled','confirmed')}"
+                        },
+                        "runAfter": {
+                          "Get_and_set_PatientFetchCondition_based_on_HTTP_payload": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "SetVariable"
+                      },
+                      "HTTP:_Fetch_Patient-level_Appointment_Integration_Result_via_PatientICN_and_SA": {
+                        "inputs": {
+                          "headers": {
+                            "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                          },
+                          "method": "GET",
+                          "uri": "@{outputs('Patient-level_Integration_Result_Odata_Search_Query_2')}"
+                        },
+                        "runAfter": {
+                          "Patient-level_Integration_Result_Odata_Search_Query_2": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "Http"
+                      },
+                      "Patient-level_Integration_Result_Odata_Search_Query_2": {
+                        "inputs": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/mcs_integrationresults?$filter=(createdon ge '@{variables('Patient level Integration Result Search Lookback Start Date')}' and mcs_vimtmessageregistryname eq '@{variables('PatientIcn')}' and _mcs_serviceappointmentid_value eq @{variables('ServiceAppointmentId')} and mcs_vimtrequest eq 'outbound-worker-patient-level')&$expand=mcs_serviceappointmentid&$orderby=modifiedon desc",
+                        "runAfter": {
+                          "Get_and_set_VisitStatus_from_HTTP_payload": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "Compose"
+                      },
+                      "Set_IsCerner_=_true": {
+                        "inputs": {
+                          "name": "IsCerner",
+                          "value": true
+                        },
+                        "runAfter": {},
+                        "type": "SetVariable"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@triggerBody()?['MessageSource']",
+                            "Cerner"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_Vista,_set_SA_statuses_if_it_failed": {
+                  "actions": {
+                    "Switch:_Appointment_Operation_(Cancel_or_Create)": {
+                      "cases": {
+                        "Case:_Canceled": {
+                          "actions": {
+                            "Status_is_equal_to_AE": {
+                              "actions": {
+                                "HTTP:_Set_Service_Appointment_Status_to_CanceledFailure": {
+                                  "inputs": {
+                                    "body": {
+                                      "statecode": 0,
+                                      "statuscode": 917290006
+                                    },
+                                    "headers": {
+                                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                    },
+                                    "method": "PATCH",
+                                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments(@{variables('ServiceAppointmentId')})"
+                                  },
+                                  "runAfter": {},
+                                  "type": "Http"
+                                },
+                                "Set_VistaStatus_to_FAILED_TO_CANCEL": {
+                                  "inputs": {
+                                    "name": "VistaStatus",
+                                    "value": "FAILED_TO_CANCEL"
+                                  },
+                                  "runAfter": {
+                                    "HTTP:_Set_Service_Appointment_Status_to_CanceledFailure": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "SetVariable"
+                                }
+                              },
+                              "else": {
+                                "actions": {
+                                  "Set_VistaStatus_to_CANCELED_2": {
+                                    "inputs": {
+                                      "name": "VistaStatus",
+                                      "value": "CANCELED"
+                                    },
+                                    "runAfter": {},
+                                    "type": "SetVariable"
+                                  }
+                                }
+                              },
+                              "expression": {
+                                "or": [
+                                  {
+                                    "equals": [
+                                      "@triggerBody()?['status']",
+                                      "AE"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {},
+                              "type": "If"
+                            }
+                          },
+                          "case": "canceled"
+                        },
+                        "Case:_Confirmed": {
+                          "actions": {
+                            "Status_is_equal_to_AE_2": {
+                              "actions": {
+                                "HTTP:_Set_Service_Appointment_Status_to_Scheduled,_InterfaceVIMTFailure": {
+                                  "inputs": {
+                                    "body": {
+                                      "statecode": 3,
+                                      "statuscode": 917290002
+                                    },
+                                    "headers": {
+                                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                    },
+                                    "method": "PATCH",
+                                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/serviceappointments(@{variables('ServiceAppointmentId')})"
+                                  },
+                                  "runAfter": {
+                                    "Set_VistaStatus_to_FAILED_TO_SCHEDULE": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Http"
+                                },
+                                "Set_VistaStatus_to_FAILED_TO_SCHEDULE": {
+                                  "inputs": {
+                                    "name": "VistaStatus",
+                                    "value": "FAILED_TO_SCHEDULE"
+                                  },
+                                  "runAfter": {},
+                                  "type": "SetVariable"
+                                }
+                              },
+                              "else": {
+                                "actions": {
+                                  "NOTE_We_don't_set_the_SA_status_here_because": {
+                                    "inputs": "We will not set the SA state here because at this time we would not have gotten a response back from Cerner.",
+                                    "runAfter": {
+                                      "Set_VistaStatus_to_SCHEDULED": [
+                                        "Succeeded"
+                                      ]
+                                    },
+                                    "type": "Compose"
+                                  },
+                                  "Set_VistaStatus_to_SCHEDULED": {
+                                    "inputs": {
+                                      "name": "VistaStatus",
+                                      "value": "SCHEDULED"
+                                    },
+                                    "runAfter": {},
+                                    "type": "SetVariable"
+                                  }
+                                }
+                              },
+                              "expression": {
+                                "and": [
+                                  {
+                                    "equals": [
+                                      "@triggerBody()?['status']",
+                                      "AE"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {},
+                              "type": "If"
+                            }
+                          },
+                          "case": "confirmed"
+                        }
+                      },
+                      "default": {
+                        "actions": {
+                          "Compose_error_message_3": {
+                            "inputs": "Visit Status '@{variables('VisitStatus')}' is not recognized. This is not expected.",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_3": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_3')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_3": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_error_3": {
+                            "inputs": "@int(outputs('Compose_error_message_3'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_3": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        }
+                      },
+                      "expression": "@variables('VisitStatus')",
+                      "runAfter": {},
+                      "type": "Switch"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@triggerBody()?['MessageSource']",
+                            "Cerner"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_there_is_a_facility_on_the_Provider_side,_get_the_information_for_it_": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_message_is_from_Vista_and_is_a_schedule,_create_VistA_VIR": {
+                  "actions": {
+                    "Condition:_Is_Vista_on_Patient_Side": {
+                      "actions": {
+                        "HTTP_CreatePatientSideVistaIntegrationResult": {
+                          "inputs": {
+                            "body": {
+                              "cvt_appointment@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                              "cvt_clinicien": "@{variables('PatientClinicIen')}",
+                              "cvt_datetime": "@{formatDateTime(body('HTTP:_Get_Service_Appointment')?['scheduledstart'],'yyyyMMddHHmm')}",
+                              "cvt_facilitycode": "@{variables('PatientStationNumber')}",
+                              "cvt_name": "Vista Integration Result - @{variables('PatientFullName')} (@{variables('PatientStationNumber')})",
+                              "cvt_parentresult@odata.bind": "@{variables('Integration Result OData Link')}",
+                              "cvt_patientname": "@{variables('PatientFullName')}(@{variables('PatientStationNumber')})",
+                              "cvt_personid": "@{variables('PatientIcn')}",
+                              "cvt_reason": "@{triggerBody()?['failurereason']}",
+                              "cvt_serviceactivity@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                              "cvt_veteran@odata.bind": "/contacts(@{variables('ContactId')})",
+                              "cvt_vistareasoncode": "VISTA",
+                              "cvt_vistastatus": "@{variables('VistaStatus')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "POST",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('IsVistaOnPatientSide')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {},
+                      "type": "If"
+                    },
+                    "Condition:_Is_Vista_on_Provider_Side": {
+                      "actions": {
+                        "HTTP:_CreateProviderSideVistaIntegrationResult_1": {
+                          "inputs": {
+                            "body": {
+                              "cvt_appointment@odata.bind": "@{variables('ReserveResource OData Lookup')}",
+                              "cvt_clinicien": "@variables('ProviderClinicIen')",
+                              "cvt_datetime": "@{formatDateTime(body('HTTP:_Get_Service_Appointment')?['scheduledstart'],'yyyyMMddHHmm')}",
+                              "cvt_facilitycode": "@variables('ProviderStationNumber')",
+                              "cvt_name": "Vista Integration Result - @{variables('PatientFullName')} (@{variables('ProviderStationNumber')})",
+                              "cvt_parentresult@odata.bind": "@{variables('Integration Result OData Link')}",
+                              "cvt_patientname": "@{variables('PatientFullName')}(@{variables('ProviderStationNumber')})",
+                              "cvt_personid": "@variables('PatientIcn')",
+                              "cvt_reason": "@{triggerBody()?['failurereason']}",
+                              "cvt_serviceactivity@odata.bind": "/serviceappointments(@{variables('ServiceAppointmentId')})",
+                              "cvt_veteran@odata.bind": "/contacts(@{variables('ContactId')})",
+                              "cvt_vistareasoncode": "VISTA",
+                              "cvt_vistastatus": " @{variables('VistaStatus')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "POST",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/cvt_vistaintegrationresults"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('IsVistaOnProviderSide')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Condition:_Is_Vista_on_Patient_Side": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@triggerBody()?['MessageSource']",
+                            "Cerner"
+                          ]
+                        }
+                      },
+                      {
+                        "equals": [
+                          "@variables('VisitStatus')",
+                          "confirmed"
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_message_is_from_Vista,_set_SA_statuses_if_it_failed": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_there_are_patient(s),_get_their_information": {
+                  "actions": {
+                    "Set_ContactId_variable_2": {
+                      "inputs": {
+                        "name": "ContactId",
+                        "value": "@{body('HTTP:_Get_Patient')['value'][0]['contact1.contactid']}"
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    },
+                    "Set_PatientIcn_1": {
+                      "inputs": {
+                        "name": "PatientIcn",
+                        "value": "@{body('HTTP:_Get_Patient')['value'][0]['mcs_identifier']}"
+                      },
+                      "runAfter": {
+                        "Set_ContactId_variable_2": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    },
+                    "Set_PatientName": {
+                      "inputs": {
+                        "name": "PatientFullName",
+                        "value": "@{body('HTTP:_Get_Patient')['value'][0]['contact1.fullname']}"
+                      },
+                      "runAfter": {
+                        "Set_PatientIcn_1": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Compose_error_message_0": {
+                        "inputs": "TMPCernerIntegrationBusinessLogicError: More than one Patient exists with the specified ICN, or no patients exist with the specified ICN.\n\nFetchXML that returned more than 1, or 0, results, was :  @{outputs('Patient_FetchXML')}",
+                        "runAfter": {},
+                        "type": "Compose"
+                      },
+                      "Set_Terminating_Error_Message_Text_0": {
+                        "inputs": {
+                          "name": "Terminating Error Message Text",
+                          "value": "@{outputs('Compose_error_message_0')}"
+                        },
+                        "runAfter": {
+                          "Compose_error_message_0": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "SetVariable"
+                      },
+                      "Throw_error_0": {
+                        "inputs": "@int(outputs('Compose_error_message_0'))",
+                        "runAfter": {
+                          "Set_Terminating_Error_Message_Text_0": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "Compose"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@length(body('HTTP:_Get_Patient')['value'])",
+                          1
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Get_Patient": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_there_is_a_facility_on_the_Provider_side,_get_the_information_for_it_": {
+                  "actions": {
+                    "Check_if_SA_is_Cerner_on_the_Provider_Side": {
+                      "actions": {
+                        "Set_IsCernerOnProviderSide_to_true": {
+                          "inputs": {
+                            "name": "IsCernerOnProviderSide",
+                            "value": true
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@if(greater(length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value),0), body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value[0]?.ProviderFacilityType,'')",
+                              "@variables('CernerFacilityTypeCode')"
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Check_if_SA_is_Vista_on_the_Provider_Side": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Check_if_SA_is_Vista_on_the_Provider_Side": {
+                      "actions": {
+                        "Set_IsVistaOnProviderSide_to_true": {
+                          "inputs": {
+                            "name": "IsVistaOnProviderSide",
+                            "value": true
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@if(greater(length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value),0), body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value[0]?.ProviderFacilityType,'')",
+                              "@variables('VistaFacilityTypeCode')"
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Set_ProviderStationNumber_variable": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Provider_Clinic_Information_(FetchXML)": {
+                      "inputs": "<fetch>\n  <entity name=\"activityparty\">\n    <attribute name=\"partyid\" />\n    <attribute name=\"participationtypemask\" />\n    <link-entity name=\"equipment\" to=\"partyid\" from=\"equipmentid\" alias=\"equipment\" link-type=\"outer\">\n      <attribute name=\"name\" alias=\"EquipmentName\" />\n      <attribute name=\"cvt_type\" alias=\"EquipmentType\" />\n      <attribute name=\"cvt_type\" />\n      <link-entity name=\"mcs_resource\" to=\"equipmentid\" from=\"mcs_relatedresourceid\" alias=\"resource\" link-type=\"outer\">\n        <attribute name=\"mcs_type\" />\n        <attribute name=\"mcs_name\" />\n        <attribute name=\"mcs_cerneruniqueid\" />\n        <attribute name=\"mcs_resourceid\" />\n        <attribute name=\"cvt_ien\" />\n        <attribute name=\"cvt_defaultproviderduz\" />\n        <link-entity name=\"mcs_site\" to=\"mcs_relatedsiteid\" from=\"mcs_siteid\" alias=\"mcs_site\" link-type=\"outer\">\n          <attribute name=\"mcs_name\" />\n          <link-entity name=\"mcs_facility\" to=\"mcs_facilityid\" from=\"mcs_facilityid\" alias=\"mcs_facility\" link-type=\"outer\">\n            <attribute name=\"mcs_stationnumber\" />\n            <attribute name=\"cvt_facilitytype\" />\n          </link-entity>\n        </link-entity>\n      </link-entity>\n    </link-entity>\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ServiceAppointmentId')}\" />\n      <condition attribute=\"mcs_type\" entityname=\"resource\" operator=\"eq\" value=\"251920000\" />\n<condition attribute=\"mcs_stationnumber\" entityname=\"mcs_facility\" operator=\"eq\" value=\"@{body('Parse_Patient_and_Provider_Facilities_Information_into_JSON')?['value'][0]['ProviderStationNumber']}\" />\n    </filter>\n  </entity>\n</fetch>",
+                      "runAfter": {},
+                      "type": "Compose"
+                    },
+                    "Provider_Clinic_Information_(HTTP)": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/activityparties?fetchXml=@{outputs('Provider_Clinic_Information_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Provider_Clinic_Information_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Provider_Clinic_Information_-_Parse_into_JSON": {
+                      "inputs": {
+                        "content": "@body('Provider_Clinic_Information_(HTTP)')",
+                        "schema": {
+                          "properties": {
+                            "@@odata.context": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "items": {
+                                "properties": {
+                                  "@@odata.etag": {
+                                    "type": "string"
+                                  },
+                                  "EquipmentName": {
+                                    "type": "string"
+                                  },
+                                  "EquipmentType": {
+                                    "type": "integer"
+                                  },
+                                  "_partyid_value": {
+                                    "type": "string"
+                                  },
+                                  "activitypartyid": {
+                                    "type": "string"
+                                  },
+                                  "equipment.cvt_type": {
+                                    "type": "integer"
+                                  },
+                                  "mcs_facility.cvt_facilitytype": {
+                                    "type": "integer"
+                                  },
+                                  "mcs_facility.mcs_stationnumber": {
+                                    "type": "string"
+                                  },
+                                  "mcs_site.mcs_name": {
+                                    "type": "string"
+                                  },
+                                  "participationtypemask": {
+                                    "type": "integer"
+                                  },
+                                  "partyid": {},
+                                  "resource.cvt_ien": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_cerneruniqueid": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_name": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_resourceid": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_type": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "runAfter": {
+                        "Provider_Clinic_Information_(HTTP)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ParseJson"
+                    },
+                    "Set_ProviderClinicIen_variable": {
+                      "inputs": {
+                        "name": "ProviderClinicIen",
+                        "value": "@{if(greater(length(body('Provider_Clinic_Information_-_Parse_into_JSON').value),0), body('Provider_Clinic_Information_-_Parse_into_JSON').value[0]?['resource.cvt_ien'],'')}"
+                      },
+                      "runAfter": {
+                        "Provider_Clinic_Information_-_Parse_into_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    },
+                    "Set_ProviderStationNumber_variable": {
+                      "inputs": {
+                        "name": "ProviderStationNumber",
+                        "value": "@{if(greater(length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value),0), body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value[0]?.ProviderStationNumber,'')}"
+                      },
+                      "runAfter": {
+                        "Set_ProviderClinicIen_variable": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON')?['value'])",
+                          0
+                        ]
+                      },
+                      {
+                        "not": {
+                          "equals": [
+                            "@body('Parse_Patient_and_Provider_Facilities_Information_into_JSON')?['value']?[0]?['ProviderStationNumber']",
+                            "@null"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "If_there_is_a_pt_site_on_the_SA_or_RR_assc._with_the_SA,_get_info_from_it__": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_there_is_a_pt_site_on_the_SA_or_RR_assc._with_the_SA,_get_info_from_it__": {
+                  "actions": {
+                    "Check_if_SA_is_Cerner_on_the_Patient_Side": {
+                      "actions": {
+                        "Set_IsCernerOnPatientSide": {
+                          "inputs": {
+                            "name": "IsCernerOnPatientSide",
+                            "value": true
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('PatientFacilityTypeCode')",
+                              "@variables('CernerFacilityTypeCode')"
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Check_if_SA_is_Vista_on_the_Patient_Side": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Check_if_SA_is_Vista_on_the_Patient_Side": {
+                      "actions": {
+                        "Set_IsVistaOnPatientSide_to_true": {
+                          "inputs": {
+                            "name": "IsVistaOnPatientSide",
+                            "value": true
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('PatientFacilityTypeCode')",
+                              "@variables('VistaFacilityTypeCode')"
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Set_PatientClinicIen_variable": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Condition:_If_there_is_a_RR,_get_the_Station_number_from_there,_else_from_query": {
+                      "actions": {
+                        "HTTP:_Get_Facility_Num_assc._w_Facility_assc._w_Site_assc._w_Reserve_Resource": {
+                          "inputs": {
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                            },
+                            "method": "GET",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/appointments?fetchXml=@{outputs('HTTP:_Get_Facility_Num_from_Reserve_Resource')}"
+                          },
+                          "runAfter": {
+                            "HTTP:_Get_Facility_Num_from_Reserve_Resource": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Http"
+                        },
+                        "HTTP:_Get_Facility_Num_from_Reserve_Resource": {
+                          "inputs": "<fetch no-lock='true'>\n  <entity name='appointment'>\n    <link-entity name='mcs_site' to='cvt_site' from='mcs_siteid' alias='site' link-type='inner'>\n      <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='fac' link-type='inner'>\n        <attribute name='mcs_stationnumber' />\n        <attribute name='cvt_facilitytype' />\n      </link-entity>\n    </link-entity>\n    <filter>\n      <condition attribute='activityid' operator='eq' value='@{variables('ReserveResourceId')}' />\n    </filter>\n  </entity>\n</fetch>",
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Set_PatientStationNumber_from_Reserve_Resource": {
+                          "inputs": {
+                            "name": "PatientStationNumber",
+                            "value": "@{body('HTTP:_Get_Facility_Num_assc._w_Facility_assc._w_Site_assc._w_Reserve_Resource')?.value[0]?['fac.mcs_stationnumber']}"
+                          },
+                          "runAfter": {
+                            "HTTP:_Get_Facility_Num_assc._w_Facility_assc._w_Site_assc._w_Reserve_Resource": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        },
+                        "Set_variable_PatientFacilityTypeCode": {
+                          "inputs": {
+                            "name": "PatientFacilityTypeCode",
+                            "value": "@int(body('HTTP:_Get_Facility_Num_assc._w_Facility_assc._w_Site_assc._w_Reserve_Resource')?.value[0]?['fac.cvt_facilitytype'])"
+                          },
+                          "runAfter": {
+                            "Set_PatientStationNumber_from_Reserve_Resource": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "description": "If there is a reserve resource, get the station number from the facility associated with the site that is associated with the reserve resource. Else, get it from the query we ran before that looks at the linked entities on the service appointment.",
+                      "else": {
+                        "actions": {
+                          "Set_PatientFacilityTypeCode_from_Service_Appt": {
+                            "inputs": {
+                              "name": "PatientFacilityTypeCode",
+                              "value": "@if(greater(length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value),0), int(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value[0]?.PatientFacilityType),'')"
+                            },
+                            "runAfter": {
+                              "Set_PatientStationNumber_from_Service_Appt": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Set_PatientStationNumber_from_Service_Appt": {
+                            "inputs": {
+                              "name": "PatientStationNumber",
+                              "value": "@{if(greater(length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value),0), body('Parse_Patient_and_Provider_Facilities_Information_into_JSON').value[0]?.PatientStationNumber,'')}"
+                            },
+                            "runAfter": {},
+                            "type": "SetVariable"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@variables('ReserveResourceId')",
+                                "@null"
+                              ]
+                            }
+                          },
+                          {
+                            "not": {
+                              "equals": [
+                                "@variables('ReserveResourceId')",
+                                ""
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "runAfter": {},
+                      "type": "If"
+                    },
+                    "Patient_Clinic_Information_(FetchXML)": {
+                      "inputs": "<fetch>\n  <entity name=\"activityparty\">\n    <attribute name=\"partyid\" />\n    <attribute name=\"participationtypemask\" />\n    <link-entity name=\"equipment\" to=\"partyid\" from=\"equipmentid\" alias=\"equipment\" link-type=\"outer\">\n      <attribute name=\"name\" alias=\"EquipmentName\" />\n      <attribute name=\"cvt_type\" alias=\"EquipmentType\" />\n      <attribute name=\"cvt_type\" />\n      <link-entity name=\"mcs_resource\" to=\"equipmentid\" from=\"mcs_relatedresourceid\" alias=\"resource\" link-type=\"outer\">\n        <attribute name=\"mcs_type\" />\n        <attribute name=\"mcs_name\" />\n        <attribute name=\"mcs_cerneruniqueid\" />\n        <attribute name=\"mcs_resourceid\" />\n        <attribute name=\"cvt_ien\" />\n        <attribute name=\"cvt_defaultproviderduz\" />\n        <link-entity name=\"mcs_site\" to=\"mcs_relatedsiteid\" from=\"mcs_siteid\" alias=\"mcs_site\" link-type=\"outer\">\n          <attribute name=\"mcs_name\" />\n          <link-entity name=\"mcs_facility\" to=\"mcs_facilityid\" from=\"mcs_facilityid\" alias=\"mcs_facility\" link-type=\"outer\">\n            <attribute name=\"mcs_stationnumber\" />\n            <attribute name=\"cvt_facilitytype\" />\n          </link-entity>\n        </link-entity>\n      </link-entity>\n    </link-entity>\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\" value=\"@{variables('ServiceAppointmentId')}\" />\n      <condition attribute=\"mcs_type\" entityname=\"resource\" operator=\"eq\" value=\"251920000\" />\n<condition attribute=\"mcs_stationnumber\" entityname=\"mcs_facility\" operator=\"eq\" value=\"@{variables('PatientStationNumber')}\" />\n    </filter>\n  </entity>\n</fetch>",
+                      "runAfter": {
+                        "Condition:_If_there_is_a_RR,_get_the_Station_number_from_there,_else_from_query": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Patient_Clinic_Information_(HTTP)": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/activityparties?fetchXml=@{outputs('Patient_Clinic_Information_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Patient_Clinic_Information_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Patient_Clinic_Information_-_Parse_into_JSON": {
+                      "inputs": {
+                        "content": "@body('Patient_Clinic_Information_(HTTP)')",
+                        "schema": {
+                          "properties": {
+                            "@@odata.context": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "items": {
+                                "properties": {
+                                  "@@odata.etag": {
+                                    "type": "string"
+                                  },
+                                  "EquipmentName": {
+                                    "type": "string"
+                                  },
+                                  "EquipmentType": {
+                                    "type": "integer"
+                                  },
+                                  "_partyid_value": {
+                                    "type": "string"
+                                  },
+                                  "activitypartyid": {
+                                    "type": "string"
+                                  },
+                                  "equipment.cvt_type": {
+                                    "type": "integer"
+                                  },
+                                  "mcs_facility.cvt_facilitytype": {
+                                    "type": "integer"
+                                  },
+                                  "mcs_facility.mcs_stationnumber": {
+                                    "type": "string"
+                                  },
+                                  "mcs_site.mcs_name": {
+                                    "type": "string"
+                                  },
+                                  "participationtypemask": {
+                                    "type": "integer"
+                                  },
+                                  "partyid": {},
+                                  "resource.cvt_ien": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_cerneruniqueid": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_name": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_resourceid": {
+                                    "type": "string"
+                                  },
+                                  "resource.mcs_type": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "runAfter": {
+                        "Patient_Clinic_Information_(HTTP)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ParseJson"
+                    },
+                    "Set_PatientClinicIen_variable": {
+                      "inputs": {
+                        "name": "PatientClinicIen",
+                        "value": "@{if(greater(length(body('Patient_Clinic_Information_-_Parse_into_JSON').value),0), body('Patient_Clinic_Information_-_Parse_into_JSON').value[0]?['resource.cvt_ien'],'')}"
+                      },
+                      "runAfter": {
+                        "Patient_Clinic_Information_-_Parse_into_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "expression": {
+                    "or": [
+                      {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(body('Parse_Patient_and_Provider_Facilities_Information_into_JSON')?['value'])",
+                              0
+                            ]
+                          },
+                          {
+                            "not": {
+                              "equals": [
+                                "@body('Parse_Patient_and_Provider_Facilities_Information_into_JSON')?['value']?[0]?['PatientStationNumber']",
+                                "@null"
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "and": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@variables('ReserveResourceId')",
+                                "@null"
+                              ]
+                            }
+                          },
+                          {
+                            "not": {
+                              "equals": [
+                                "@variables('ReserveResourceId')",
+                                ""
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Patient_Group_Facility_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "If_there_is_a_reserve_resource_associated,_get_the_information_for_it_": {
+                  "actions": {
+                    "Set_ReserveResourceId_variable": {
+                      "inputs": {
+                        "name": "ReserveResourceId",
+                        "value": "@{body('Get_Reserve_Resource_Information_(HTTP)')?.value[0]['ReserveResourceId']}"
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    },
+                    "Set_ReserveResource_OData_Lookup_variable": {
+                      "inputs": {
+                        "name": "ReserveResource OData Lookup",
+                        "value": "/appointments(@{body('Get_Reserve_Resource_Information_(HTTP)')?.value[0]['ReserveResourceId']})"
+                      },
+                      "runAfter": {
+                        "Set_ReserveResourceId_variable": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "If_there_is_more_than_one_matching_RR_for_a_group_appt,_throw_error": {
+                        "actions": {
+                          "Compose_error_message_8": {
+                            "inputs": "There are 0, or more than 1, reserve resources associated with Service Appointment id = @{variables('ServiceAppointmentId')} that have a patient with an ICN of @{variables('PatientIcn')}. This is not expected.\n\nFetchXML returning 0 or more than 1 reserve resources : @{outputs('Get_Reserve_Resource_Information_(FetchXML)')}",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Set_Terminating_Error_Message_Text_8": {
+                            "inputs": {
+                              "name": "Terminating Error Message Text",
+                              "value": "@{outputs('Compose_error_message_8')}"
+                            },
+                            "runAfter": {
+                              "Compose_error_message_8": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "SetVariable"
+                          },
+                          "Throw_error_8": {
+                            "inputs": "@int(outputs('Compose_error_message_8'))",
+                            "runAfter": {
+                              "Set_Terminating_Error_Message_Text_8": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          }
+                        },
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@body('Parse_SA_into_JSON')?['mcs_groupappointment']",
+                                true
+                              ]
+                            },
+                            {
+                              "greater": [
+                                "@length(body('Get_Reserve_Resource_Information_(HTTP)')?.value)",
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        "runAfter": {},
+                        "type": "If"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@length(body('Get_Reserve_Resource_Information_(HTTP)')?.value)",
+                          1
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@body('Parse_SA_into_JSON')?['mcs_groupappointment']",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Get_Reserve_Resource_Information_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Parse_Patient_and_Provider_Facilities_Information_into_JSON": {
+                  "inputs": {
+                    "content": "@body('Get_Patient_and_Provider_Facilities_Information_(HTTP)')",
+                    "schema": {
+                      "properties": {
+                        "@@odata.context": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "items": {
+                            "properties": {
+                              "@@odata.etag": {
+                                "type": "string"
+                              },
+                              "PatientFacility": {
+                                "type": "string"
+                              },
+                              "PatientFacilityType": {
+                                "type": "integer"
+                              },
+                              "PatientSiteName": {
+                                "type": "string"
+                              },
+                              "PatientStationNumber": {
+                                "type": "string"
+                              },
+                              "ProviderFacility": {
+                                "type": "string"
+                              },
+                              "ProviderFacilityType": {
+                                "type": "integer"
+                              },
+                              "ProviderSiteName": {
+                                "type": "string"
+                              },
+                              "ProviderStationNumber": {
+                                "type": "string"
+                              },
+                              "activityid": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "runAfter": {
+                    "Get_Patient_and_Provider_Facilities_Information_(HTTP)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Parse_SA_into_JSON": {
+                  "inputs": {
+                    "content": "@body('HTTP:_Get_Service_Appointment')",
+                    "schema": {
+                      "properties": {
+                        "@@odata.context": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "@@odata.etag": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_createdby_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_createdonbehalfby_value": {},
+                        "_cvt_patienttabletid_value": {},
+                        "_cvt_providerfacility_value": {},
+                        "_cvt_recurringappointmentsmaster_value": {},
+                        "_cvt_relatedproviderid_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_cvt_relatedschedulingpackage_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_mcs_appointmentid_value": {},
+                        "_mcs_relatedprovidersite_value": {
+                          "type": "string"
+                        },
+                        "_mcs_relatedsite_value": {},
+                        "_mcs_relatedtsa_value": {},
+                        "_mcs_servicesubtype_value": {},
+                        "_mcs_servicetype_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_modifiedby_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_modifiedonbehalfby_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_ownerid_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_owningbusinessunit_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_owningteam_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_owninguser_value": {},
+                        "_regardingobjectid_value": {},
+                        "_sendermailboxid_value": {},
+                        "_serviceid_value": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "_siteid_value": {},
+                        "_slaid_value": {},
+                        "_slainvokedid_value": {},
+                        "_transactioncurrencyid_value": {},
+                        "activityadditionalparams": {},
+                        "activityid": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "activitytypecode": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "actualdurationminutes": {},
+                        "actualend": {},
+                        "actualstart": {},
+                        "category": {},
+                        "community": {},
+                        "createdon": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "cvt_addresources": {
+                          "type": "boolean"
+                        },
+                        "cvt_businessphone": {},
+                        "cvt_cancelcode": {},
+                        "cvt_cancelreason": {},
+                        "cvt_cancelremarks": {},
+                        "cvt_clinicallyindicateddate": {},
+                        "cvt_clinicremarks": {},
+                        "cvt_comments": {},
+                        "cvt_createpatrooms": {
+                          "type": "boolean"
+                        },
+                        "cvt_donotallowemails": {
+                          "type": "boolean"
+                        },
+                        "cvt_email": {},
+                        "cvt_homephone": {},
+                        "cvt_mobilephone": {},
+                        "cvt_notificationsent": {
+                          "type": "boolean"
+                        },
+                        "cvt_openappointment": {
+                          "type": "boolean"
+                        },
+                        "cvt_patconsultien": {},
+                        "cvt_patconsulttitle": {},
+                        "cvt_patientcount": {},
+                        "cvt_patientrooms": {
+                          "type": "boolean"
+                        },
+                        "cvt_patientsiteresourcesrequired": {
+                          "type": "boolean"
+                        },
+                        "cvt_patientverifiedemail": {},
+                        "cvt_patientverifiedphone": {},
+                        "cvt_patrtcid": {},
+                        "cvt_patuserduz": {},
+                        "cvt_proconsultien": {},
+                        "cvt_proconsulttitle": {},
+                        "cvt_prortcid": {},
+                        "cvt_prouserduz": {},
+                        "cvt_providerstationcode": {},
+                        "cvt_proxyaddcompleted": {
+                          "type": "boolean"
+                        },
+                        "cvt_recurrence": {
+                          "type": "boolean"
+                        },
+                        "cvt_retryintegration": {
+                          "type": "boolean"
+                        },
+                        "cvt_room": {},
+                        "cvt_roomcapacity": {},
+                        "cvt_rtcparentpatient": {},
+                        "cvt_rtcparentprovider": {},
+                        "cvt_rungetconsults": {
+                          "type": "boolean"
+                        },
+                        "cvt_samltoken": {},
+                        "cvt_scheduled": {
+                          "type": "boolean"
+                        },
+                        "cvt_schedulinginstructions": {},
+                        "cvt_showtimeas": {},
+                        "cvt_statuscode": {
+                          "type": "boolean"
+                        },
+                        "cvt_technologyfailurereason": {},
+                        "cvt_technologyfailurestatus": {},
+                        "cvt_technologytype": {},
+                        "cvt_telehealthmodality": {
+                          "type": "boolean"
+                        },
+                        "cvt_telephonecall": {
+                          "type": "boolean"
+                        },
+                        "cvt_type": {
+                          "type": "boolean"
+                        },
+                        "cvt_vistaaddcompleted": {
+                          "type": "boolean"
+                        },
+                        "cvt_vmrcompleted": {
+                          "type": "boolean"
+                        },
+                        "deliverylastattemptedon": {},
+                        "deliveryprioritycode": {
+                          "type": "integer"
+                        },
+                        "description": {},
+                        "exchangeitemid": {},
+                        "exchangerate": {},
+                        "exchangeweblink": {},
+                        "importsequencenumber": {},
+                        "instancetypecode": {
+                          "type": "integer"
+                        },
+                        "isalldayevent": {
+                          "type": "boolean"
+                        },
+                        "isbilled": {
+                          "type": "boolean"
+                        },
+                        "ismapiprivate": {
+                          "type": "boolean"
+                        },
+                        "isregularactivity": {
+                          "type": "boolean"
+                        },
+                        "isworkflowcreated": {
+                          "type": "boolean"
+                        },
+                        "lastonholdtime": {},
+                        "leftvoicemail": {
+                          "type": "boolean"
+                        },
+                        "location": {},
+                        "mcs_capacity": {},
+                        "mcs_dialingalias": {},
+                        "mcs_groupappointment": {
+                          "type": "boolean"
+                        },
+                        "mcs_integrationaction": {},
+                        "mcs_meetingroomname": {},
+                        "mcs_miscdata": {},
+                        "mcs_patientpin": {},
+                        "mcs_patienturl": {},
+                        "mcs_providerpin": {},
+                        "mcs_providerurl": {},
+                        "mcs_remainingcapacity": {},
+                        "mcs_resourcecount": {},
+                        "mcs_vistaprimarykey": {},
+                        "modifiedon": {
+                          "type": "string"
+                        },
+                        "new_capacity": {},
+                        "onholdtime": {},
+                        "overriddencreatedon": {},
+                        "postponeactivityprocessinguntil": {},
+                        "prioritycode": {
+                          "type": "integer"
+                        },
+                        "processid": {},
+                        "scheduleddurationminutes": {
+                          "type": "integer"
+                        },
+                        "scheduledend": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "scheduledstart": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "senton": {},
+                        "seriesid": {},
+                        "sortdate": {},
+                        "stageid": {},
+                        "statecode": {
+                          "type": "integer"
+                        },
+                        "statuscode": {
+                          "type": "integer"
+                        },
+                        "subcategory": {},
+                        "subject": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "subscriptionid": {},
+                        "timezoneruleversionnumber": {
+                          "type": "integer"
+                        },
+                        "tmp_appointmentmodality": {
+                          "type": "integer"
+                        },
+                        "tmp_sipaddress": {},
+                        "tmp_staticvmrlink": {},
+                        "tmp_technologytype": {},
+                        "tmp_timezone": {},
+                        "traversedpath": {},
+                        "utcconversiontimezonecode": {},
+                        "versionnumber": {
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "runAfter": {
+                    "Condition:_SA_doesn't_exist": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ParseJson"
+                },
+                "Patient_FetchXML": {
+                  "inputs": "@variables('PatientFetchCondition')",
+                  "runAfter": {
+                    "Parse_SA_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Patient_Group_Facility_(FetchXML)": {
+                  "inputs": "<fetch>\n  <entity name=\"appointment\" >\n    <attribute name=\"activityid\" />\n    <filter>\n      <condition attribute=\"activityid\" operator=\"eq\"  value=\"@{variables('ServiceAppointmentId')}\" />\n    </filter>\n    <link-entity name=\"mcs_site\" from=\"mcs_siteid\" to=\"cvt_site\" link-type=\"outer\" alias=\"cvt_siteLink\" >\n      <attribute name=\"mcs_name\" alias=\"PatientSiteName\" />\n      <link-entity name=\"mcs_facility\" from=\"mcs_facilityid\" to=\"mcs_facilityid\" link-type=\"outer\" alias=\"cvt_siteFacility\" >\n        <attribute name=\"cvt_facilitytype\" alias=\"PatientFacilityType\" />\n        <attribute name=\"mcs_stationnumber\" alias=\"PatientStationNumber\" />\n        <attribute name=\"mcs_name\" alias=\"PatientFacility\" />\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Parse_Patient_and_Provider_Facilities_Information_into_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Patient_Group_Facility_(HTTP)": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/@{parameters('DynamicsWebAPIVersion')}/appointments?fetchXml=@{outputs('Patient_Group_Facility_(FetchXML)')}"
+                  },
+                  "runAfter": {
+                    "Patient_Group_Facility_(FetchXML)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                }
+              },
+              "runAfter": {
+                "Initialize_Patient_level_Integration_Result_Search_Lookback_Start_Date": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "CDS Client URL": {
+              "defaultValue": "https://dvagov-tmp-dev3.crm9.dynamics.com",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "e95f1b23-abaf-45ee-821d-b7ab251ab3bf",
+              "type": "String"
+            },
+            "DynamicsWebAPIVersion": {
+              "defaultValue": "v9.2",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            }
+          },
+          "staticResults": {
+            "HTTP:_Fetch_Integration_Results_via_Controlid0": {
+              "outputs": {
+                "body": {
+                  "value": [
+                    {}
+                  ]
+                },
+                "headers": {
+                  "Vary": "Accept-Encoding"
+                },
+                "statusCode": "OK"
+              },
+              "status": "Succeeded"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "inputs": {
+                "method": "POST",
+                "relativePath": "MakeCancelInboundCerner",
+                "schema": {
+                  "properties": {
+                    "MessageSource": {
+                      "type": "string"
+                    },
+                    "MessageType": {
+                      "type": "string"
+                    },
+                    "PatientICN": {
+                      "type": "string"
+                    },
+                    "ReserveResourceId": {
+                      "type": "string"
+                    },
+                    "ServiceAppointmentId": {
+                      "type": "string"
+                    },
+                    "VisitStatus": {
+                      "type": "string"
+                    },
+                    "controlid": {
+                      "type": "string"
+                    },
+                    "failurereason": {
+                      "type": "string"
+                    },
+                    "logicapprunid ": {
+                      "type": "string"
+                    },
+                    "messageid": {
+                      "type": "string"
+                    },
+                    "organizationname": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "kind": "Http",
+              "type": "Request"
+            }
+          }
+        },
+        "parameters": {
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

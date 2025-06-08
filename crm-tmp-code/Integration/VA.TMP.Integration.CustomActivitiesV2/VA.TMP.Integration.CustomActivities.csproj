@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyOriginatorKeyFile>..\VA.TMP.Integration.VIMT.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>True</SignAssembly>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="ViaLoginAction.cs" />
+    <Compile Remove="ViaLoginActionRunner.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CRM\MCSShared\CvtHelper.cs" Link="Links\CvtHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperData.cs" Link="Links\CvtHelperData.cs" />
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperEmail.cs" Link="Links\CvtHelperEmail.cs" />
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperSP.cs" Link="Links\CvtHelperSP.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AILogicBase.cs" Link="Links\AILogicBase.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AppInsightsLogData.cs" Link="Links\AppInsightsLogData.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AppInsightsLogger.cs" Link="Links\AppInsightsLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\HttpHelper.cs" Link="Links\HttpHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\Messages.cs" Link="Links\Messages.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\PluginLogger.cs" Link="Links\PluginLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\SerializationHelper.cs" Link="Links\SerializationHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSHelper.cs" Link="Links\MCSHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSLogger.cs" Link="Links\MCSLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSSettings.cs" Link="Links\MCSSettings.cs" />
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.DataModel.cs" Link="Links\VA.TMP.DataModel.cs" />
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.Xrm.OptionSets.cs" Link="Links\VA.TMP.Xrm.OptionSets.cs" />
+    <Compile Include="..\VA.TMP.Integration.Common\Serialization.cs" Link="Links\Serialization.cs" />
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseRequestMessage.cs" Link="Messages\TmpBaseRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseResponseMessage.cs" Link="Messages\TmpBaseResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginRequestMessage.cs" Link="Messages\ViaLoginRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginResponseMessage.cs" Link="Messages\ViaLoginResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.PluginsV2\Helpers\ApiIntegrationSettings.cs" Link="Links\ApiIntegrationSettings.cs" />
+    <Compile Include="..\VA.TMP.Integration.PluginsV2\Helpers\AzureTokenHelper.cs" Link="Links\AzureTokenHelper.cs" />
+    <Compile Include="..\VA.TMP.Integration.PluginsV2\Helpers\RestPoster.cs" Link="Links\RestPoster.cs" />
+    <Compile Include="..\VA.TMP.Integration.PluginsV2\Messages\Token\TokenResponse.cs" Link="Messages\TokenResponse.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Messages\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.42" />
+    <PackageReference Include="Microsoft.CrmSdk.Workflow" Version="9.0.2.42" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+</Project>

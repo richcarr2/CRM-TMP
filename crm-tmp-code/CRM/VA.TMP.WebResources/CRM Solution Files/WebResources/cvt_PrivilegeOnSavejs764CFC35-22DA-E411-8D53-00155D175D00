@@ -1,0 +1,23 @@
+﻿//Library Name: cvt_Privilege.OnSave.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.Privilege_OnSave = {};
+
+MCS.Privilege_OnSave.CreateName = function () {
+    var providerName = Xrm.Page.getAttribute("cvt_providerid").getValue();
+    var facilityName = Xrm.Page.getAttribute("cvt_privilegedatid").getValue();
+    var typeOfPrivileging = Xrm.Page.getAttribute("cvt_typeofprivileging");
+    var serviceType = Xrm.Page.getAttribute("cvt_servicetypeid").getValue();
+
+    var nameField = (providerName != null) ? providerName[0].name : "";
+    nameField += (serviceType != null) ? " - " + serviceType[0].name : "";
+    nameField += (facilityName != null) ? " @ " + facilityName[0].name : "";
+    nameField += (typeOfPrivileging != null && typeOfPrivileging.getSelectedOption() != null) ? " (" + typeOfPrivileging.getSelectedOption().text + ")" : "";
+
+    if (Xrm.Page.getAttribute("cvt_name").getValue() != nameField) {
+        Xrm.Page.getAttribute("cvt_name").setSubmitMode("always");
+        Xrm.Page.getAttribute("cvt_name").setValue(nameField);
+    }
+};

@@ -1,0 +1,451 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EC Api", "EC Api", "{70A51584-F7DF-4F7D-BE09-FD789EB02E09}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EC Messages", "EC Messages", "{7357A8ED-69EB-4A1E-9DB5-507944D0CD88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EC", "EC", "{D2F7F73C-E5C0-4680-A889-01377F3D2065}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{5FEB1DC5-7DB0-4A7D-8EAE-64BB600AB34E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A717B923-0518-4BC8-B47E-25E4280D03D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Common", "VA.TMP.Integration.Common\VA.TMP.Integration.Common.csproj", "{A0E8519C-1F20-434E-A076-B1D708201CA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Core", "VA.TMP.Integration.Core\VA.TMP.Integration.Core.csproj", "{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Core.Exceptions", "VA.TMP.Integration.Core.Exceptions\VA.TMP.Integration.Core.Exceptions.csproj", "{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.JsonWebToken.Messages", "EC\Json Web Token\Ec.JsonWebToken.Messages\Ec.JsonWebToken.Messages.csproj", "{6B0812F9-EB95-4068-8827-E00564F891B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.JsonWebToken", "EC\Json Web Token\Ec.JsonWebToken\Ec.JsonWebToken.csproj", "{22050143-6BF2-485C-A875-B7A92D4D73CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.JsonWebToken.Services", "EC\Json Web Token\Ec.JsonWebToken.Services\Ec.JsonWebToken.Services.csproj", "{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.Jwt.Api", "EC\Json Web Token\Ec.Jwt.Api\Ec.Jwt.Api.csproj", "{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Schemas", "Schemas", "{A53221AF-A500-420B-AB9B-C3D878D6CBDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Schema.VideoVisitService", "VA.TMP.Integration.Schema.VideoVisitService\VA.TMP.Integration.Schema.VideoVisitService.csproj", "{8E91280C-E4B5-4594-A7DC-BD7B84D8553E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Schema.VirtualMeetingRoom", "VA.TMP.Integration.Schema.VirtualMeetingRoom\VA.TMP.Integration.Schema.VirtualMeetingRoom.csproj", "{67C22EA0-11A6-49A4-82EF-E29467FDA32B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{DAF1FC7E-5CED-416D-953D-10A1408AF7B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Certificate.Interface", "VA.TMP.Integration.Certificate.Interface\VA.TMP.Integration.Certificate.Interface.csproj", "{B9F763D8-467F-4035-986E-1F767B327442}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Certificate", "VA.TMP.Integration.Certificate\VA.TMP.Integration.Certificate.csproj", "{E51628EA-947D-40D2-B846-8192CF49728E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Context.Interface", "VA.TMP.Integration.Context.Interface\VA.TMP.Integration.Context.Interface.csproj", "{4250EA97-012F-4CE0-B476-1A9BD96A345C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Context", "VA.TMP.Integration.Context\VA.TMP.Integration.Context.csproj", "{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Rest.Interface", "VA.TMP.Integration.Rest.Interface\VA.TMP.Integration.Rest.Interface.csproj", "{595C8176-40CF-454E-8DB1-780912BE9CA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Rest", "VA.TMP.Integration.Rest\VA.TMP.Integration.Rest.csproj", "{ABD47875-58C2-4AA8-90E9-A63B7549A28E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Token.Interface", "VA.TMP.Integration.Token.Interface\VA.TMP.Integration.Token.Interface.csproj", "{3E1B0C8D-C400-4895-9056-1DE73B8BDB20}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VA.TMP.Integration.Token", "VA.TMP.Integration.Token\VA.TMP.Integration.Token.csproj", "{C7B317E3-20DA-4E23-8866-A6916FD9DE2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.HealthShare.Messages", "EC\HealthShare\Ec.HealthShare.Messages\Ec.HealthShare.Messages.csproj", "{42A0D17A-2D32-4D43-A9B7-32B741A94258}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VEIS.Mvi.Messages", "EC\Mvi\VEIS.Mvi.Messages\VEIS.Mvi.Messages.csproj", "{031F977D-D801-4C43-9160-861BE908B9EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VEIS.Core.Core", "EC\VEIS.Core.Core\VEIS.Core.Core.csproj", "{EE54F46E-28B7-4490-B246-820C543E497B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VEIS.VIAScheduling.Messages", "EC\Via\VEIS.VIAScheduling.Messages\VEIS.VIAScheduling.Messages.csproj", "{6D734A79-1C27-479E-9011-BAFF06C22F9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VideoVisit.Messages", "EC\Video Visit\Ec.VideoVisit.Messages\Ec.VideoVisit.Messages.csproj", "{CA96678E-9370-4445-9154-6CA4349C42F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VirtualMeetingRoom.Messages", "EC\Virtual Meeting Room\Ec.VirtualMeetingRoom.Messages\Ec.VirtualMeetingRoom.Messages.csproj", "{34B5D573-4F84-48CF-86FD-AB49D701EF95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.HealthShare.Api", "EC\HealthShare\Ec.HealthShare.Api\Ec.HealthShare.Api.csproj", "{2EFE617C-E87C-4779-9078-BC8348891733}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VideoVisit.Api", "EC\Video Visit\Ec.VideoVisit.Api\Ec.VideoVisit.Api.csproj", "{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.Vmr.Api", "EC\Virtual Meeting Room\Ec.Vmr.Api\Ec.Vmr.Api.csproj", "{B014CF6E-6C00-4952-B894-3CB36DE9357F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HealthShare", "HealthShare", "{88AD0AFF-46C6-4246-91FC-C4DFB2ACC5EE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JsonWebToken", "JsonWebToken", "{1463D980-E742-4CE7-8405-8ED3F73F57E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoVisit", "VideoVisit", "{BCC4196A-3834-4FF3-80A3-F93F66DDB8E6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualMeetingRoom", "VirtualMeetingRoom", "{D3390C58-9B2D-40C4-A6F7-3DA861C5E097}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.HealthShare", "EC\HealthShare\Ec.HealthShare\Ec.HealthShare.csproj", "{72556582-9F23-48A2-B35A-42F7C1811585}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.HealthShare.Services", "EC\HealthShare\Ec.HealthShare.Services\Ec.HealthShare.Services.csproj", "{F382758F-687C-4FB3-A063-A2EDE4398CB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VideoVisit", "EC\Video Visit\Ec.VideoVisit\Ec.VideoVisit.csproj", "{234AE3D1-B510-4793-A8BF-87F4038F6207}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VideoVisit.Services", "EC\Video Visit\Ec.VideoVisit.Services\Ec.VideoVisit.Services.csproj", "{02A3DD27-B9A7-480E-B087-004DCB4FCF4E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VirtualMeetingRoom", "EC\Virtual Meeting Room\Ec.VirtualMeetingRoom\Ec.VirtualMeetingRoom.csproj", "{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.VirtualMeetingRoom.Services", "EC\Virtual Meeting Room\Ec.VirtualMeetingRoom.Services\Ec.VirtualMeetingRoom.Services.csproj", "{43FFB4DF-BE94-47CC-B292-84043FF16BCD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{8B4AE39E-63BC-4C95-8ACE-8FF7C2883E15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.Jwt.UnitTests", "Unit Tests\Ec.Jwt.UnitTests\Ec.Jwt.UnitTests.csproj", "{D7B882CB-EB31-4D85-8A15-CE1F1BC02208}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.HealthShare.UnitTests", "Unit Tests\Ec.HealthShare.UnitTests\Ec.HealthShare.UnitTests.csproj", "{3281047C-4DAF-4680-9E75-1523C8085B76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.Vvs.UnitTests", "Unit Tests\Ec.Vvs.UnitTests\Ec.Vvs.UnitTests.csproj", "{0766508E-CD1D-490D-AD83-B7861AC74C7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ec.Vmr.UnitTests", "Unit Tests\Ec.Vmr.UnitTests\Ec.Vmr.UnitTests.csproj", "{023968FB-0BBF-4139-AC20-95EE0C202D45}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0E8519C-1F20-434E-A076-B1D708201CA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0E8519C-1F20-434E-A076-B1D708201CA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0E8519C-1F20-434E-A076-B1D708201CA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0E8519C-1F20-434E-A076-B1D708201CA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B0812F9-EB95-4068-8827-E00564F891B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B0812F9-EB95-4068-8827-E00564F891B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B0812F9-EB95-4068-8827-E00564F891B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B0812F9-EB95-4068-8827-E00564F891B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22050143-6BF2-485C-A875-B7A92D4D73CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22050143-6BF2-485C-A875-B7A92D4D73CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22050143-6BF2-485C-A875-B7A92D4D73CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22050143-6BF2-485C-A875-B7A92D4D73CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E91280C-E4B5-4594-A7DC-BD7B84D8553E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E91280C-E4B5-4594-A7DC-BD7B84D8553E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E91280C-E4B5-4594-A7DC-BD7B84D8553E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E91280C-E4B5-4594-A7DC-BD7B84D8553E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67C22EA0-11A6-49A4-82EF-E29467FDA32B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67C22EA0-11A6-49A4-82EF-E29467FDA32B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67C22EA0-11A6-49A4-82EF-E29467FDA32B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67C22EA0-11A6-49A4-82EF-E29467FDA32B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9F763D8-467F-4035-986E-1F767B327442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9F763D8-467F-4035-986E-1F767B327442}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9F763D8-467F-4035-986E-1F767B327442}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9F763D8-467F-4035-986E-1F767B327442}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E51628EA-947D-40D2-B846-8192CF49728E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E51628EA-947D-40D2-B846-8192CF49728E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E51628EA-947D-40D2-B846-8192CF49728E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E51628EA-947D-40D2-B846-8192CF49728E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4250EA97-012F-4CE0-B476-1A9BD96A345C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4250EA97-012F-4CE0-B476-1A9BD96A345C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4250EA97-012F-4CE0-B476-1A9BD96A345C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4250EA97-012F-4CE0-B476-1A9BD96A345C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595C8176-40CF-454E-8DB1-780912BE9CA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595C8176-40CF-454E-8DB1-780912BE9CA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595C8176-40CF-454E-8DB1-780912BE9CA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595C8176-40CF-454E-8DB1-780912BE9CA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABD47875-58C2-4AA8-90E9-A63B7549A28E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABD47875-58C2-4AA8-90E9-A63B7549A28E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABD47875-58C2-4AA8-90E9-A63B7549A28E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABD47875-58C2-4AA8-90E9-A63B7549A28E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E1B0C8D-C400-4895-9056-1DE73B8BDB20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E1B0C8D-C400-4895-9056-1DE73B8BDB20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E1B0C8D-C400-4895-9056-1DE73B8BDB20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E1B0C8D-C400-4895-9056-1DE73B8BDB20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7B317E3-20DA-4E23-8866-A6916FD9DE2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7B317E3-20DA-4E23-8866-A6916FD9DE2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7B317E3-20DA-4E23-8866-A6916FD9DE2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7B317E3-20DA-4E23-8866-A6916FD9DE2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42A0D17A-2D32-4D43-A9B7-32B741A94258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42A0D17A-2D32-4D43-A9B7-32B741A94258}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42A0D17A-2D32-4D43-A9B7-32B741A94258}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42A0D17A-2D32-4D43-A9B7-32B741A94258}.Release|Any CPU.Build.0 = Release|Any CPU
+		{031F977D-D801-4C43-9160-861BE908B9EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{031F977D-D801-4C43-9160-861BE908B9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{031F977D-D801-4C43-9160-861BE908B9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{031F977D-D801-4C43-9160-861BE908B9EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE54F46E-28B7-4490-B246-820C543E497B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE54F46E-28B7-4490-B246-820C543E497B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE54F46E-28B7-4490-B246-820C543E497B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE54F46E-28B7-4490-B246-820C543E497B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D734A79-1C27-479E-9011-BAFF06C22F9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D734A79-1C27-479E-9011-BAFF06C22F9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D734A79-1C27-479E-9011-BAFF06C22F9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D734A79-1C27-479E-9011-BAFF06C22F9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA96678E-9370-4445-9154-6CA4349C42F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA96678E-9370-4445-9154-6CA4349C42F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA96678E-9370-4445-9154-6CA4349C42F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA96678E-9370-4445-9154-6CA4349C42F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFE617C-E87C-4779-9078-BC8348891733}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFE617C-E87C-4779-9078-BC8348891733}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFE617C-E87C-4779-9078-BC8348891733}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFE617C-E87C-4779-9078-BC8348891733}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B014CF6E-6C00-4952-B894-3CB36DE9357F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B014CF6E-6C00-4952-B894-3CB36DE9357F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B014CF6E-6C00-4952-B894-3CB36DE9357F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B014CF6E-6C00-4952-B894-3CB36DE9357F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72556582-9F23-48A2-B35A-42F7C1811585}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72556582-9F23-48A2-B35A-42F7C1811585}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72556582-9F23-48A2-B35A-42F7C1811585}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72556582-9F23-48A2-B35A-42F7C1811585}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F382758F-687C-4FB3-A063-A2EDE4398CB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F382758F-687C-4FB3-A063-A2EDE4398CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F382758F-687C-4FB3-A063-A2EDE4398CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F382758F-687C-4FB3-A063-A2EDE4398CB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{234AE3D1-B510-4793-A8BF-87F4038F6207}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{234AE3D1-B510-4793-A8BF-87F4038F6207}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{234AE3D1-B510-4793-A8BF-87F4038F6207}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{234AE3D1-B510-4793-A8BF-87F4038F6207}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02A3DD27-B9A7-480E-B087-004DCB4FCF4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02A3DD27-B9A7-480E-B087-004DCB4FCF4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02A3DD27-B9A7-480E-B087-004DCB4FCF4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02A3DD27-B9A7-480E-B087-004DCB4FCF4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7B882CB-EB31-4D85-8A15-CE1F1BC02208}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7B882CB-EB31-4D85-8A15-CE1F1BC02208}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7B882CB-EB31-4D85-8A15-CE1F1BC02208}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7B882CB-EB31-4D85-8A15-CE1F1BC02208}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3281047C-4DAF-4680-9E75-1523C8085B76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3281047C-4DAF-4680-9E75-1523C8085B76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3281047C-4DAF-4680-9E75-1523C8085B76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3281047C-4DAF-4680-9E75-1523C8085B76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0766508E-CD1D-490D-AD83-B7861AC74C7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0766508E-CD1D-490D-AD83-B7861AC74C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0766508E-CD1D-490D-AD83-B7861AC74C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0766508E-CD1D-490D-AD83-B7861AC74C7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{023968FB-0BBF-4139-AC20-95EE0C202D45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{023968FB-0BBF-4139-AC20-95EE0C202D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{023968FB-0BBF-4139-AC20-95EE0C202D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{023968FB-0BBF-4139-AC20-95EE0C202D45}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0E8519C-1F20-434E-A076-B1D708201CA8} = {A717B923-0518-4BC8-B47E-25E4280D03D6}
+		{C8CD62E0-88EE-4F35-BC2C-816B2058BF2B} = {5FEB1DC5-7DB0-4A7D-8EAE-64BB600AB34E}
+		{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0} = {5FEB1DC5-7DB0-4A7D-8EAE-64BB600AB34E}
+		{6B0812F9-EB95-4068-8827-E00564F891B3} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{22050143-6BF2-485C-A875-B7A92D4D73CD} = {1463D980-E742-4CE7-8405-8ED3F73F57E5}
+		{D08FDF9C-0C77-4896-898C-7FFBBAFAA57E} = {1463D980-E742-4CE7-8405-8ED3F73F57E5}
+		{77B89ADC-DA7F-4A51-BC16-5336B2AD29C7} = {70A51584-F7DF-4F7D-BE09-FD789EB02E09}
+		{8E91280C-E4B5-4594-A7DC-BD7B84D8553E} = {A53221AF-A500-420B-AB9B-C3D878D6CBDE}
+		{67C22EA0-11A6-49A4-82EF-E29467FDA32B} = {A53221AF-A500-420B-AB9B-C3D878D6CBDE}
+		{B9F763D8-467F-4035-986E-1F767B327442} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{E51628EA-947D-40D2-B846-8192CF49728E} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{4250EA97-012F-4CE0-B476-1A9BD96A345C} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{7E9F52F1-7861-41C5-9D83-228EDF1C7DAB} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{595C8176-40CF-454E-8DB1-780912BE9CA9} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{ABD47875-58C2-4AA8-90E9-A63B7549A28E} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{3E1B0C8D-C400-4895-9056-1DE73B8BDB20} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{C7B317E3-20DA-4E23-8866-A6916FD9DE2C} = {DAF1FC7E-5CED-416D-953D-10A1408AF7B0}
+		{42A0D17A-2D32-4D43-A9B7-32B741A94258} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{031F977D-D801-4C43-9160-861BE908B9EB} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{EE54F46E-28B7-4490-B246-820C543E497B} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{6D734A79-1C27-479E-9011-BAFF06C22F9E} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{CA96678E-9370-4445-9154-6CA4349C42F1} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95} = {7357A8ED-69EB-4A1E-9DB5-507944D0CD88}
+		{2EFE617C-E87C-4779-9078-BC8348891733} = {70A51584-F7DF-4F7D-BE09-FD789EB02E09}
+		{1C00238B-D1AE-4F61-B0B8-D8C8C5974EAC} = {70A51584-F7DF-4F7D-BE09-FD789EB02E09}
+		{B014CF6E-6C00-4952-B894-3CB36DE9357F} = {70A51584-F7DF-4F7D-BE09-FD789EB02E09}
+		{88AD0AFF-46C6-4246-91FC-C4DFB2ACC5EE} = {D2F7F73C-E5C0-4680-A889-01377F3D2065}
+		{1463D980-E742-4CE7-8405-8ED3F73F57E5} = {D2F7F73C-E5C0-4680-A889-01377F3D2065}
+		{BCC4196A-3834-4FF3-80A3-F93F66DDB8E6} = {D2F7F73C-E5C0-4680-A889-01377F3D2065}
+		{D3390C58-9B2D-40C4-A6F7-3DA861C5E097} = {D2F7F73C-E5C0-4680-A889-01377F3D2065}
+		{72556582-9F23-48A2-B35A-42F7C1811585} = {88AD0AFF-46C6-4246-91FC-C4DFB2ACC5EE}
+		{F382758F-687C-4FB3-A063-A2EDE4398CB4} = {88AD0AFF-46C6-4246-91FC-C4DFB2ACC5EE}
+		{234AE3D1-B510-4793-A8BF-87F4038F6207} = {BCC4196A-3834-4FF3-80A3-F93F66DDB8E6}
+		{02A3DD27-B9A7-480E-B087-004DCB4FCF4E} = {BCC4196A-3834-4FF3-80A3-F93F66DDB8E6}
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166} = {D3390C58-9B2D-40C4-A6F7-3DA861C5E097}
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD} = {D3390C58-9B2D-40C4-A6F7-3DA861C5E097}
+		{D7B882CB-EB31-4D85-8A15-CE1F1BC02208} = {8B4AE39E-63BC-4C95-8ACE-8FF7C2883E15}
+		{3281047C-4DAF-4680-9E75-1523C8085B76} = {8B4AE39E-63BC-4C95-8ACE-8FF7C2883E15}
+		{0766508E-CD1D-490D-AD83-B7861AC74C7A} = {8B4AE39E-63BC-4C95-8ACE-8FF7C2883E15}
+		{023968FB-0BBF-4139-AC20-95EE0C202D45} = {8B4AE39E-63BC-4C95-8ACE-8FF7C2883E15}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6E2E017D-E6B6-4745-B216-13EB80523F1A}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 37
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://va-crmprojects.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = VA.TMP.Integration.Common\\VA.TMP.Integration.Common.csproj
+		SccProjectTopLevelParentUniqueName1 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName1 = VA.TMP.Integration.Common
+		SccLocalPath1 = VA.TMP.Integration.Common
+		SccProjectUniqueName2 = VA.TMP.Integration.Core\\VA.TMP.Integration.Core.csproj
+		SccProjectTopLevelParentUniqueName2 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName2 = VA.TMP.Integration.Core
+		SccLocalPath2 = VA.TMP.Integration.Core
+		SccProjectUniqueName3 = VA.TMP.Integration.Core.Exceptions\\VA.TMP.Integration.Core.Exceptions.csproj
+		SccProjectTopLevelParentUniqueName3 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName3 = VA.TMP.Integration.Core.Exceptions
+		SccLocalPath3 = VA.TMP.Integration.Core.Exceptions
+		SccProjectUniqueName4 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken.Messages\\Ec.JsonWebToken.Messages.csproj
+		SccProjectTopLevelParentUniqueName4 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName4 = EC/Json\u0020Web\u0020Token/Ec.JsonWebToken.Messages
+		SccLocalPath4 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken.Messages
+		SccProjectUniqueName5 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken\\Ec.JsonWebToken.csproj
+		SccProjectTopLevelParentUniqueName5 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName5 = EC/Json\u0020Web\u0020Token/Ec.JsonWebToken
+		SccLocalPath5 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken
+		SccProjectUniqueName6 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken.Services\\Ec.JsonWebToken.Services.csproj
+		SccProjectTopLevelParentUniqueName6 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName6 = EC/Json\u0020Web\u0020Token/Ec.JsonWebToken.Services
+		SccLocalPath6 = EC\\Json\u0020Web\u0020Token\\Ec.JsonWebToken.Services
+		SccProjectUniqueName7 = EC\\Json\u0020Web\u0020Token\\Ec.Jwt.Api\\Ec.Jwt.Api.csproj
+		SccProjectTopLevelParentUniqueName7 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName7 = EC/Json\u0020Web\u0020Token/Ec.Jwt.Api
+		SccLocalPath7 = EC\\Json\u0020Web\u0020Token\\Ec.Jwt.Api
+		SccProjectUniqueName8 = VA.TMP.Integration.Schema.VideoVisitService\\VA.TMP.Integration.Schema.VideoVisitService.csproj
+		SccProjectTopLevelParentUniqueName8 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName8 = VA.TMP.Integration.Schema.VideoVisitService
+		SccLocalPath8 = VA.TMP.Integration.Schema.VideoVisitService
+		SccProjectUniqueName9 = VA.TMP.Integration.Schema.VirtualMeetingRoom\\VA.TMP.Integration.Schema.VirtualMeetingRoom.csproj
+		SccProjectTopLevelParentUniqueName9 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName9 = VA.TMP.Integration.Schema.VirtualMeetingRoom
+		SccLocalPath9 = VA.TMP.Integration.Schema.VirtualMeetingRoom
+		SccProjectUniqueName10 = VA.TMP.Integration.Certificate.Interface\\VA.TMP.Integration.Certificate.Interface.csproj
+		SccProjectTopLevelParentUniqueName10 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName10 = VA.TMP.Integration.Certificate.Interface
+		SccLocalPath10 = VA.TMP.Integration.Certificate.Interface
+		SccProjectUniqueName11 = VA.TMP.Integration.Certificate\\VA.TMP.Integration.Certificate.csproj
+		SccProjectTopLevelParentUniqueName11 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName11 = VA.TMP.Integration.Certificate
+		SccLocalPath11 = VA.TMP.Integration.Certificate
+		SccProjectUniqueName12 = VA.TMP.Integration.Context.Interface\\VA.TMP.Integration.Context.Interface.csproj
+		SccProjectTopLevelParentUniqueName12 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName12 = VA.TMP.Integration.Context.Interface
+		SccLocalPath12 = VA.TMP.Integration.Context.Interface
+		SccProjectUniqueName13 = VA.TMP.Integration.Context\\VA.TMP.Integration.Context.csproj
+		SccProjectTopLevelParentUniqueName13 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName13 = VA.TMP.Integration.Context
+		SccLocalPath13 = VA.TMP.Integration.Context
+		SccProjectUniqueName14 = VA.TMP.Integration.Rest.Interface\\VA.TMP.Integration.Rest.Interface.csproj
+		SccProjectTopLevelParentUniqueName14 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName14 = VA.TMP.Integration.Rest.Interface
+		SccLocalPath14 = VA.TMP.Integration.Rest.Interface
+		SccProjectUniqueName15 = VA.TMP.Integration.Rest\\VA.TMP.Integration.Rest.csproj
+		SccProjectTopLevelParentUniqueName15 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName15 = VA.TMP.Integration.Rest
+		SccLocalPath15 = VA.TMP.Integration.Rest
+		SccProjectUniqueName16 = VA.TMP.Integration.Token.Interface\\VA.TMP.Integration.Token.Interface.csproj
+		SccProjectTopLevelParentUniqueName16 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName16 = VA.TMP.Integration.Token.Interface
+		SccLocalPath16 = VA.TMP.Integration.Token.Interface
+		SccProjectUniqueName17 = VA.TMP.Integration.Token\\VA.TMP.Integration.Token.csproj
+		SccProjectTopLevelParentUniqueName17 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName17 = VA.TMP.Integration.Token
+		SccLocalPath17 = VA.TMP.Integration.Token
+		SccProjectUniqueName18 = EC\\HealthShare\\Ec.HealthShare.Messages\\Ec.HealthShare.Messages.csproj
+		SccProjectTopLevelParentUniqueName18 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName18 = EC/HealthShare/Ec.HealthShare.Messages
+		SccLocalPath18 = EC\\HealthShare\\Ec.HealthShare.Messages
+		SccProjectUniqueName19 = EC\\Mvi\\VEIS.Mvi.Messages\\VEIS.Mvi.Messages.csproj
+		SccProjectTopLevelParentUniqueName19 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName19 = EC/Mvi/VEIS.Mvi.Messages
+		SccLocalPath19 = EC\\Mvi\\VEIS.Mvi.Messages
+		SccProjectUniqueName20 = EC\\VEIS.Core.Core\\VEIS.Core.Core.csproj
+		SccProjectTopLevelParentUniqueName20 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName20 = EC/VEIS.Core.Core
+		SccLocalPath20 = EC\\VEIS.Core.Core
+		SccProjectUniqueName21 = EC\\Via\\VEIS.VIAScheduling.Messages\\VEIS.VIAScheduling.Messages.csproj
+		SccProjectTopLevelParentUniqueName21 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName21 = EC/Via/VEIS.VIAScheduling.Messages
+		SccLocalPath21 = EC\\Via\\VEIS.VIAScheduling.Messages
+		SccProjectUniqueName22 = EC\\Video\u0020Visit\\Ec.VideoVisit.Messages\\Ec.VideoVisit.Messages.csproj
+		SccProjectTopLevelParentUniqueName22 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName22 = EC/Video\u0020Visit/Ec.VideoVisit.Messages
+		SccLocalPath22 = EC\\Video\u0020Visit\\Ec.VideoVisit.Messages
+		SccProjectUniqueName23 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom.Messages\\Ec.VirtualMeetingRoom.Messages.csproj
+		SccProjectTopLevelParentUniqueName23 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName23 = EC/Virtual\u0020Meeting\u0020Room/Ec.VirtualMeetingRoom.Messages
+		SccLocalPath23 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom.Messages
+		SccProjectUniqueName24 = EC\\HealthShare\\Ec.HealthShare.Api\\Ec.HealthShare.Api.csproj
+		SccProjectTopLevelParentUniqueName24 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName24 = EC/HealthShare/Ec.HealthShare.Api
+		SccLocalPath24 = EC\\HealthShare\\Ec.HealthShare.Api
+		SccProjectUniqueName25 = EC\\Video\u0020Visit\\Ec.VideoVisit.Api\\Ec.VideoVisit.Api.csproj
+		SccProjectTopLevelParentUniqueName25 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName25 = EC/Video\u0020Visit/Ec.VideoVisit.Api
+		SccLocalPath25 = EC\\Video\u0020Visit\\Ec.VideoVisit.Api
+		SccProjectUniqueName26 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.Vmr.Api\\Ec.Vmr.Api.csproj
+		SccProjectTopLevelParentUniqueName26 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName26 = EC/Virtual\u0020Meeting\u0020Room/Ec.Vmr.Api
+		SccLocalPath26 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.Vmr.Api
+		SccProjectUniqueName27 = EC\\HealthShare\\Ec.HealthShare\\Ec.HealthShare.csproj
+		SccProjectTopLevelParentUniqueName27 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName27 = EC/HealthShare/Ec.HealthShare
+		SccLocalPath27 = EC\\HealthShare\\Ec.HealthShare
+		SccProjectUniqueName28 = EC\\HealthShare\\Ec.HealthShare.Services\\Ec.HealthShare.Services.csproj
+		SccProjectTopLevelParentUniqueName28 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName28 = EC/HealthShare/Ec.HealthShare.Services
+		SccLocalPath28 = EC\\HealthShare\\Ec.HealthShare.Services
+		SccProjectUniqueName29 = EC\\Video\u0020Visit\\Ec.VideoVisit\\Ec.VideoVisit.csproj
+		SccProjectTopLevelParentUniqueName29 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName29 = EC/Video\u0020Visit/Ec.VideoVisit
+		SccLocalPath29 = EC\\Video\u0020Visit\\Ec.VideoVisit
+		SccProjectUniqueName30 = EC\\Video\u0020Visit\\Ec.VideoVisit.Services\\Ec.VideoVisit.Services.csproj
+		SccProjectTopLevelParentUniqueName30 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName30 = EC/Video\u0020Visit/Ec.VideoVisit.Services
+		SccLocalPath30 = EC\\Video\u0020Visit\\Ec.VideoVisit.Services
+		SccProjectUniqueName31 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom\\Ec.VirtualMeetingRoom.csproj
+		SccProjectTopLevelParentUniqueName31 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName31 = EC/Virtual\u0020Meeting\u0020Room/Ec.VirtualMeetingRoom
+		SccLocalPath31 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom
+		SccProjectUniqueName32 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom.Services\\Ec.VirtualMeetingRoom.Services.csproj
+		SccProjectTopLevelParentUniqueName32 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName32 = EC/Virtual\u0020Meeting\u0020Room/Ec.VirtualMeetingRoom.Services
+		SccLocalPath32 = EC\\Virtual\u0020Meeting\u0020Room\\Ec.VirtualMeetingRoom.Services
+		SccProjectUniqueName33 = Unit\u0020Tests\\Ec.Jwt.UnitTests\\Ec.Jwt.UnitTests.csproj
+		SccProjectTopLevelParentUniqueName33 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName33 = Unit\u0020Tests/Ec.Jwt.UnitTests
+		SccLocalPath33 = Unit\u0020Tests\\Ec.Jwt.UnitTests
+		SccProjectUniqueName34 = Unit\u0020Tests\\Ec.HealthShare.UnitTests\\Ec.HealthShare.UnitTests.csproj
+		SccProjectTopLevelParentUniqueName34 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName34 = Unit\u0020Tests/Ec.HealthShare.UnitTests
+		SccLocalPath34 = Unit\u0020Tests\\Ec.HealthShare.UnitTests
+		SccProjectUniqueName35 = Unit\u0020Tests\\Ec.Vvs.UnitTests\\Ec.Vvs.UnitTests.csproj
+		SccProjectTopLevelParentUniqueName35 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName35 = Unit\u0020Tests/Ec.Vvs.UnitTests
+		SccLocalPath35 = Unit\u0020Tests\\Ec.Vvs.UnitTests
+		SccProjectUniqueName36 = Unit\u0020Tests\\Ec.Vmr.UnitTests\\Ec.Vmr.UnitTests.csproj
+		SccProjectTopLevelParentUniqueName36 = VA.TMP.Integration.UnitTests.sln
+		SccProjectName36 = Unit\u0020Tests/Ec.Vmr.UnitTests
+		SccLocalPath36 = Unit\u0020Tests\\Ec.Vmr.UnitTests
+	EndGlobalSection
+EndGlobal

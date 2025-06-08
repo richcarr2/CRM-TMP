@@ -1,0 +1,36 @@
+﻿//Library Name: cvt_QualityCheck.OnSave.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.QualityCheck_OnSave = {};
+
+MCS.QualityCheck_OnSave.CreateName = function () {
+    var providerName = Xrm.Page.getAttribute("cvt_providerid").getValue();
+    var createdOn = Xrm.Page.getAttribute("createdon").getValue();
+    var flag = Xrm.Page.getAttribute("cvt_flag");
+    var nameField = "";
+
+    if (providerName != null) {
+        nameField += providerName[0].name;
+    }
+    if (createdOn != null) {
+        nameField += " - "
+        nameField += createdOn;
+    }
+    else {
+        var todayDt = new Date();
+        nameField += " - "
+        nameField += todayDt;
+    }
+    if (flag != null && flag.getSelectedOption() != null) {
+        nameField += " ("
+        nameField += flag.getSelectedOption().text;
+        nameField += ")"
+    }
+
+    if (Xrm.Page.getAttribute("cvt_name").getValue() != nameField) {
+        Xrm.Page.getAttribute("cvt_name").setSubmitMode("always");
+        Xrm.Page.getAttribute("cvt_name").setValue(nameField);
+    }
+};

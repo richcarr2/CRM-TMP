@@ -1,0 +1,60 @@
+﻿//Library Name: cvt_Privilege.OnChange.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.Privilege_OnChange = {};
+
+//Toggle sections based on TypeofPrivileging
+MCS.Privilege_OnChange.TypeToggle = function () {
+    var typeOfPrivileging = (Xrm.Page.data.entity.attributes.get('cvt_typeofprivileging').getValue() != null) ? Xrm.Page.data.entity.attributes.get('cvt_typeofprivileging').getSelectedOption().value : null;
+    if (typeOfPrivileging != null) {
+        if (typeOfPrivileging == 917290000) { //Primary
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home').setVisible(true);
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home2').setVisible(true);
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_proxy').setVisible(false);
+            Xrm.Page.getAttribute("cvt_notifydate").setRequiredLevel('required');
+
+            //Clear Proxy fields
+            Xrm.Page.getAttribute("cvt_referencedprivilegeid").setValue(null);
+            Xrm.Page.getAttribute("cvt_referencedprivilegeid").setRequiredLevel('none');
+        }
+        else if (typeOfPrivileging == 917290001) { //Secondary     
+
+            //Disable
+            Xrm.Page.getControl("cvt_servicetypeid").setDisabled(true);
+            Xrm.Page.getControl("cvt_servicesubtypeid").setDisabled(true);
+            Xrm.Page.getControl("cvt_typeofprivileging").setDisabled(true);
+            Xrm.Page.getControl('statuscode').setDisabled(true);
+            Xrm.Page.getControl("cvt_referencedprivilegeid").setDisabled(true);
+            Xrm.Page.getControl("cvt_providerid").setDisabled(true);
+
+
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home').setVisible(false);
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home2').setVisible(false);
+            Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_proxy').setVisible(true);
+            //Clear Home fields
+            Xrm.Page.getAttribute("cvt_expirationdate").setValue(null);
+            Xrm.Page.getAttribute("cvt_expirationdate").setRequiredLevel('none');
+            Xrm.Page.getAttribute("cvt_notifydate").setValue(null);
+            Xrm.Page.getAttribute("cvt_notifydate").setRequiredLevel('none');
+
+
+            Xrm.Page.getAttribute("cvt_referencedprivilegeid").setRequiredLevel("required");
+
+            
+        }
+    }
+    else {
+        Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home').setVisible(false);
+        Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_home2').setVisible(false);
+        Xrm.Page.ui.tabs.get('tabGeneral').sections.get('cvt_proxy').setVisible(false);
+        //Clear both Home and Proxy fields
+        Xrm.Page.getAttribute("cvt_referencedprivilegeid").setValue(null);
+        Xrm.Page.getAttribute("cvt_expirationdate").setValue(null);
+        Xrm.Page.getAttribute("cvt_referencedprivilegeid").setRequiredLevel('none');
+
+        Xrm.Page.getAttribute("cvt_notifydate").setValue(null);
+        Xrm.Page.getAttribute("cvt_notifydate").setRequiredLevel('none');
+    }
+};

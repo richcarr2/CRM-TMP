@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32228.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMPPlugins", "..\VA.TMP.CRM.PluginsV2\TMPPlugins.csproj", "{B128656D-6912-4261-A799-8276144394FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VA.TMP.WebResources", "..\..\VA.TMP.WebResourcesV2\VA.TMP.WebResources.csproj", "{2050BA86-4519-4302-A53C-114731BEE620}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B128656D-6912-4261-A799-8276144394FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B128656D-6912-4261-A799-8276144394FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B128656D-6912-4261-A799-8276144394FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B128656D-6912-4261-A799-8276144394FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2050BA86-4519-4302-A53C-114731BEE620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2050BA86-4519-4302-A53C-114731BEE620}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2050BA86-4519-4302-A53C-114731BEE620}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2050BA86-4519-4302-A53C-114731BEE620}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A96945A2-E6E6-4876-8229-4577C0C2FC7F}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,358 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-prod"
+        },
+        "LogicAppLocation": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "ISEResourceGroup": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "ISEName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "eis-prod-southwest-ise"
+        },
+        "LogicAppName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat('va-eis-tmp-OAuthAuthenticator', parameters('Target-Env'))]"
+        },
+        "OAuthURL-arm": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[concat('https://login.microsoftonline.us/', subscription().tenantId ,'/oauth2/v2.0/token')]"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicAppName')]",
+            "location": "[parameters('LogicAppLocation')]",
+            "tags": {
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISEName')]",
+                    "id": "[resourceId(parameters('ISEResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISEName'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "OAuthURL": {
+                            "defaultValue": "https://login.microsoftonline.us/f7c49e36-971b-42c7-b244-a88eed6c0bf6/oauth2/v2.0/token",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "relativePath": "OAuthAuthenticator",
+                                "schema": {
+                                    "properties": {
+                                        "ClientId": {
+                                            "type": "string"
+                                        },
+                                        "ClientSecret": {
+                                            "type": "string"
+                                        },
+                                        "GrantType": {
+                                            "type": "string"
+                                        },
+                                        "OAuth URL": {
+                                            "type": "string"
+                                        },
+                                        "Scope": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Catch": {
+                            "actions": {
+                                "Append_to_Response_variable_(error_condition)": {
+                                    "runAfter": {},
+                                    "type": "AppendToArrayVariable",
+                                    "inputs": {
+                                        "name": "ResponseVariable",
+                                        "value": "@actions('Oauth2').outputs"
+                                    }
+                                },
+                                "Compose_2": {
+                                    "runAfter": {
+                                        "Append_to_Response_variable_(error_condition)": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Compose",
+                                    "inputs": "@result('Try')"
+                                },
+                                "Response": {
+                                    "runAfter": {
+                                        "Compose_2": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Response",
+                                    "kind": "Http",
+                                    "inputs": {
+                                        "body": {},
+                                        "statusCode": 500
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Try": [
+                                    "Failed",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Scope"
+                        },
+                        "Compose": {
+                            "runAfter": {
+                                "Initialize_Response_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose",
+                            "inputs": "@equals(triggerBody()?['OAuth URL'],null)"
+                        },
+                        "Compose_final_response": {
+                            "runAfter": {
+                                "Catch": [
+                                    "Succeeded",
+                                    "Skipped"
+                                ]
+                            },
+                            "type": "Compose",
+                            "inputs": {
+                                "HTTPResponse": "@base64(variables('ResponseVariable')[0])",
+                                "LogicAppHTTPOutputs": {
+                                    "HTTPOutput": "@if(greater(length(variables('ResponseVariable')),1),base64(variables('ResponseVariable')[1]),'')",
+                                    "OauthParseOutput": "@if(greater(length(variables('ResponseVariable')),2),base64(variables('ResponseVariable')[2]),'')"
+                                },
+                                "token": "@body('ParseOauth2Response')?['access_token']"
+                            }
+                        },
+                        "Condition:_If_OAuth_URL_is_Null": {
+                            "actions": {},
+                            "runAfter": {
+                                "Compose": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Set_variable:_OAuth_URL": {
+                                        "runAfter": {},
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "OAuth URL",
+                                            "value": "@triggerBody()?['OAuth URL']"
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@equals(triggerBody()?['OAuth URL'],null)",
+                                            true
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Create_Resource_URL": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Resource URL",
+                                        "type": "string",
+                                        "value": "client_id=@{triggerBody()?['ClientId']}&grant_type=@{triggerBody()?['GrantType']}&client_secret=@{triggerBody()?['ClientSecret']}&scope=@{triggerBody()?['Scope']}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Filter_Errors": {
+                            "runAfter": {
+                                "Try": [
+                                    "Failed",
+                                    "Skipped",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Query",
+                            "inputs": {
+                                "from": "@result('Try')",
+                                "where": "@equals(item()?['status'], 'Failed')"
+                            }
+                        },
+                        "Initialize_Response_variable": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ResponseVariable",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {
+                                "Create_Resource_URL": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "OAuth URL",
+                                        "type": "string",
+                                        "value": "@parameters('OAuthURL')"
+                                    }
+                                ]
+                            },
+                            "description": "We need to parametrize the Tenant Id in this URL "
+                        },
+                        "Response_2": {
+                            "runAfter": {
+                                "Filter_Errors": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "code": "@coalesce(first(body('Filter_Errors'))?['error']?['code'],first(body('Filter_Errors'))?['outputs']?['body']?['error'],'Error')",
+                                    "message": "@coalesce(first(body('Filter_Errors'))?['error']?['message'],first(body('Filter_Errors'))?['outputs']?['body']?['error_description'],'Error')"
+                                },
+                                "statusCode": "@coalesce(first(body('Filter_Errors'))?['outputs']?['statuscode'],500)\r\n"
+                            }
+                        },
+                        "Send_response_to_client": {
+                            "runAfter": {
+                                "Compose_final_response": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@outputs('Compose_final_response')",
+                                "statusCode": "@outputs('Oauth2')['statusCode']"
+                            }
+                        },
+                        "Try": {
+                            "actions": {
+                                "Append_to_Response_variable_(success_condition)": {
+                                    "runAfter": {
+                                        "ParseOauth2Response": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "AppendToArrayVariable",
+                                    "inputs": {
+                                        "name": "ResponseVariable",
+                                        "value": "@body('ParseOauth2Response')"
+                                    }
+                                },
+                                "Oauth2": {
+                                    "runAfter": {},
+                                    "type": "Http",
+                                    "inputs": {
+                                        "body": "@variables('Resource URL')",
+                                        "headers": {
+                                            "content-type": "application/x-www-form-urlencoded"
+                                        },
+                                        "method": "POST",
+                                        "uri": "@variables('OAuth URL')"
+                                    }
+                                },
+                                "ParseOauth2Response": {
+                                    "runAfter": {
+                                        "Oauth2": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('Oauth2')",
+                                        "schema": {
+                                            "properties": {
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "ext_expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "token_type": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Condition:_If_OAuth_URL_is_Null": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Scope"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "OAuthURL": {
+                        "value": "[parameters('OAuthURL-arm')]"
+                    }
+                }
+            }
+        }
+    ]
+}

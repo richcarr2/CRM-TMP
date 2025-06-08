@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="bookableresource.cs" />
+    <Compile Remove="bookableresourcecategory.cs" />
+    <Compile Remove="OptionSets\AppointmentModality_donotuse.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="VA.TMP.DataModel.xrm2" />
+    <None Remove="VA.TMP.DataModel.xrmsuo2" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.42" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,35 @@
+﻿if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+
+MCS.Patients = [];
+// Create Namespace container for functions in this library;
+MCS.AppointmentOnLoad = {};
+
+MCS.AppointmentOnLoad.loadPatients = function () {
+    var patientObj = Xrm.Page.getAttribute("optionalattendees");
+    var patients = patientObj != null ? patientObj.getValue() : [];
+    MCS.Patients = patients;
+}
+
+MCS.AppointmentOnLoad.ClearOrganizer = function () {
+    Xrm.Page.getAttribute("organizer").setValue();
+};
+
+MCS.AppointmentOnLoad.DisplayGroupForm = function () {
+    var isGroup;
+    var groupObj = Xrm.Page.getAttribute("cvt_serviceactivityid");
+    if (groupObj != null)
+        isGroup = Xrm.Page.getAttribute("cvt_serviceactivityid").getValue() != null;
+    //if this is the child record of a service activity record, then hide away a number of the normal fields
+    Xrm.Page.ui.tabs.get('appointment').sections.get('scheduling information').setVisible(!isGroup);
+    Xrm.Page.ui.tabs.get('appointment').sections.get('appointment description').setVisible(!isGroup);
+    Xrm.Page.ui.tabs.get('appointment').sections.get('GroupFields').setVisible(isGroup);
+};
+
+MCS.AppointmentOnLoad.showMVI = function () {
+    var showMVI = MCS.cvt_Common.MVIConfig();
+    Xrm.Page.ui.tabs.get('PersonSearch').setVisible(showMVI);
+    Xrm.Page.getControl('optionalattendees').setVisible(showMVI);
+    if (showMVI)
+        Xrm.Page.ui.tabs.get('PersonSearch').setFocus();
+}

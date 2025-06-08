@@ -1,0 +1,24 @@
+﻿"identifier":
+[
+    {% for p in XCN.Repeats -%}
+    {
+    "value": "{{p.1.value}}",
+    "type":
+        {          
+            {% assign IDType = p.13.Value | get_property: 'CodeSystem/IDType', 'code' -%}
+            {% if IDType -%}
+            "coding":
+            [
+                {
+                    "code": "{{ IDType }}",
+                    "display": "{{ p.13.Value | get_property: 'CodeSystem/IDType', 'display' }}",
+                    "system": "{{ p.13.Value | get_property: 'CodeSystem/IDType', 'system' }}",
+                },
+            ],
+            {% endif -%}
+            "text": "{{ p.13.Value }}", 
+            
+        },
+    },
+    {% endfor -%}
+],

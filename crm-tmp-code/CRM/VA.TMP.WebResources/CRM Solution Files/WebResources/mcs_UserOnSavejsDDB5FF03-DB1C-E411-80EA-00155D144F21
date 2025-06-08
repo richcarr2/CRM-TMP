@@ -1,0 +1,99 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+
+MCS.User = {};
+
+//Check for Location alignment
+MCS.User.SetLocationRequirement = function () {
+    //Check if Type is VISN Lead or Other/Support
+    if (Xrm.Page.getAttribute('cvt_type').getValue() != null &&
+        (Xrm.Page.getAttribute('cvt_type').getValue() == 917290006 ||
+        Xrm.Page.getAttribute('cvt_type').getValue() == 917290002)) {
+        //Make Facility and TSS Site not required
+        Xrm.Page.getAttribute('cvt_facility').setRequiredLevel("none");
+        Xrm.Page.getAttribute('cvt_site').setRequiredLevel("none");
+    }
+    else {
+        Xrm.Page.getAttribute('cvt_facility').setRequiredLevel("required");
+        Xrm.Page.getAttribute('cvt_site').setRequiredLevel("required");
+    }
+};
+//Displays different tabs & Fields based on field values selected. 
+MCS.User.SetSubmit = function () {
+    if (Xrm.Page.getAttribute("cvt_deleteuserconnections").getIsDirty() == true)
+        Xrm.Page.getAttribute("cvt_deleteuserconnections").setSubmitMode("always");
+
+    if (Xrm.Page.getAttribute("cvt_updateuserconnections").getIsDirty() == true)
+        Xrm.Page.getAttribute("cvt_updateuserconnections").setSubmitMode("always");
+
+    if (Xrm.Page.getAttribute("cvt_replacementuser").getIsDirty() == true)
+        Xrm.Page.getAttribute("cvt_replacementuser").setSubmitMode("always");
+};
+
+//Check for Location alignment
+MCS.User.VerifyLocations = function (context) {
+    var visn = "";
+    var facility = "";
+    var site = "";
+
+    var event = context.getEventArgs();
+
+    if (Xrm.Page.getAttribute('businessunitid').getValue() != null)
+        visn = Xrm.Page.getAttribute('businessunitid').getValue()[0].id;
+    else {
+        alert("Please select a VISN.");
+        event.preventDefault();
+        return;
+    }
+    //Check if Type is VISN Lead or Other/Support
+    if (Xrm.Page.getAttribute('cvt_type').getValue() != null &&
+        (Xrm.Page.getAttribute('cvt_type').getValue() == 917290006 ||
+        Xrm.Page.getAttribute('cvt_type').getValue() == 917290002)) {
+        return;
+    }
+    if (Xrm.Page.getAttribute('cvt_facility').getValue() != null)
+        facility = Xrm.Page.getAttribute('cvt_facility').getValue()[0].id;
+    else {
+        alert("Please select a Facility.");
+        event.preventDefault();
+        return;
+    }
+    if (Xrm.Page.getAttribute('cvt_site').getValue() != null)
+        site = Xrm.Page.getAttribute('cvt_site').getValue()[0].id;
+    else {
+        alert("Please select a TSS Site.");
+        event.preventDefault();
+        return;
+    }
+    //Make two query
+    //Verify that TSS Site's (1)Facility and (2)BU match
+
+    var calls = CrmRestKit.Retrieve("mcs_site", site, ['mcs_FacilityId', 'mcs_BusinessUnitId'], false);
+    calls.fail(
+            function (error) {
+            }).done(function (data) {
+                if (data && data.d) {
+                    //Check Facility
+                    if (MCS.cvt_Common.compareGUIDS(facility, data.d.mcs_FacilityId.Id) == false) {
+                        alert("Save prevented. Please make sure the TSS Site, from " + data.d.mcs_FacilityId.Name + ", belongs to the Facility listed on the form: " + Xrm.Page.getAttribute('cvt_facility').getValue()[0].name);
+                        event.preventDefault();
+                        return;
+                    }
+                    var callsFacility = CrmRestKit.Retrieve("mcs_facility", data.d.mcs_FacilityId.Id, ['mcs_BusinessUnitId'], false);
+                    callsFacility.fail(
+                            function (error) {
+                            }).done(function (result) {
+                                if (result && result.d) {
+                                    //Check BU
+                                    if (MCS.cvt_Common.compareGUIDS(visn, result.d.mcs_BusinessUnitId.Id) == false) {
+                                        alert("Save prevented. Please make sure the Facility, from " + result.d.mcs_BusinessUnitId.Name + ", belongs to the Business Unit listed on the form: " + Xrm.Page.getAttribute('businessunitid').getValue()[0].name);
+                                        event.preventDefault();
+                                        return;
+                                    }
+                                }
+                            });
+                }
+            });
+
+};

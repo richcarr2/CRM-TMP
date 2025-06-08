@@ -1,0 +1,47 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "metadata": {
+                "description": "Suffix for the target environment when naming resources"
+            },
+            "defaultValue": "-prod"
+        },
+        "IntegrationAccount-Name": {
+            "type": "String",
+            "defaultValue": "[concat('va-eis-tmp-integration-acct', parameters('Target-Env'))]"
+        },
+        "ISEResourceGroup": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "ISEName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "eis-prod-southwest-ise"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/integrationAccounts",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('IntegrationAccount-Name')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISEName')]",
+                    "id": "[resourceId(parameters('ISEResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISEName'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "state": "Enabled"
+            }
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+﻿if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+
+if (typeof (MCS.Team) == "undefined") {
+    MCS.Team = {};
+}
+
+MCS.Team.OnChange = {};
+
+MCS.Team.OnChange.ShowHideServiceLine = function () {
+    var specialty = Xrm.Page.getControl("cvt_servicetype");
+    var roleType = Xrm.Page.getAttribute("cvt_type");
+    var showSpecialty = roleType.getValue() == 917290001 || roleType.getValue() == 917290008;
+    specialty.setVisible(showSpecialty);
+    
+    if (!showSpecialty) {
+        Xrm.Page.getAttribute("cvt_servicetype").setValue(null);
+        Xrm.Page.getAttribute('cvt_servicetype').setRequiredLevel("none");
+    }
+    else
+        Xrm.Page.getAttribute('cvt_servicetype').setRequiredLevel("required");
+};
+
+MCS.Team.OnChange.CreateName = function () {
+    var fac = Xrm.Page.getAttribute("cvt_facility").getValue();
+    var serviceLine = Xrm.Page.getAttribute("cvt_servicetype").getValue();
+    var role = Xrm.Page.getAttribute("cvt_type").getValue();
+    var facilityName = "", serviceLineName = "", roleName = "", derivedResultField = "";
+
+    if (serviceLine != null) {
+        serviceLineName = serviceLine[0].name;
+        derivedResultField = serviceLineName;
+    }
+
+    switch (role) {
+        case 917290000: //FTC
+            roleName = " FTC Approval Group";
+            break;
+        case 917290001:
+            roleName = " Service Chief Approval Group";
+            break;
+        case 917290002:
+            roleName = " Chiefs of Staff Approval Group";
+            break;
+        case 917290003:
+            roleName = " Credentialing and Privileging Officer Approval Group";
+            break;
+        case 917290004:
+            roleName = "TSA Notification Group";
+            break;
+        case 917290005:
+            roleName = "Scheduler Group";
+            break;
+        case 917290006:
+            roleName = "Data Administrators";
+            break;
+        case 917290007:
+            roleName = "TCTs";
+            break;
+        case 917290008:
+            roleName = " ER On-Call Providers";
+            Xrm.Page.getAttribute("cvt_facility").setValue(null);
+            break;
+    }
+    derivedResultField += roleName;
+
+    if (fac != null && role != 917290008) {
+        facilityName = fac[0].name;
+        derivedResultField += " @ " + facilityName;
+    }
+
+    if (Xrm.Page.getAttribute("name").getValue() != derivedResultField && role != null) {
+        Xrm.Page.getAttribute("name").setSubmitMode("always");
+        Xrm.Page.getAttribute("name").setValue(derivedResultField);
+    }
+};

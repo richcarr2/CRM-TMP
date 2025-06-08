@@ -1,0 +1,588 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "type": "String"
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "type": "string"
+    },
+    "ServiceBus_Connection_Name": {
+      "type": "string"
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "AzureAPIForFHIR_URL": {
+      "type": "string"
+    },
+    "AzureContainerRegistry_ArtifactReference": {
+      "type": "string"
+    },
+    "ResponseHandlerLogicApp_Name": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "Service_Bus_Topic_Name": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "VEIS_OAuth_URL": "[concat('https://login.microsoftonline.us/',subscription().tenantId,'/oauth2/v2.0/token')]",
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+    "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "CKID": "195",
+        "Environment": "DEVTEST",
+        "ProjectName": "Veterans Experience Integration Solution",
+        "VAAzureProgram": "EIS",
+        "VAECID": "AZG20181226001",
+        "displayName": "LogicApp"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Filter_array:_Filter_Errors": {
+              "inputs": {
+                "from": "@result('Scope:_Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Failed"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Failed_Integration_Result": {
+              "inputs": {
+                "body": {
+                  "cvt_visibletouser": false,
+                  "mcs_error": "TMP/Cerner Service Appointment Confirmation '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "mcs_name": "TMP/Cerner Service Appointment Confirmation",
+                  "mcs_payload": "@{base64ToString(triggerBody()['ContentData'])}",
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{outputs('Get_ServiceAppointment_GUID')})",
+                  "mcs_status": 803750003
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_TMP_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Filter_array:_Filter_Errors": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "HTTP:_Create_Successful_Integration_Result": {
+              "inputs": {
+                "body": {
+                  "cvt_visibletouser": false,
+                  "mcs_name": "TMP/Cerner Service Appointment Confirmation",
+                  "mcs_payload": "@{base64ToString(triggerBody()['ContentData'])}",
+                  "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{outputs('Get_ServiceAppointment_GUID')})",
+                  "mcs_status": 803750002
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_TMP_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Initialize_variable": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "MessageType",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Scope:_Try": {
+              "actions": {
+                "Compose": {
+                  "inputs": "<fetch>\n  <entity name=\"activityparty\" >\n    <link-entity name=\"appointment\" from=\"activityid\" to=\"activityid\" >\n      <attribute name=\"activityid\" />\n      <link-entity name=\"serviceappointment\" from=\"activityid\" to=\"cvt_serviceactivityid\" >\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"17a5bd2d-2ee6-eb11-bacb-001dd802d3c0\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"contact\" from=\"contactid\" to=\"partyid\" >\n      <link-entity name=\"mcs_personidentifiers\" from=\"mcs_patient\" to=\"contactid\" >\n        <filter>\n          <condition attribute=\"mcs_identifier\" operator=\"eq\" value=\"1012781163V209546\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "HTTP:_Convert_HL7_to_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose:_Decode_Message_Content_and_Convert_to_JSON": {
+                  "inputs": "@json(decodeBase64(triggerBody()['ContentData']))",
+                  "runAfter": {
+                    "HTTP:_Fetch_TMP_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose:_Patient_FetchXML": {
+                  "inputs": "<fetch>\n  <entity name=\"activityparty\" >\n    <link-entity name=\"appointment\" from=\"activityid\" to=\"activityid\" >\n      <attribute name=\"activityid\" />\n      <link-entity name=\"serviceappointment\" from=\"activityid\" to=\"cvt_serviceactivityid\" >\n        <filter>\n          <condition attribute=\"activityid\" operator=\"eq\" value=\"@{outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['AppointmentId']}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n    <link-entity name=\"contact\" from=\"contactid\" to=\"partyid\" >\n      <link-entity name=\"mcs_personidentifiers\" from=\"mcs_patient\" to=\"contactid\" >\n        <filter>\n          <condition attribute=\"mcs_identifier\" operator=\"eq\" value=\"@{json(body('HTTP:_Convert_HL7_to_JSON'))['patientICN']}\" />\n        </filter>\n      </link-entity>\n    </link-entity>\n  </entity>\n</fetch>",
+                  "runAfter": {
+                    "Compose": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose:_Pre-Processing": {
+                  "inputs": {
+                    "parameter": [
+                      {
+                        "name": "inputData",
+                        "valueString": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['Msg']"
+                      },
+                      {
+                        "name": "inputDataType",
+                        "valueString": "Hl7v2"
+                      },
+                      {
+                        "name": "templateCollectionReference",
+                        "valueString": "@{parameters('Azure Container Registry Image Reference')}"
+                      },
+                      {
+                        "name": "rootTemplate",
+                        "valueString": "VEIS_SIU_S12,S13,S15_TMP"
+                      }
+                    ],
+                    "resourceType": "Parameters"
+                  },
+                  "runAfter": {
+                    "Compose:_Decode_Message_Content_and_Convert_to_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Get_ServiceAppointment_GUID": {
+                  "inputs": "@substring(outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['AppointmentId'],0,36)",
+                  "runAfter": {
+                    "HTTP:_Get_Reserve_Resource": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Get_secret:_CDS_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_FHIR_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_FHIR_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('fhir-api-client-id')}/value"
+                  },
+                  "runAfter": {},
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_FHIR_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('fhir-api-client-secret')}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_FHIR_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Convert_HL7_to_JSON": {
+                  "inputs": {
+                    "body": "@outputs('Compose:_Pre-Processing')",
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_FHIR_Oauth_Token')['access_token']}",
+                      "Content-Type": "application/json"
+                    },
+                    "method": "POST",
+                    "uri": "@{parameters('FHIRServer')}/$convert-data"
+                  },
+                  "runAfter": {
+                    "Compose:_Pre-Processing": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Fetch_FHIR_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_FHIR_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_FHIR_Client_Secret')?['value']}&scope=@{parameters('FHIRServer')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "@{parameters('VEIS OAuth URL')}"
+                  },
+                  "runAfter": {
+                    "Get_secret:_FHIR_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Fetch_TMP_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Get_Reserve_Resource": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_TMP_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/activityparties?fetchXml=@{outputs('Compose')}"
+                  },
+                  "runAfter": {
+                    "Compose:_Patient_FetchXML": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Switch:_HL7_Message_Type": {
+                  "cases": {
+                    "S12": {
+                      "actions": {
+                        "HTTP:_Call_Response_Handler_Logic_App_(S12)": {
+                          "inputs": {
+                            "body": {
+                              "MessageSource": "Cerner",
+                              "MessageType": "@{outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']}",
+                              "PatientICN": "@{json(body('HTTP:_Convert_HL7_to_JSON'))?['patientICN']}",
+                              "ReserveResourceId": "",
+                              "ServiceAppointmentId": "@{outputs('Get_ServiceAppointment_GUID')}",
+                              "VisitStatus": "@{variables('MessageType')}"
+                            },
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('Response Handler Logic App URL')"
+                          },
+                          "runAfter": {
+                            "Set_variable": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Http"
+                        },
+                        "Set_variable": {
+                          "inputs": {
+                            "name": "MessageType",
+                            "value": "Scheduled"
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "case": "S12"
+                    },
+                    "S13": {
+                      "actions": {
+                        "Set_variable_2": {
+                          "inputs": {
+                            "name": "MessageType",
+                            "value": "Scheduled"
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "case": "S13"
+                    },
+                    "S15": {
+                      "actions": {
+                        "HTTP:_Call_Response_Handler_Logic_App_(S15)": {
+                          "inputs": {
+                            "body": {
+                              "MessageSource": "Cerner",
+                              "MessageType": "@{outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']}",
+                              "PatientICN": "@{json(body('HTTP:_Convert_HL7_to_JSON'))?['patientICN']}",
+                              "ReserveResourceId": "",
+                              "ServiceAppointmentId": "@{outputs('Get_ServiceAppointment_GUID')}",
+                              "VisitStatus": "@{variables('MessageType')}"
+                            },
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('Response Handler Logic App URL')"
+                          },
+                          "runAfter": {
+                            "Set_variable_3": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Http"
+                        },
+                        "Set_variable_3": {
+                          "inputs": {
+                            "name": "MessageType",
+                            "value": "Canceled"
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "case": "S15"
+                    }
+                  },
+                  "default": {
+                    "actions": {}
+                  },
+                  "expression": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                  "runAfter": {
+                    "Get_ServiceAppointment_GUID": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Switch"
+                }
+              },
+              "runAfter": {
+                "Initialize_variable": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "Azure Container Registry Image Reference": {
+              "defaultValue": "vaeistmpcontainerregpreprod.azurecr.us/fhir-converter:main",
+              "type": "String"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "FHIRServer": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            },
+            "Response Handler Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Service Bus Topic Name": {
+              "defaultValue": "hl7messagetopic",
+              "type": "String"
+            },
+            "VEIS OAuth URL": {
+              "defaultValue": "",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "When_a_message_is_received_in_a_topic_subscription_(auto-complete)": {
+              "evaluatedRecurrence": {
+                "frequency": "Minute",
+                "interval": 1
+              },
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "get",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('ServiceAppointmentConfirmation')}/messages/head",
+                "queries": {
+                  "subscriptionType": "Main"
+                }
+              },
+              "recurrence": {
+                "frequency": "Minute",
+                "interval": 1
+              },
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "runs": 25
+                }
+              },
+              "type": "ApiConnection"
+            }
+          }
+        },
+        "parameters": {
+          "Response Handler Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('ResponseHandlerLogicApp_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "Azure Container Registry Image Reference": {
+            "value": "[parameters('AzureContainerRegistry_ArtifactReference')]"
+          },
+          "FHIRServer": {
+            "value": "[parameters('AzureAPIForFHIR_URL')]"
+          },
+          "VEIS OAuth URL": {
+            "value": "[variables('VEIS_OAuth_URL')]"
+          },
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "Service Bus Topic Name": {
+            "value": "[parameters('Service_Bus_Topic_Name')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              },
+              "servicebus": {
+                "connectionId": "[variables('connections_servicebus_externalid')]",
+                "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

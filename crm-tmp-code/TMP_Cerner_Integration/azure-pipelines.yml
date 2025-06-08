@@ -1,0 +1,36 @@
+
+trigger:
+- nothing
+
+pool: 'Default' 
+
+steps:
+- task: InlinePowershell@1
+  continueOnError: true
+  displayName: 'Inbound Test S12'
+  inputs:
+    Script: 'curl -Method Post -Uri $(Uri)  -body ''{"MsgType": "S12"}'' -ContentType ''application/json'''
+
+- task: InlinePowershell@1
+  continueOnError: true
+  displayName: 'Inbound Test S13'
+  inputs:
+    Script: 'curl -Method Post -Uri $(Uri) -body ''{"MsgType": "S13"}'' -ContentType ''application/json'''
+
+- task: InlinePowershell@1
+  continueOnError: true
+  displayName: 'Inbound Test S15'
+  inputs:
+    Script: 'curl -Method Post -Uri $(Uri) -body ''{"MsgType": "S15"}'' -ContentType ''application/json'''
+
+- task: InlinePowershell@1
+  continueOnError: true
+  displayName: 'Inbound Test S23'
+  inputs:
+    Script: 'curl -Method Post -Uri $(Uri) -body ''{"MsgType": "S23"}'' -ContentType ''application/json'''
+
+- task: InlinePowershell@1
+  continueOnError: true
+  displayName: 'Inbound Test S24'
+  inputs:
+    Script: 'curl -Method Post -Uri $(Uri) -body ''{"MsgType": "S24"}'' -ContentType ''application/json'''

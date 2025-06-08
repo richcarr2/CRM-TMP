@@ -1,0 +1,399 @@
+﻿<html>
+<head>
+	<title>Page Title</title>
+	<style>
+		.button {
+			background-color: rgb(47, 95, 144);
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			margin: 4px 2px;
+			cursor: pointer;
+			position: fixed;
+			bottom: 0px;
+			right: 0px;
+		}
+
+		#mergeTable {
+			font-family: Arial,Segeo UI, Georgia;
+			border-collapse: collapse;
+			width: 100%;
+			font-size: 14px;
+		}
+
+			#mergeTable td, #mergeTable th {
+				border: 1px solid #ddd;
+				padding: 8px;
+			}
+
+			#mergeTable tr:hover {
+				background-color: #ddd;
+			}
+
+			#mergeTable th {
+				padding-top: 12px;
+				padding-bottom: 12px;
+				text-align: left;
+				background-color: #04AA6D;
+				color: white;
+			}
+
+
+		body {
+			font-size: 14px;
+			font-style: normal;
+			font-family: Arial,Segeo UI, Georgia;
+		}
+
+		.headers {
+			background-color: rgb(244,244,244);
+			text-align: left;
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+	<script>
+
+		$(document).ready(function () {
+
+			$("#errorMsg").hide();
+			var vars = getUrlVars();
+			var primaryId = vars["primaryId"];
+			var secondaryId = vars["secondaryId"];
+			var entityLogicalName = vars["entityLogicalName"];
+			LoadMergeRecords(entityLogicalName, primaryId, secondaryId);
+			$("#errorMsg").hide();
+			var fields = "";
+			var userPrimaryId = "";
+			var userSecondaryId = "";
+
+			function getUrlVars() {
+				var vars = [],
+					hash;
+				var hashes = unescape(window.location.search.replace('?', ''));
+				hashes = hashes.replace('Data=', '').replace('data=', '').split('&');
+				for (var i = 0; i < hashes.length; i++) {
+					hash = hashes[i].split('=');
+					vars.push(hash[0]);
+					vars[hash[0]] = hash[1];
+				}
+				return vars;
+			}
+
+			async function LoadMergeRecords(entityLogicalName, primaryId, secondaryId) {
+				var Columns = await GetEntityMetaData(entityLogicalName);
+				var Record1Values = await GetRecordValues(entityLogicalName, primaryId);
+				var Record2Values = await GetRecordValues(entityLogicalName, secondaryId);
+				var Record1ActivityCount = await GetActivityCount(entityLogicalName, primaryId);
+				var Record2ActivityCount = await GetActivityCount(entityLogicalName, secondaryId);
+
+				var radios = [{ "Vista Label": "mcs_usernameinput" }, { "IEN": "cvt_ien" }, { "Vista Capcity": "cvt_vistacapacity" }];
+				var radios = [{ "displayName": "VistA Label", "schemaName": "mcs_usernameinput", "type": "text" }, { "displayName": "VistA IEN", "schemaName": "cvt_ien", "type": "text" }, { "displayName": "VistA Capacity", "schemaName": "cvt_vistacapacity", "type": "text" }, { "displayName": "TMP Site", "schemaName": "mcs_relatedsiteid", "type": "lookup" }, { "displayName": "Facility (Data from TMP Site)", "schemaName": "mcs_facility", "type": "lookup" }, { "displayName": "VISN (Data from Facility)", "schemaName": "mcs_businessunitid", "type": "lookup" }, { "displayName": "Default Provider", "schemaName": "cvt_defaultprovider", "type": "lookup" }, { "displayName": "Specialty", "schemaName": "cvt_specialty", "type": "lookup" }, { "displayName": "Primary Stop Code", "schemaName": "cvt_primarystopcode", "type": "text" }, { "displayName": "Secondary Stop Code", "schemaName": "cvt_secondarystopcode", "type": "text" }, { "displayName": "Treating Specialty", "schemaName": "cvt_treatingspecialty", "type": "text" }, { "displayName": "Default Provider Name", "schemaName": "cvt_defaultprovidernameimport", "type": "text" }, { "displayName": "Default Provider Email", "schemaName": "cvt_defaultprovideremail", "type": "text" }, { "displayName": "Default Provider Duz", "schemaName": "cvt_defaultproviderduz", "type": "text" }, { "displayName": "Station Number", "schemaName": "cvt_stationnumber", "type": "text" }, { "displayName": "Institution", "schemaName": "cvt_institution", "type": "text" }, { "displayName": "VISN Text", "schemaName": "cvt_visntext", "type": "text" }, { "displayName": "Service Text", "schemaName": "cvt_servicetext", "type": "text" }, { "displayName": "OverBook Allowed", "schemaName": "cvt_overbookallowed", "type": "text" }, { "displayName": "Cerner Unique ID", "schemaName": "mcs_cerneruniqueid", "type": "text" }];
+                var radios = [{ "displayName": "VistA Label", "schemaName": "mcs_usernameinput", "type": "text", "isReadOnly": false, "group": "General" }, { "displayName": "VistA IEN", "schemaName": "cvt_ien", "type": "text", "isReadOnly": true, "group": "DisplayData", "isDisplayOnly": true }, { "displayName": "Last Modified On", "schemaName": "modifiedon", "type": "datetime", "isReadOnly": true, "group": "DisplayData", "isDisplayOnly": true }, { "displayName": "VistA Capacity", "schemaName": "cvt_vistacapacity", "type": "text", "isReadOnly": false, "group": "General" }, { "displayName": "TMP Site", "schemaName": "mcs_relatedsiteid", "type": "lookup", "isReadOnly": false, "group": "General" }, { "displayName": "Facility (Data from TMP Site)", "schemaName": "mcs_facility", "type": "lookup", "isReadOnly": false, "group": "General" }, { "displayName": "VISN (Data from Facility)", "schemaName": "mcs_businessunitid", "type": "lookup", "isReadOnly": false, "group": "General" }, { "displayName": "Default Provider", "schemaName": "cvt_defaultprovider", "type": "lookup", "isReadOnly": false, "group": "VistA Clinic" }, { "displayName": "Specialty", "schemaName": "cvt_specialty", "type": "lookup", "isReadOnly": false, "group": "VistA Clinic" }, { "displayName": "Primary Stop Code", "schemaName": "cvt_primarystopcode", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Secondary Stop Code", "schemaName": "cvt_secondarystopcode", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Treating Specialty", "schemaName": "cvt_treatingspecialty", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Default Provider Name", "schemaName": "cvt_defaultprovidernameimport", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Default Provider Email", "schemaName": "cvt_defaultprovideremail", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Default Provider Duz", "schemaName": "cvt_defaultproviderduz", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Facility Station Number", "relatedEntity": "mcs_facility", "schemaName": "mcs_stationnumber", "type": "text", "isReadOnly": true, "group": "DisplayData", "isDisplayOnly": true }, { "displayName": "Institution", "schemaName": "cvt_institution", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "VISN Text", "schemaName": "cvt_visntext", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Service Text", "schemaName": "cvt_servicetext", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "OverBook Allowed", "schemaName": "cvt_overbookallowed", "type": "text", "isReadOnly": true, "group": "Import Data", "isDisplayOnly": false }, { "displayName": "Cerner Unique ID", "schemaName": "mcs_cerneruniqueid", "type": "text", "isReadOnly": false, "group": "Cerner" }, { "displayName": "Activity Count", "schemaName": "activitycount", "type": "text", "isReadOnly": true, "group": "DisplayData", "isDisplayOnly": true }];
+
+                var groupOrder = ['DisplayData', 'General', 'VistA Clinic', 'Import Data', 'Cerner']//['DisplayData', 'EditableData']
+				var content = "";
+				var vistaLabel1 = "";
+				var vistaLabel2 = "";
+
+				var objectWithGroupByName = [];
+				for (var field of radios) {
+					var name = field['group'];
+					if (!objectWithGroupByName[name]) {
+						objectWithGroupByName[name] = [];
+					}
+					objectWithGroupByName[name].push(field);
+				}
+				for (const group in groupOrder) {
+					var classname = groupOrder[group].replace(/\s/g,'');
+					content += '<tr><td class="headers"><label style="font-weight:bold">' + groupOrder[group] + '</label></td>';
+					if (classname === 'DisplayData') {
+						content += '<td></td>' +
+							'<td></td>';
+					}
+					else {
+                        content += '<td>' + '<input type= "radio" id="' + classname + '" class="Record1 headers Section ' + classname + '1" name="' + classname + '"  value="1" onclick="onSubSectionChange(\'' + classname + '1\')"></input></td>' +
+                            '<td>' + '<input type= "radio" id="' + classname + '" class="Record2 headers Section ' + classname + '2" name="' + classname + '"  value="2" onclick="onSubSectionChange(\'' + classname + '2\')"></input></td>';
+					}
+                    content += '</tr>';
+
+					for (var field of objectWithGroupByName[groupOrder[group]]) {
+						var value = "";
+						value = field['displayName'];
+						var isReadOnly = field['isReadOnly'];
+						var schema = field['schemaName'];
+                        var isDisplayOnly = field['isDisplayOnly'];
+
+						var Record1Value = GetRecordValue(field, Record1Values);
+						var Record2Value = GetRecordValue(field, Record2Values);
+
+						if (schema === 'mcs_usernameinput') {
+							vistaLabel1 = Record1Value;
+							vistaLabel2 = Record2Value;
+						}
+						if (isReadOnly) {
+							if (schema === 'activitycount') {
+								content += '<tr><td>' + '<label style="font-weight:bold">' + value + '</label>' + '</td>' +
+									'<td>' + '<label for="' + value + '">' + Record1ActivityCount + '</label>' + '</td>' +
+									'<td>' + '<label for="' + value + '">' + Record2ActivityCount + '</label>' + '</td>' +
+									'</tr>';
+							} else if (isDisplayOnly) {
+								content += '<tr><td>' + '<label style="font-weight:bold">' + value + '</label>' + '</td>' +
+									'<td>' + '<label for="' + value + '">' + Record1Value + '</label>' + '</td>' +
+									'<td>' + '<label for="' + value + '">' + Record2Value + '</label>' + '</td>' +
+									'</tr>';
+							}
+							else {
+                                content += '<tr><td>' + '<label style="font-weight:bold">' + value + '</label>' + '</td>' +
+                                    '<td>' + '<input type= "radio" disabled id="' + value + '" class="Record1 ' + classname + '1" name="' + value + '"  value="' + schema + '"></input><label for="' + value + '">' + Record1Value + '</label>' + '</td>' +
+                                    '<td>' + '<input type= "radio" disabled id="' + value + '" class="Record2 ' + classname + '2" name="' + value + '"  value="' + schema + '"></input><label for="' + value + '">' + Record2Value + '</label>' + '</td>' +
+                                    '</tr>';
+                            }
+
+						} else {
+							content += '<tr><td>' + '<label style="font-weight:bold">' + value + '</label>' + '</td>' +
+                                '<td>' + '<input type= "radio" id="' + value + '" class="Record1 ' + classname +'1" name="' + value + '"  value="' + schema + '"></input><label for="' + value + '">' + Record1Value + '</label>' + '</td>' +
+                                '<td>' + '<input type= "radio" id="' + value + '" class="Record2 ' + classname +'2" name="' + value + '"  value="' + schema + '"></input><label for="' + value + '">' + Record2Value + '</label>' + '</td>' +
+								'</tr>';
+						}
+					}
+				}
+				$('#mergeTable').append(content);
+			}
+
+			function GetRecordValue(field, RecordValues) {
+				var schema = field['schemaName'];
+				var relatedEntity = field['relatedEntity'];
+				var recordSchema = schema;
+				if (field['type'] === 'lookup') {
+					recordSchema = '_' + schema + '_value@OData.Community.Display.V1.FormattedValue';
+				}
+				var recordValue = "";
+				if (field['relatedEntity'] !== undefined && field['relatedEntity'] !== null) {
+					recordValue = RecordValues[field['relatedEntity']][recordSchema];
+				}
+				else {
+					recordValue = RecordValues[recordSchema];
+				}
+				return ValidateAndFormatData(recordValue, field['type']);
+			}
+			function ValidateAndFormatData(value, type) {
+				if (value === null || value === undefined) {
+					return '';
+				} else {
+					if (type === 'datetime') {
+						value = formatDate(value);
+					}
+					return value;
+				}
+			}
+
+			$('input:radio[name="parentRecord"]').change(function () {
+
+				if ($(this).val() == '12345') {
+                    var radioBtns = $('#mergeTable').find('.Record1');//.find("input[type='radio'][class=Record1]");
+					$.each(radioBtns, doSomeWork);
+					userPrimaryId = primaryId;
+					userSecondaryId = secondaryId;
+				} else {
+                    var radioBtns = $('#mergeTable').find('.Record2');//.find("input[type='radio'][class=Record2]");
+					$.each(radioBtns, doSomeWork);
+					userPrimaryId = secondaryId;
+					userSecondaryId = primaryId;
+				}
+			});
+
+			onSubSectionChange = function (groupName) {
+                var radioBtns = $('#mergeTable').find('.' + groupName);
+                $.each(radioBtns, doSomeWork);
+                //if ($('input:radio[name="' + groupName + '"]').val() == '1') {
+                //    var radioBtns = $('#mergeTable').find('.' + groupName + '1';
+                //    $.each(radioBtns, doSomeWork);
+                //} else {
+                //    var radioBtns = $('#mergeTable').find('.' + groupName + '2');
+                //    $.each(radioBtns, doSomeWork);
+                //}
+            }
+
+			var doSomeWork = function (i, radiobtn) {
+				radiobtn.checked = true;
+			}
+
+			async function GetRecordValues(entityLogicalName, entityId) {
+				var recordData = null;
+				await parent.Xrm.WebApi.retrieveRecord(entityLogicalName, entityId, "?$expand=mcs_facility($select=mcs_stationnumber)").then(
+					function success(result) {
+						recordData = result;
+					},
+					function (error) {
+
+					}
+				);
+				return recordData;
+			}
+
+			async function GetActivityCount(entityLogicalName, entityId) {
+				var recordData = null;
+				await parent.Xrm.WebApi.retrieveMultipleRecords('activityparty', '?$filter=_partyid_value eq ' + entityId).then(
+					function success(result) {
+						recordData = result.entities.length;
+					},
+					function (error) {
+
+					});
+				return recordData;
+			}
+
+			async function GetEntityMetaData(entityName) {
+				var data = null;
+				await parent.Xrm.Utility.getEntityMetadata(entityName, []).then(
+					function success(result) {
+						//alert('ok');
+						data = result;
+					},
+					function (error) {
+
+					});
+				return data;
+			}
+
+			async function TMPMergeAction(entityLogicalName, primaryEntityId, secondaryEntityId, fields) {
+				parent.Xrm.Utility.showProgressIndicator("Record Merge in Progress");
+				var parameters = {};
+				parameters.entityName = entityLogicalName;
+				parameters.winner = primaryEntityId;
+				parameters.looser = secondaryEntityId;
+				parameters.fieldsToUpdate = fields;
+
+				var tmp_MergeRecordsActionRequest = {
+					entityName: parameters.entityName,
+					winner: parameters.winner,
+					looser: parameters.looser,
+					fieldsToUpdate: parameters.fieldsToUpdate,
+
+					getMetadata: function () {
+						return {
+							boundParameter: null,
+							parameterTypes: {
+								"entityName": {
+									"typeName": "Edm.String",
+									"structuralProperty": 1
+								},
+								"winner": {
+									"typeName": "Edm.String",
+									"structuralProperty": 1
+								},
+								"looser": {
+									"typeName": "Edm.String",
+									"structuralProperty": 1
+								},
+								"fieldsToUpdate": {
+									"typeName": "Edm.String",
+									"structuralProperty": 1
+								}
+							},
+							operationType: 0,
+							operationName: "tmp_MergeRecordsAction"
+						};
+					}
+				};
+				var results = null;
+				await parent.Xrm.WebApi.online.execute(tmp_MergeRecordsActionRequest).then(
+					function success(result) {
+						if (result.ok) {
+							var results = result.statusText;
+							parent.Xrm.Utility.closeProgressIndicator();
+							parent.Xrm.Utility.alertDialog("Records Merged Successfully!");
+
+						}
+					},
+					function (error) {
+						parent.Xrm.Utility.closeProgressIndicator();
+						parent.Xrm.Utility.alertDialog(error.message);
+					});
+
+				return results;
+			}
+
+			function AddFields(entityId) {
+				fields = "";
+				var radioBtns1 = $('#mergeTable').find(".Record1");
+				var radioBtns2 = $('#mergeTable').find(".Record2");
+				if (entityId === userPrimaryId) {
+					var radioBtns = $('#mergeTable').find(".Record2");
+					$.each(radioBtns, function (i, radiobtn) {
+                        if (radiobtn.checked && !radiobtn.className.includes('Section')) {
+							fields += radiobtn.value + ",";
+						}
+					});
+				} else {
+					var radioBtns = $('#mergeTable').find(".Record1");
+					$.each(radioBtns, function (i, radiobtn) {
+                        if (radiobtn.checked && !radiobtn.className.includes('Section')) {
+							fields += radiobtn.value + ",";
+						}
+					});
+				}
+				if (fields !== "") {
+					fields = fields.substring(0, fields.length - 1)
+				}
+			}
+
+			var promise;
+			async function OnMerge() {
+				if (userPrimaryId !== "") {
+					$("#errorMsg").hide();
+					AddFields(primaryId);
+					var result = await TMPMergeAction(entityLogicalName, userPrimaryId, userSecondaryId, fields);
+					window.close();
+				} else {
+					$("#errorMsg").html("Please select a Primary Record").show();
+				}
+			}
+			$('#mergebtn').click(function () {
+				promise = OnMerge();
+			});
+
+			function formatDate(dateInput) {
+				var strDate = dateInput;
+				var regex = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z/;
+				var arrDate = regex.exec(strDate);
+				var objDate = new Date(
+					(+arrDate[1]),
+					(+arrDate[2]) - 1, // Month starts at 0!
+					(+arrDate[3]),
+					(+arrDate[4]),
+					(+arrDate[5]),
+					(+arrDate[6])
+				);
+
+				var newDate = objDate.getMonth() + 1 + '/' + objDate.getDate() + '/' + objDate.getFullYear();
+				var newTime = objDate.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+				return newDate + " " + newTime;
+			}
+
+		});
+	</script>
+</head>
+<body style="overflow-wrap: break-word;">
+	<div id="container5" style="width:50%; float: left;">
+		<label id="errorMsg" style="color: red;"></label>
+	</div>
+	<div>
+
+		<table id="mergeTable" width="100%">
+			<tr>
+				<td></td>
+				<td><input id="primaryRecord" class="Record1 parentRecord" type="radio" name="parentRecord" value="12345">Record 1</input></td>
+				<td><input id="secondaryRecord" class="Record2 parentRecord" type="radio" name="parentRecord" value="67890">Record 2</input></td>
+			</tr>
+		</table>
+	</div>
+	<div id="container5" style="width:50%; float: right;">
+		<button id="mergebtn" class="button">Merge</button>
+	</div>
+</body>
+</html>

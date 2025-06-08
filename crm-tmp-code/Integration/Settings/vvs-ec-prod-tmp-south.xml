@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PROD-GOV-INTERNAL">
+  <AppService Name="vvs-ec-prod-tmp-south" ResourceGroup="VEIS-PROD-GOV-INTERNAL-INT-SOUTH-API-RG">
+      <AppSettings>
+        <AppSetting Key="BaseUri" Value="https://staff.mobile.va.gov" />
+        <AppSetting Key="RefererUri" Value="https://tmp.va.gov" />
+        <AppSetting Key="CreateUri" Value="/video-visit-resources/v2/appointment" />
+        <AppSetting Key="UpdateUri" Value="/video-visit-resources/v2/appointment/{0}" />
+        <AppSetting Key="CancelUri" Value="/video-visit-resources/v2/appointment/{0}/cancellation" />
+        <AppSetting Key="JwtBaseUri" Value="https://va-veis-prod-apim-south.prod.veis.va.gov" />
+        <AppSetting Key="JwtUri" Value="/ec/jwt/api/EncryptToken" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="Authority" Value="https://login.microsoftonline.us/vaazuregov.onmicrosoft.com" />
+        <AppSetting Key="Resource" Value="https://vaazuregov.onmicrosoft.com/4a3f0981-c1fa-4bd1-8fdc-278cf662b4b0" />
+        <AppSetting Key="SubscriptionId" Value="b7734d3ecc604bfea4b44922b21c8d36" />
+        <AppSetting key="InstrumentationKey" Value="" />
+      </AppSettings>    
+  </AppService>
+</Azure>

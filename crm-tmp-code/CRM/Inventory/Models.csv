@@ -1,0 +1,32 @@
+Model Number,Manufacturer,Component Type
+SX-80,Cisco,SX-Series Codec
+SX-20,Cisco,SX-Series Codec
+SX-10,Cisco,SX-Series Codec
+MXP Tandberg,Tandberg,MXP
+MXP Cisco,Cisco,MXP
+HDX 8000 HD,Polycom,HDX PolyCom Codec
+HDX 7000 HD,Polycom,HDX PolyCom Codec
+Edge 95 Codec,Cisco,Edge 95 Codec
+C-40,Cisco,C-Series Codec
+C-20,Cisco,C-Series Codec
+C-60,Cisco,C-Series Codec
+C-90,Cisco,C-Series Codec
+Samsung Galaxy Tablet,Samsung,COTS Tablet
+Precision HD USB,Logitech,"Camera, Videoconferencing / Web"
+Precision HD 1080p,Cisco,"Camera, Videoconferencing / Web"
+TotalENT Lightbox,JedMed,Light box
+TotalENT Lightbox,Global Med,Light box
+TotalENT Otoscope,Global Med,Otoscope
+TotalENT Otoscope JedMed,JedMed,Otoscope
+TotalExam 2 Camera,Global Med,Total Exam Camera 2
+Welch Allyn Digital Otoscope,JedMed,Otoscope
+Welch Allyn Digital Otoscope,Welch Allyn Inc,Otoscope
+Otoflex,OtoMetrics,Otoflex
+Otocam Video Otoscope,OtoMetrics,Otoscope
+iPad Pro,Apple,iOS Tablet
+iPad Mini,Apple,iOS Tablet
+ClearStetch USB Chestpiece,Global Med,Digital Stethoscope Peripheral
+Astera Audiometer,OtoMetrics,Astera
+Camera,Cisco,Main codec camera
+DX70,Cisco,"Codec, Hardware"
+DX80,Cisco,"Codec, Hardware"

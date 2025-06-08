@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="DEVTEST-GOV-INTERNAL">
+  <AppService Name="jwt-ec-dev-tmp" ResourceGroup="VEIS-DEVTEST-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="Issuer" Value="gov.va.vamf.tmp-azure-qa.v1" />
+        <AppSetting Key="Authenticated" Value="true" />
+        <AppSetting Key="AuthenticationAuthority" Value="gov.va.iam.ssoi.v1" />
+        <AppSetting Key="IdType" Value="secid" />
+        <AppSetting Key="VamfAuthRole" Value="staff" />
+        <AppSetting Key="Loa" Value="3" />
+        <AppSetting Key="CertificateUrl" Value="https://vanprodeastveiskv1.vault.usgovcloudapi.net/secrets/jwt-ec-nprod-tmp-nprod-vaec-va-gov/4f9e8c0f8f044725a59120f3b35ca24c" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="BaseUri" Value="https://staff.apps-staging.va.gov" />
+        <AppSetting Key="EncryptUri" Value="/users/v2/session" />
+        <AppSetting Key="RefererUri" Value="https://tmp.va.gov" />
+        <AppSetting Key="InstrumentationKey" Value="575cebfe-8828-fc25-9213-00855608c74e" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="000288139CF0E982C2C0BE7298CE2629D211F2FF" />
+      </AppSettings>    
+  </AppService>
+</Azure>

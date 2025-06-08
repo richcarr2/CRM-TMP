@@ -1,0 +1,1 @@
+primarystopcode;sta3n;visnfy17;locationName;locationien;TreatingSpecialtyname;MedicalService;staffname;emailaddress;MaximumOverbooksPerDay;mcs_resourceid;secondarystopcode;ErrorCode;ErrorColumn;CrmErrorMessage

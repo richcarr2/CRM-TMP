@@ -1,0 +1,11 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.Specialty = {};
+
+MCS.Specialty.DisableVVS = function () {
+    var hasRole = MCS.cvt_Common.userHasRoleInList("System Administrator");
+    var vvsControl = Xrm.Page.getControl("cvt_usevvs");
+    vvsControl.setDisabled(!hasRole);
+}

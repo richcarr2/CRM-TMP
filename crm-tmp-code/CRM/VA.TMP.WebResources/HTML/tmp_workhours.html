@@ -1,0 +1,27 @@
+﻿<html>
+<head>
+    <script>
+        function OnLoad() {
+            var baseURL = window.parent.Xrm.Page.context.getClientUrl();
+            var resourceId = window.parent.Xrm.Page.data.entity.getId();
+
+            //for equipment
+            var src = baseURL + "/biz/users/monthlyCalendar.aspx?oId=" + resourceId + "&oType=4000";
+
+            //for systemuser
+            if (parent.Xrm.Page.data.entity.getEntityName() === "systemuser") {
+                src = baseURL + "/biz/users/monthlyCalendar.aspx?formid=c2cd9e55-d4b4-4b55-9951-16ead79643e5&oId=%7b" + resourceId.replace('{', '').replace('}', '') + "%7d&oType=8&pagemode=iframe&rof=true&security=65591&tabSet=areaMonthlyCalendar&theme=Outlook15White";
+                "&oType=8&pagemode=iframe&rof=true&security=65591&tabSet=areaMonthlyCalendar&theme=Outlook15White";
+            }
+            document.getElementById('workhours').src = src;
+        }
+    </script>
+    <meta>
+</head>
+
+<body onload="OnLoad()" style="word-wrap: break-word;" onfocusout="parent.setEmailRange();">
+    <iframe id="workhours" src="" frameborder="0" style="overflow:hidden;height:100%;width:100%">
+    </iframe>
+
+</body>
+</html>

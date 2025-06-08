@@ -1,0 +1,34 @@
+﻿{
+    "fullUrl":"urn:uuid:{{ GUID }}",
+    "resource":{
+        "resourceType": "MessageHeader",
+        "id":"{{ GUID }}",
+        "eventCoding": {
+            "system": "{{ MSH.9.2.value | get_property: 'CodeSystem/VEIS_MessageEvent', 'system' }}",
+            "code": "{{ MSH.9.2.value | get_property: 'CodeSystem/VEIS_MessageEvent', 'code' }}", 
+            "display": "{{ MSH.9.2.value | get_property: 'CodeSystem/VEIS_MessageEvent', 'display' }}",
+        },
+        "source":
+        [
+            {
+                "name": "{{ MSH.3.value}}",
+            },
+        ],
+        "destination":
+        [
+            {
+                "name": "{{ MSH.5.value}}",
+            },
+        ],
+        "sender":
+        {
+            {% if MSH.4 and sendingFacilityGUID -%}
+            "reference":"Organization/{{ sendingFacilityGUID }}",
+            {% endif -%}
+        },
+    },
+    "request":{
+        "method":"PUT",
+        "url":"MessageHeader/{{ GUID }}",
+    }
+},

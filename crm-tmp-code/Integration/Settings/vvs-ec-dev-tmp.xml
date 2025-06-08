@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="DEVTEST-GOV-INTERNAL">
+  <AppService Name="vvs-ec-dev-tmp" ResourceGroup="VEIS-DEVTEST-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="BaseUri" Value="https://staff.apps-staging.va.gov" />
+        <AppSetting Key="RefererUri" Value="https://tmp.va.gov" />
+        <AppSetting Key="CreateUri" Value="/video-visit-resources/v2/appointment" />
+        <AppSetting Key="UpdateUri" Value="/video-visit-resources/v2/appointment/{0}" />
+        <AppSetting Key="CancelUri" Value="/video-visit-resources/v2/appointment/{0}/cancellation" />
+        <AppSetting Key="JwtBaseUri" Value="https://Va-veis-dev-apim.veis.va.gov" />
+        <AppSetting Key="JwtUri" Value="/ec/jwt/api/EncryptToken" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="Authority" Value="https://login.microsoftonline.us/vaazuregov.onmicrosoft.com" />
+        <AppSetting Key="Resource" Value="https://vaazuregov.onmicrosoft.com/5f24c14f-ee45-40d6-8c29-fe64c0b3fb72" />
+        <AppSetting Key="SubscriptionId" Value="88784cf9396e41dab087c90a5da0c2c1" />
+        <AppSetting key="InstrumentationKey" Value="575cebfe-8828-fc25-9213-00855608c74e" />
+      </AppSettings>    
+  </AppService>
+</Azure>

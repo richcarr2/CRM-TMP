@@ -1,0 +1,18 @@
+﻿<?xml version="1.0"?>
+<DTS:ConnectionManager xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:ObjectName="Destination"
+  DTS:DTSID="{003E6829-6930-489D-B71B-4A20BEEC6EF1}"
+  DTS:CreationName="OLEDB">
+  <DTS:PropertyExpression
+    DTS:Name="InitialCatalog">@[$Project::Destination_InitialCatalog]</DTS:PropertyExpression>
+  <DTS:PropertyExpression
+    DTS:Name="ServerName">@[$Project::Destination_ServerName]</DTS:PropertyExpression>
+  <DTS:ObjectData>
+    <DTS:ConnectionManager
+      DTS:ConnectionString="Data Source=vac21sqdverd01.database.usgovcloudapi.net;User ID=devSSISVetExpReporting;Initial Catalog=TMP;Provider=SQLNCLI11.1;Auto Translate=False;">
+      <DTS:Password
+        DTS:Name="Password"
+        Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAPkLQGMFVy0W4bkYDHayqSQAAAAACAAAAAAADZgAAwAAAABAAAAANuG1tDcJ3sDIUtlNGD/U1AAAAAASAAACgAAAAEAAAAG2sMMo88OBDQbclxr9oUTOAAAAA5MlgHYGrFNyL3TRL9TkK10BZCiF4IY+s22iW8VMUmh26uH0lyTiWWPSxN2ZE4TSSb55M7t2dROLFzGNyoH3LU1OlptnE+MO3NJl9kRi6e05vS4zC1ryG+quBlhVyoWs/EKfp+o6ad2vhDOCfazoh0XvKWN7CAF1z2fZOr/CsZrgUAAAAOikE7iuxrCJ9d/WFEHD/cONHhe0=</DTS:Password>
+    </DTS:ConnectionManager>
+  </DTS:ObjectData>
+</DTS:ConnectionManager>

@@ -1,0 +1,176 @@
+﻿<html>
+<head>
+</head>
+<body style="word-wrap: break-word;">
+    ﻿
+
+    <link href="mcs_mvi_ui" rel="stylesheet" type="text/css">
+    <script src="ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="cvt_jquery.1.7.1.js" type="text/javascript"></script>
+    <script src="mcs_CrmRestKit.js" type="text/javascript"></script>
+    <script src="mcs_JSON.js" type="text/javascript"></script>
+    <script src="cvt_vodUI.js" type="text/javascript"></script>
+    <script src="cvt_CommonFunctions.js" type="text/javascript"></script>
+    <script type="text/javascript">
+            $(document).ready(function () {
+                //Set up the form
+                hideAll();
+
+                //get current user's email address
+                getCurrentUserInformation();
+
+                //Bind the function to the Search Button
+                $("#RequestButton").bind("click", function () {
+                    requestVOD();
+                });
+
+                //Bind the function to the Re-check Button
+                $("#CheckButton").bind("click", function () {
+                    manualCheckForVMR();
+                }); 
+
+                //Bind the function to the Refresh Button
+                $("#Refresh1Button").bind("click", function () {
+                    refreshForm();
+                });
+                $("#Refresh2Button").bind("click", function () {
+                    refreshForm();
+                });
+                $("#Refresh3Button").bind("click", function () {
+                    refreshForm();
+                });
+            });
+    </script>
+
+
+    <div>
+        <table id="searchTraits">
+            <tbody>
+                <tr>
+                    <td class="header" colspan="6"><h2 title="Request an On Demand VA Video Connect">Request an On Demand VA Video Connect</h2></td>
+                </tr>
+                <tr>
+                    <td title="Provider E-mail Address (Required)" class="td_right"><label for="ProviderEmailAddressTextBox">Provider E-mail Address </label><span class="required">*</span></td>
+                    <td class="td_left" title="Provider E-mail Address (Required)">
+                        <input name="providerEmailAddress*" class="formInputText" id="ProviderEmailAddressTextBox" size="25" maxlength="200" disabled="disabled" readonly="readonly" aria-required="true" />
+                        <img name="selectProvider*"   tabindex="1" class="formInputText" id="ProviderLookupIcon" src="cvt_lookupicon.gif" align="middle" style="cursor: pointer;" onclick="openProviderLookup(this)" alt="HTML5 Icon" width="21" height="21" aria-required="false" />
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Patient E-mail Address (Required)" class="td_right"><label for="PatientEmailAddressTextBox">Patient E-mail Address </label><span class="required">*</span></td>
+                    <td class="td_left" title="Patient E-mail Address (Required)">
+                        <input name="patientEmailAddress*" tabindex="2" class="formInputText" id="PatientEmailAddressTextBox" size="30" maxlength="200" aria-required="true" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+    
+    <div id="buttons" class="info">
+        <table id="buttonTable">
+            <tbody>
+                <tr>
+                    <td class="td_left">
+                        <button title="Request On Demand VVC" style="width:200px;" tabindex="9" id="RequestButton" class="button_normal_gradient">Request On Demand VVC</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br />
+    <div id="searchResults">
+        <div id="msgBoxWorking" class="info">
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Working on it.  This may take a few seconds..." rowspan="4" class="message_box_image"><img src="mcs_mvi_loading"></td>
+                    </tr>
+                    <tr>
+                        <td class="infoText">Working on it. This may take a few seconds...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxFailedIntegration" class="info">
+            <br />
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Integration errors" rowspan="4" class="message_box_image"><img src="mcs_mvi_error" /></td>
+                    </tr>
+                    <tr>
+                        <td class="header">VVC Creation Failure</td>
+                    </tr>
+                    <tr>
+                        <td class="infoText"><span id="errorText" aria-live="assertive"></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td_left">
+                            <button title="Request another On Demand VVC" style="width:200px" tabindex="9" id="Refresh1Button" class="button_normal_gradient">Request another On Demand VVC</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxFailedValidation" class="info">
+            <br />
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Validation errors" rowspan="4" class="message_box_image"><img src="mcs_mvi_warning" /></td>
+                    </tr>
+                    <tr>
+                        <td class="header">Patient Email validation error</td>
+                    </tr>
+                    <tr>
+                        <td class="infoText"><span id="validationErrors" aria-live="assertive"></span></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxNoResult" class="info">
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="No Result Details" rowspan="4" class="message_box_image"><img src="mcs_mvi_error" /></td>
+                    </tr>
+                    <tr>
+                        <td class="infoText"><span id="noResultText" aria-live="assertive"></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td_left">
+                            <button title="Check for VMR" style="width:200px" tabindex="9" id="CheckButton" class="button_normal_gradient">Check for On Demand VVC Creation</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td_left">
+                            <button title="Request another On Demand VVC" style="width:200px" tabindex="9" id="Refresh2Button" class="button_normal_gradient">Request another On Demand VVC</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxSuccess" class="info">
+
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Success Details" rowspan="4" class="message_box_image"><img src="cvt_checked.png"></td>
+                    </tr>
+                    <tr>
+                        <td class="infoText">The On Demand VVC has been created. Emails have been sent to provider and patient.</td>
+                    </tr>
+                    <tr>
+                        <td class="td_left">
+                            <button title="Request another On Demand VVC" style="width:200px" tabindex="9" id="Refresh3Button" class="button_normal_gradient">Request another On Demand VVC</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

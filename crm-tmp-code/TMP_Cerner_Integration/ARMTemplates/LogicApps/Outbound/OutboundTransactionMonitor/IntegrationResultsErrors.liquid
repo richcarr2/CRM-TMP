@@ -1,0 +1,113 @@
+
+{% assign facilityTypeCode_Vista = 917290001 %}
+{% assign facilityTypeCode_Cerner = 917290000 %}
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.mcs_errorresult {
+  overflow: hidden;
+  max-width: 50ch;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+</style>
+</head>
+<body>
+<br />
+<p style="color:red;font-size:25px">The following Integration Results have encountered an error in the past 0 to {{content.MinutesToLookback}} minutes.
+A second alert *will not* be sent for these Integration Results.
+Please investigate.</p>
+<br />
+<br />
+    <table>
+        <thead>
+            <tr>
+                <th><b>Int Result Name</b></th>
+                <th><b>Int Result</b></th>
+                <th><b>Int Result Error</b></th>
+                <th><b>Int Result Link</b></th>
+                <th><b>SA Link</b>
+                <th><b>SA Status Code</b></th>
+                <th><b>Is Group Appt?</b></th>
+                <th><b>Pat Station #</b></th>
+                <th><b>Pat Type</b></th>
+                <th><b>Pro Station #</b></th>
+                <th><b>Pro Type</b></th>
+                <th><b>Created (UTC)</b></th>
+                <th><b>Modified (UTC)</b></th>
+                <th><b>Created/Now Delta (dd:hh:mm:ss:tt)</b></th>
+            </tr>
+
+        </thead>
+        <tbody>
+            {% for intresult in content.IntegrationResults[0].value %}
+                <tr>
+                    <td>{{intresult.mcs_name}}</td>
+
+                    <td class='mcs_errorresult'>{{intresult.mcs_result | Slice: 0,50}}...</td>
+
+                    <td class='mcs_errorresult'>{{intresult.mcs_error  | Slice: 0,50}}...</td>
+
+                    <td><a target="_blank" href = '{{content.CDSClientURL}}/main.aspx?pagetype=entityrecord&etn=mcs_integrationresult&id={{intresult.mcs_integrationresultid}}'>Link</a></td>
+
+                    <td><a target="_blank" href = '{{content.CDSClientURL}}/main.aspx?pagetype=entityrecord&etn=serviceappointment&id={{intresult.["serviceappointment.activityid"]}}'>Link</a></td>
+
+                    {% for option in content.StatusCodeMetadata[0].GlobalOptionSet.Options %}
+                     
+                        {% if option.Value == intresult.["serviceappointment.statuscode"] %}
+                            <td>{{option.Label.LocalizedLabels[0].Label}}</td>
+                        {% endif %}
+
+                    {% endfor %}
+
+                    {% if intresult.["serviceappointment.mcs_groupappointment"] %} <td>Yes</td>
+                    {% else %} <td>No</td>
+                    {% endif %}
+                
+                    <td>{{intresult.["patFacility.mcs_stationnumber"]}}</td>
+
+                    {% if intresult.["patFacility.cvt_facilitytype"] == facilityTypeCode_Vista %}<td>VistA</td>
+                        {% elsif intresult.["patFacility.cvt_facilitytype"] == facilityTypeCode_Cerner %}<td>Cerner</td>
+                        {% elsif intresult.["patFacility.cvt_facilitytype"] == null or intresult.["patFacility.cvt_facilitytype"] == ''%}<td>-</td>
+                        {% else %}<td>This Facility type {{intresult.["patFacility.cvt_facilitytype"]}} not been mapped in the Liquid template. Please update the Liquid template.</td>
+                    {% endif %}
+
+                    <td>{{intresult.["proFacility.mcs_stationnumber"]}}</td>
+
+                    {% if intresult.["proFacility.cvt_facilitytype"] == facilityTypeCode_Vista %}<td>VistA</td>
+                        {% elsif intresult.["proFacility.cvt_facilitytype"] == facilityTypeCode_Cerner %}<td>Cerner</td>
+                        {% elsif intresult.["proFacility.cvt_facilitytype"] == null or intresult.["proFacility.cvt_facilitytype"] == ''%}<td>-</td>
+                        {% else %}<td>This Facility type {{intresult.["proFacility.cvt_facilitytype"]}} has not been mapped in the Liquid template. Please update the Liquid template.</td>
+                    {% endif %}            
+                
+                    <td>{{intresult.["serviceappointment.createdon"]}}</td>
+                    <td>{{intresult.["serviceappointment.modifiedon"]}}</td>
+
+                    {% assign modifiedMinusCreatedDelta = content.DateTimeNow | Minus: intresult.["serviceappointment.createdon"] %}
+                
+                    <td>{{modifiedMinusCreatedDelta}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+</body>

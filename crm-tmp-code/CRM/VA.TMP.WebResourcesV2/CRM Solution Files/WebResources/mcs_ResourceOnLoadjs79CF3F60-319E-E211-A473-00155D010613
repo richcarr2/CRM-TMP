@@ -1,0 +1,375 @@
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_Resource = {};
+
+//Namespace Variables
+var CachedCapacityValue = null;
+var CachedVistaCapacityValue = null;
+
+//Removes the Provider and Telepresenter options from the Option Set.
+MCS.mcs_Resource.RemoveProTeleOptions = function () {
+    //If mapped from Resource Group, don't allow Provider
+    if (Xrm.Page.getAttribute("mcs_resourcegroupguid").getValue() != null) {
+        switch (Xrm.Page.getAttribute("mcs_type").getValue()) {
+            case 99999999: //Provider
+                MCS.cvt_Common.closeWindow("A Provider cannot be added this way. Contact your administrator for questions.");
+                break;
+            case 100000000:
+            case 917290000:
+                Xrm.Page.getAttribute("mcs_type").setValue(null)
+                break;
+        }
+    }
+    var options = Xrm.Page.getControl("mcs_type");
+    options.removeOption(100000000);
+    options.removeOption(99999999);
+    options.removeOption(917290000);
+
+    //After removing options, if it still exists, lock it in.
+    if (Xrm.Page.getAttribute("mcs_type").getValue() != null)
+        Xrm.Page.getControl("mcs_type").setDisabled(true);
+
+    //Submit if OnCreate
+    if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE)
+        Xrm.Page.getAttribute("mcs_type").setSubmitMode(true);
+};
+
+//Check Capacity Value
+MCS.mcs_Resource.SetDefaultCapacity = function () {
+    var resourceTypeValue = (Xrm.Page.getControl("mcs_type") != null) ? Xrm.Page.getAttribute("mcs_type").getValue() : null;
+
+    if (resourceTypeValue == 251920001 && Xrm.Page.getAttribute("cvt_capacity").getValue() == null) {
+        Xrm.Page.getAttribute("cvt_capacity").setValue(1);
+        Xrm.Page.getAttribute("cvt_capacity").setSubmitMode("always");
+    }
+
+    if (resourceTypeValue == 251920000 && Xrm.Page.getAttribute("cvt_vistacapacity").getValue() == null) {
+        Xrm.Page.getAttribute("cvt_vistacapacity").setValue(1);
+        Xrm.Page.getAttribute("cvt_vistacapacity").setSubmitMode("always");
+    }
+    CachedCapacityValue = Xrm.Page.getAttribute("cvt_capacity").getValue();
+    CachedVistaCapacityValue = Xrm.Page.getAttribute("cvt_vistacapacity").getValue();
+};
+
+//Set grids which will retrieve all TSA's Related to this Resource.
+MCS.mcs_Resource.GetRelatedTSAs = function () {
+    if (Xrm.Page.ui.getFormType() != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        var TSAProvGrid = document.getElementById("RelatedTSAsProvSite");
+        var TSAPatGrid = document.getElementById("RelatedTSAsPatSite");
+        if (TSAProvGrid == null || TSAPatGrid == null) { //make sure the grids have loaded 
+            setTimeout(function () { MCS.mcs_Resource.GetRelatedTSAs(); }, 500); //if the grid hasn’t loaded run this again when it has 
+            return;
+        }
+
+        var ThisResourceName = Xrm.Page.getAttribute("mcs_name").getValue();
+        var ThisResourceId = (Xrm.Page.data.entity.getId() != null) ? Xrm.Page.data.entity.getId() : MCS.cvt_Common.BlankGUID;
+
+        TSAProvGrid.control.SetParameter("fetchXml", MCS.mcs_Resource.GetFetchXML("cvt_providerresourcegroup", ThisResourceName, ThisResourceId)); //set the fetch xml to the sub grid   
+        TSAProvGrid.control.Refresh();
+
+        TSAPatGrid.control.SetParameter("fetchXml", MCS.mcs_Resource.GetFetchXML("cvt_patientresourcegroup", ThisResourceName, ThisResourceId)); //set the fetch xml to the sub grid   
+        TSAPatGrid.control.Refresh();
+    }
+};
+
+//Set grid which will retrieve all SA's Related to this Resource.  
+MCS.mcs_Resource.GetRelatedServiceActivities = function () {
+    if (Xrm.Page.ui.getFormType() != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        var SAGrid = document.getElementById("RelatedServiceActivities");
+
+        if (SAGrid == null) { //make sure the grids have loaded 
+            setTimeout(function () { MCS.mcs_Resource.GetRelatedServiceActivities(); }, 500); //if the grid hasn’t loaded run this again when it has 
+            return;
+        }
+
+        var ThisResourceId = (Xrm.Page.getAttribute("mcs_relatedresourceid").getValue() != null) ? Xrm.Page.getAttribute("mcs_relatedresourceid").getValue()[0].id : MCS.cvt_Common.BlankGUID;
+        var ThisResourceName = (Xrm.Page.getAttribute("mcs_relatedresourceid").getValue() != null) ? Xrm.Page.getAttribute("mcs_relatedresourceid").getValue()[0].name : '';
+
+        SAGrid.control.SetParameter("fetchXml", MCS.mcs_Resource.GetFetchXML("serviceappointment", ThisResourceName, ThisResourceId));
+        SAGrid.control.Refresh();
+    }
+};
+
+//TO DO Refactor into single function with above function
+MCS.mcs_Resource.GetScheduledAppointments = function () {
+    if (Xrm.Page.ui.getFormType() != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        var AptGrid = document.getElementById("Scheduled_Appointments");
+        if (AptGrid == null) { //make sure the grids have loaded 
+            setTimeout(function () { MCS.mcs_Resource.GetScheduledAppointments(); }, 500); //if the grid hasn’t loaded run this again when it has 
+            return;
+        }
+        var ThisResourceId = (Xrm.Page.getAttribute("mcs_relatedresourceid").getValue() != null) ? Xrm.Page.getAttribute("mcs_relatedresourceid").getValue()[0].id : MCS.cvt_Common.BlankGUID;
+        var ThisResourceName = (Xrm.Page.getAttribute("mcs_relatedresourceid").getValue() != null) ? Xrm.Page.getAttribute("mcs_relatedresourceid").getValue()[0].name : '';
+
+        AptGrid.control.SetParameter("fetchXml", MCS.mcs_Resource.GetFetchXML("appointment", ThisResourceName, ThisResourceId));
+        AptGrid.control.Refresh();
+    }
+};
+
+//Get correct FetchXML - for grids
+MCS.mcs_Resource.GetFetchXML = function (entityName, ThisResourceName, ThisResourceId) {
+    var FetchXML = "";
+    switch (entityName) {
+        case "cvt_patientresourcegroup":
+        case "cvt_providerresourcegroup":
+            //fetch xml code which will retrieve all TSA's Related to this Resource.  
+            var FetchXML =
+                "<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true'>" +
+                    "<entity name='mcs_services'>" +
+                        "<attribute name='mcs_name' />" +
+                        "<attribute name='createdon' />" +
+                        "<attribute name='cvt_relatedprovidersiteid' />" +
+                        "<attribute name='cvt_relatedpatientsiteid' />" +
+                        "<attribute name='cvt_relatedmasterid' />" +
+                        "<attribute name='cvt_servicetype' />" +
+                        "<attribute name='cvt_servicesubtype' />" +
+                        "<attribute name='statuscode' />" +
+                        "<attribute name='ownerid' />" +
+                        "<attribute name='modifiedon' />" +
+                        "<attribute name='cvt_servicescope' />" +
+                        "<attribute name='cvt_groupappointment' />" +
+                        "<attribute name='cvt_provsitevistaclinics' />" +
+                        "<attribute name='cvt_patsitevistaclinics' />" +
+                        "<attribute name='mcs_servicesid' />" +
+                        "<order attribute='mcs_name' descending='false' />" +
+                        "<filter type='and'>" +
+                            "<condition attribute='statecode' operator='eq' value='0' />" +
+                        "</filter>" +
+                        "<link-entity name='" + entityName + "' from='cvt_relatedtsaid' to='mcs_servicesid' alias='ai'>" +
+                            "<filter type='and'>" +
+                                "<condition attribute='cvt_relatedresourceid' operator='eq' uiname='" + MCS.cvt_Common.formatXML(ThisResourceName) + "' uitype='mcs_resource' value='" + ThisResourceId + "' />" +
+                            "</filter>" +
+                        "</link-entity>" +
+                    "</entity>" +
+                "</fetch>";
+            break;
+        case "serviceappointment":
+            var FetchXML =
+                "<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true'>" +
+                    "<entity name='activitypointer'>" +
+                        "<attribute name='activitytypecode' />" +
+                        "<attribute name='subject' />" +
+                        "<attribute name='statecode' />" +
+                        "<attribute name='prioritycode' />" +
+                        "<attribute name='modifiedon' />" +
+                        "<attribute name='activityid' />" +
+                        "<attribute name='instancetypecode' />" +
+                        "<order attribute='modifiedon' descending='false' />" +
+                        "<filter type='and'>" +
+                            "<condition attribute='activitytypecode' operator='eq' value='4214' />" +
+                            "<condition attribute='scheduledstart' operator='next-x-days' value='365' />" +
+                        "</filter>" +
+                        "<link-entity name='activityparty' from='activityid' to='activityid' alias='al'>" +
+                            "<filter type='and'>" +
+                                "<condition attribute='partyid' operator='eq' uiname='" + MCS.cvt_Common.formatXML(ThisResourceName) + "' uitype='equipment' value='" + ThisResourceId + "' />" +
+                            "</filter>" +
+                        "</link-entity>" +
+                    "</entity>" +
+                "</fetch>";
+            break;
+        case "appointment":
+            FetchXML =
+                "<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true'>" +
+                    "<entity name='activitypointer'>" +
+                        "<attribute name='activitytypecode' />" +
+                        "<attribute name='subject' />" +
+                        "<attribute name='statecode' />" +
+                        "<attribute name='prioritycode' />" +
+                        "<attribute name='modifiedon' />" +
+                        "<attribute name='activityid' />" +
+                        "<attribute name='instancetypecode' />" +
+                        "<order attribute='modifiedon' descending='false' />" +
+                        "<filter type='and'>" +
+                            "<condition attribute='activitytypecode' operator='eq' value='4201' />" +
+                            "<condition attribute='scheduledstart' operator='next-x-days' value='365' />" +
+                        "</filter>" +
+                        "<link-entity name='activityparty' from='activityid' to='activityid' alias='al'>" +
+                            "<filter type='and'>" +
+                                "<condition attribute='partyid' operator='eq' uiname='" + MCS.cvt_Common.formatXML(ThisResourceName) + "' uitype='equipment' value='" + ThisResourceId + "' />" +
+                            "</filter>" +
+                        "</link-entity>" +
+                    "</entity>" +
+                "</fetch>";
+            break;
+    }
+    return FetchXML;
+};
+
+MCS.mcs_Resource.GetRequiredString = function (isRequired) {
+    return isRequired ? "required" : "none";
+}
+
+//Check's Capacity Value
+MCS.mcs_Resource.CheckCapacity = function () {
+    if (Xrm.Page.getAttribute("cvt_capacity").getValue() == 0) {
+        alert("Capacity must be greater than 0.");
+        Xrm.Page.getAttribute("cvt_capacity").setValue(CachedCapacityValue);
+    }
+};
+
+MCS.mcs_Resource.SystemTypeOnChange = function () {
+    var cartType = Xrm.Page.getAttribute("cvt_carttypeid");
+    cartType.setValue(null);
+    MCS.mcs_Resource.SetCartTypeVisibility();
+}
+
+MCS.mcs_Resource.SetCartTypeVisibility = function () {
+    var systemType = Xrm.Page.getAttribute("cvt_systemtype");
+    var cartType = Xrm.Page.getAttribute("cvt_carttypeid");
+    var cartTypeControl = Xrm.Page.getControl("cvt_carttypeid");
+    if (cartType != null && cartTypeControl != null) {
+        if (systemType != null && systemType.getValue() == 917290001) {
+            cartType.setRequiredLevel("required");
+            cartTypeControl.setVisible(true);
+        } else {
+            cartType.setRequiredLevel("none");
+            cartTypeControl.setVisible(false);
+        }
+
+        var msn = Xrm.Page.getAttribute("cvt_masterserialnumber");
+        var msnControl = Xrm.Page.getControl("cvt_masterserialnumber");
+        if (systemType != null && systemType.getValue() == 917290003) {
+            msn.setRequiredLevel("none");
+            msnControl.setVisible(false);
+        } 
+    }
+    MCS.mcs_Resource.CartTypeOnChange();
+};
+
+MCS.mcs_Resource.CartTypeOnChange = function () {
+    var cartType = Xrm.Page.getAttribute("cvt_carttypeid");
+    var lastCalibration = Xrm.Page.getAttribute("cvt_carttypeid");
+    var lastCalibrationControl = Xrm.Page.getControl("cvt_lastcalibrationdate");
+
+    if (cartType != null && lastCalibrationControl != null) {
+        if (cartType.getValue() == null) {
+            lastCalibrationControl.setVisible(false);
+            //lastCalibration.setRequiredLevel("none");
+            //lastCalibration.setValue(null);
+        }
+        else {
+            var cartTypeObjValue = cartType.getValue();//Check for Lookup Value
+            var lookupRecordName = cartTypeObjValue[0].name; //To get record Name 
+            lastCalibrationControl.setVisible((lookupRecordName.toLowerCase() == "audiology") ? true : false);
+        }
+    }
+};
+
+//Create record Name
+MCS.mcs_Resource.CreateName = function () {
+    var mcs_usernameinput = Xrm.Page.getAttribute("mcs_usernameinput").getValue();
+    var derivedResultField = "";
+
+    switch (Xrm.Page.getAttribute("mcs_type").getValue()) {
+        case 251920001:
+            var building = Xrm.Page.getAttribute("cvt_building").getValue();
+            var room = Xrm.Page.getAttribute("mcs_room").getValue();
+
+            derivedResultField = (building != null) ? "Bldg. " + building : "";
+            derivedResultField += (derivedResultField != "" && room != null) ? ", " : "";
+            derivedResultField += (room != null) ? "Room " + room : "";
+
+            if ((derivedResultField == "") && (mcs_usernameinput != null))
+                derivedResultField = mcs_usernameinput;
+            break;
+        case 251920002:
+            var componentType = Xrm.Page.getAttribute("cvt_componenttype").getValue();
+            var systemType = Xrm.Page.getAttribute("cvt_systemtype").getValue();
+            var uniqueid = Xrm.Page.getAttribute("cvt_uniqueid").getValue();
+
+            derivedResultField += (systemType != null) ? Xrm.Page.getAttribute("cvt_systemtype").getText() : "";
+            derivedResultField += (componentType != null) ? Xrm.Page.getAttribute("cvt_componenttype").getText() : "";
+            derivedResultField += (uniqueid != null) ? ": " + uniqueid : "";
+            break;
+        default:
+            derivedResultField += (mcs_usernameinput != null) ? mcs_usernameinput : "";
+            break;
+    }
+
+    if (Xrm.Page.getAttribute("mcs_relatedsiteid").getValue() != null)
+        derivedResultField += " @ " + Xrm.Page.getAttribute("mcs_relatedsiteid").getValue()[0].name;
+
+    if (Xrm.Page.getAttribute("mcs_name").getValue != derivedResultField) {
+        Xrm.Page.getAttribute("mcs_name").setSubmitMode("always");
+        Xrm.Page.getAttribute("mcs_name").setValue(derivedResultField);
+    }
+};
+
+//Disable fields
+MCS.mcs_Resource.MakeFieldsReadOnly = function () {
+    if (Xrm.Page.ui.getFormType() != MCS.cvt_Common.FORM_TYPE_CREATE) {
+        Xrm.Page.getControl("mcs_type").setDisabled(true);
+        if (Xrm.Page.getAttribute("mcs_type").getValue() != 251920002)
+            Xrm.Page.getControl("mcs_relatedsiteid").setDisabled(true);
+    }
+};
+
+//Set standard fields to submit
+//TODO: get rid of this function, make it submit pertinent fields only.
+MCS.mcs_Resource.SubmitFields = function () {
+    Xrm.Page.getAttribute("mcs_name").setSubmitMode("always");
+    Xrm.Page.getAttribute("cvt_updateresourceconnections").setSubmitMode("always");
+    Xrm.Page.getAttribute("cvt_replaceresourceconnections").setSubmitMode("always");
+    Xrm.Page.getAttribute("cvt_deleteresourceconnections").setSubmitMode("always");
+    Xrm.Page.getAttribute("cvt_replacementresource").setSubmitMode("always");
+};//If the SDK namespace object is not defined, create it.
+
+//Displays different tabs based on the Resource Type selected
+MCS.mcs_Resource.ResourceType = function () {
+    var resourceTypeValue = (Xrm.Page.getControl("mcs_type") != null) ? Xrm.Page.getAttribute("mcs_type").getValue() : null;
+    var uniqueIdControl = Xrm.Page.getControl("mcs_usernameinput");
+    var componentType = Xrm.Page.getAttribute("cvt_componenttype");
+    var componentTypeControl = Xrm.Page.getControl("cvt_componenttype");
+    var systemType = Xrm.Page.getAttribute("cvt_systemtype");
+
+    var resourceTypeIsVista = resourceTypeValue == 251920000;
+    var resourceTypeIsRoom = resourceTypeValue == 251920001;
+    var resourceTypeIsTech = resourceTypeValue == 251920002;
+
+    //Vista Clinic Fields/Controls
+    uniqueIdControl.setVisible(resourceTypeIsVista);
+    uniqueIdControl.setDisabled(!resourceTypeIsVista);
+    Xrm.Page.getAttribute("mcs_usernameinput").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsVista));
+    Xrm.Page.getControl("cvt_vistacapacity").setVisible(resourceTypeIsVista);
+    Xrm.Page.getControl("cvt_ien").setVisible(resourceTypeIsVista);
+    //Xrm.Page.getAttribute("cvt_ien").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsVista));
+
+    //Room Based Fields/Controls
+    Xrm.Page.ui.tabs.get("tab_room_information").setVisible(resourceTypeIsRoom);
+    Xrm.Page.getAttribute("mcs_room").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsRoom));
+
+    //Tech Based Fields/Controls
+    Xrm.Page.ui.tabs.get("tab_technology_information").setVisible(resourceTypeIsTech);
+    Xrm.Page.ui.tabs.get("tab_9").setVisible(resourceTypeIsTech);
+    Xrm.Page.getAttribute("cvt_systemtype").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsTech));
+    Xrm.Page.getAttribute("cvt_uniqueid").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsTech));
+    Xrm.Page.getAttribute("cvt_masterserialnumber").setRequiredLevel(MCS.mcs_Resource.GetRequiredString(resourceTypeIsTech));
+    Xrm.Page.getControl("cvt_masterserialnumber").setVisible(resourceTypeIsTech);
+    if (resourceTypeIsTech) {
+        var systemTypeValue = (Xrm.Page.getControl("cvt_systemtype") != null) ? systemType.getValue() : null;
+        if (systemTypeValue == 100000000) {
+            componentType.setRequiredLevel("required");
+            componentTypeControl.setVisible(true);
+        }
+        else {
+            componentType.setRequiredLevel("none");
+            componentType.setValue(null);
+            componentTypeControl.setVisible(false);
+        }
+
+        //Prepopulate for CVT Patient Tablet
+        if (Xrm.Page.getAttribute("cvt_systemtype").getValue() == 917290005) {
+            if (Xrm.Page.getAttribute("cvt_locationuse").getValue() != null)
+                Xrm.Page.getAttribute("cvt_locationuse").setValue(917290001);
+
+            Xrm.Page.getAttribute("cvt_room").setValue("");
+            Xrm.Page.getControl("cvt_room").setDisabled(true);
+            Xrm.Page.getAttribute("cvt_room").setSubmitMode("always");
+        }
+        else
+            Xrm.Page.getControl("cvt_room").setDisabled(false);
+    }
+    //Xrm.Page.getAttribute("cvt_systemindex").setRequiredLevel("none");
+};

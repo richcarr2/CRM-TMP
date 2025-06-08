@@ -1,0 +1,613 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+      "ISE_Name": {
+        "metadata": {
+          "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+        },
+        "type": "String"
+      },
+      "IntegrationAccount_Name": {
+        "type": "string"
+      },
+      "KeyVault_Connection_Name": {
+        "metadata": {
+          "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+        },
+        "type": "string"
+      },
+      "LogicApp_Name": {
+        "type": "String"
+      },
+      "Office365_Connection_Name": {
+        "type": "string"
+      },
+      "AlertEmailAddressesTemplate": {
+        "type": "string"
+      }
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-07-01",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "location": "[resourceGroup().location]",
+            "name": "[parameters('LogicApp_Name')]",
+          "properties": {
+            "definition": {
+              "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+              "actions": {
+                "Initialize_AlertEmailAddresses": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "AlertEmailAddresses",
+                        "type": "string",
+                        "value": "@parameters('AlertEmailAddresses')"
+                      }
+                    ]
+                  },
+                  "runAfter": {},
+                  "type": "InitializeVariable"
+                },
+                "Initialize_CreatedDateEnd": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "CreatedDateEnd",
+                        "type": "string",
+                        "value": "@{addMinutes(utcNow(), div(variables('RoundTripDuration'),-1))}"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_CreatedDateStart": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_CreatedDateStart": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "CreatedDateStart",
+                        "type": "string",
+                        "value": "@{addMinutes(utcNow(), div(add(variables('RoundTripDuration'),variables('MinutesLookBack')),-1))}"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_RoundTripDuration": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_Environment": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "Environment",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_CreatedDateEnd": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_FetchConditionToIncludeVistaIntegrationResults": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "FetchConditionToExcudeVistaIntegrationResults",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_Environment": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_MinutesLookBack": {
+                  "description": "How many minutes to look backwards on the modified date of the SA, for issues",
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "MinutesLookBack",
+                        "type": "integer",
+                        "value": 5
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_AlertEmailAddresses": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_RoundTripDuration": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "RoundTripDuration",
+                        "type": "integer",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_XMinutesAgoDateTime": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_XMinutesAgoDateTime": {
+                  "description": "Get the current date time, offset by MinutesLookBack",
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "XMinutesAgoDateTime",
+                        "type": "string",
+                        "value": "@{addMinutes(utcNow(),variables('MinutesLookBack'))}"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_MinutesLookBack": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Try": {
+                  "actions": {
+                    "Bad_integration_results_FetchXML": {
+                      "inputs": "<fetch  no-lock='true'>\n  <entity name='mcs_integrationresult'>\n    <attribute name='mcs_name' />\n    <attribute name='mcs_error' />\n    <attribute name='mcs_result' />\n    <link-entity name='serviceappointment' to='mcs_serviceappointmentid' from='activityid' alias='serviceappointment' link-type='inner'>\n      <attribute name='activityid' />\n      <attribute name='subject' />\n      <attribute name='statuscode' />\n      <attribute name='statecode' />\n      <attribute name='modifiedon' />\n      <attribute name='createdon' />\n      <attribute name='tmp_appointmentmodality' />\n      <attribute name='mcs_groupappointment' />\n      <attribute name='modifiedby' />\n      <attribute name='cvt_cancelremarks' />\n      <attribute name='cvt_technologyfailurestatus' />\n      <link-entity name='mcs_site' to='mcs_relatedprovidersite' from='mcs_siteid' alias='patSite' link-type='outer'>\n        <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='patFacility' link-type='outer'>\n          <attribute name='cvt_facilitytype' />\n          <attribute name='mcs_stationnumber' />\n        </link-entity>\n      </link-entity>\n      <link-entity name='mcs_site' to='mcs_relatedsite' from='mcs_siteid' alias='proSite' link-type='outer'>\n        <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='proFacility' link-type='outer'>\n          <attribute name='cvt_facilitytype' />\n          <attribute name='mcs_stationnumber' />\n        </link-entity>\n      </link-entity>\n      <link-entity name='appointment' to='mcs_appointmentid' from='activityid' alias='appointment' link-type='outer'>\n        <link-entity name='mcs_site' to='cvt_site' from='mcs_siteid' alias='apptSite' link-type='outer'>\n          <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='apptSiteFacility' link-type='outer' />\n        </link-entity>\n      </link-entity>\n    </link-entity>\n    <filter>\n      <filter>\n        <filter>\n           <filter>\n            <condition attribute='createdon' operator='ge' value='@{variables('CreatedDateStart')}' />\n          </filter>\n          <filter>\n            <condition attribute='createdon' operator='le' value='@{variables('CreatedDateEnd')}' />\n          </filter>\n          <filter type='or'>\n            <filter type='or'>\n              <condition attribute='cvt_facilitytype' entityname='apptSiteFacility' operator='eq' value='917290000' />\n              <condition attribute='cvt_facilitytype' entityname='patFacility' operator='eq' value='917290000' />\n            </filter>\n            <condition attribute='cvt_facilitytype' entityname='proFacility' operator='eq' value='917290000' />\n          </filter>\n        </filter>\n        <filter>\n      <condition attribute='mcs_status' operator='in'>\n        <value>803750003</value>\n        <value>100000000</value>\n        <value>100000001</value>\n        <value>803750001</value>\n      </condition>\n    </filter>\n      </filter>\n   @{variables('FetchConditionToExcudeVistaIntegrationResults')}\n    </filter>\n  </entity>\n</fetch>",
+                      "runAfter": {
+                        "HTTP:_Get_pending_Service_Appointments": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Decide_if_there_are_any_integration_results_in_a_bad_state": {
+                      "actions": {
+                        "Compose_combined_JSON_for_Integration_Results": {
+                          "inputs": {
+                            "CDSClientURL": "@{body('Get_secret:_CDS_Client_URL')?['value']}",
+                            "DateTimeNow": "@{utcNow()}",
+                            "IntegrationResults": [
+                              "@body('HTTP:_Get_bad_integration_results')"
+                            ],
+                            "MinutesToLookback": "@{replace(string(variables('MinutesLookBack')),'-','')}",
+                            "StatusCodeMetadata": [
+                              "@body('HTTP:_Get_status_code_metadata')"
+                            ]
+                          },
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Send_alert_email_2": {
+                          "inputs": {
+                            "body": {
+                              "Body": "<p>@{body('Transform_JSON_data_to_HTML_template_for_alert_email_2')}</p>",
+                              "Subject": "[@{variables('Environment')}] TMP/Cerner Outbound Transaction Monitor: @{length(body('HTTP:_Get_bad_integration_results').value)} Integration Results results in errored status in past @{replace(string(variables('MinutesLookBack')),'-','')} minutes",
+                              "To": "@variables('AlertEmailAddresses')"
+                            },
+                            "host": {
+                              "connection": {
+                                "name": "@parameters('$connections')['office365']['connectionId']"
+                              }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                          },
+                          "runAfter": {
+                            "Transform_JSON_data_to_HTML_template_for_alert_email_2": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "ApiConnection"
+                        },
+                        "Transform_JSON_data_to_HTML_template_for_alert_email_2": {
+                          "inputs": {
+                            "content": "@outputs('Compose_combined_JSON_for_Integration_Results')",
+                            "integrationAccount": {
+                              "map": {
+                                "name": "IntegrationResultsErrors.liquid"
+                              }
+                            }
+                          },
+                          "kind": "JsonToText",
+                          "runAfter": {
+                            "Compose_combined_JSON_for_Integration_Results": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Liquid"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greaterOrEquals": [
+                              "@length(body('HTTP:_Get_bad_integration_results').value)",
+                              1
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Decide_if_there_are_any_service_appointments_in_a_bad_state": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Decide_if_there_are_any_service_appointments_in_a_bad_state": {
+                      "actions": {
+                        "Compose_combined_JSON_data_array_for_SA": {
+                          "inputs": {
+                            "CDSClientURL": "@{body('Get_secret:_CDS_Client_URL')?['value']}",
+                            "DateTimeNow": "@{utcNow()}",
+                            "MinutesToLookback": "@{replace(string(variables('MinutesLookBack')),'-','')}",
+                            "ServiceAppointments": [
+                              "@body('HTTP:_Get_pending_Service_Appointments')"
+                            ],
+                            "StatusCodeMetadata": [
+                              "@body('HTTP:_Get_status_code_metadata')"
+                            ]
+                          },
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Send_alert_email": {
+                          "inputs": {
+                            "body": {
+                              "Body": "<p>@{body('Transform_JSON_data_to_HTML_template_for_alert_email')}</p>",
+                              "Subject": "[@{variables('Environment')}] TMP/Cerner Outbound Transaction Monitor: @{length(body('HTTP:_Get_pending_Service_Appointments').value)} SA in failed status in past @{replace(string(variables('MinutesLookBack')),'-','')} minutes",
+                              "To": "@variables('AlertEmailAddresses')"
+                            },
+                            "host": {
+                              "connection": {
+                                "name": "@parameters('$connections')['office365']['connectionId']"
+                              }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                          },
+                          "runAfter": {
+                            "Transform_JSON_data_to_HTML_template_for_alert_email": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "ApiConnection"
+                        },
+                        "Transform_JSON_data_to_HTML_template_for_alert_email": {
+                          "inputs": {
+                            "content": "@outputs('Compose_combined_JSON_data_array_for_SA')",
+                            "integrationAccount": {
+                              "map": {
+                                "name": "PendingServiceAppointmentAlertEmailLiquid"
+                              }
+                            }
+                          },
+                          "kind": "JsonToText",
+                          "runAfter": {
+                            "Compose_combined_JSON_data_array_for_SA": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Liquid"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greaterOrEquals": [
+                              "@length(body('HTTP:_Get_pending_Service_Appointments').value)",
+                              1
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "HTTP:_Get_bad_integration_results": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Decide_whether_to_set_the_fetch_condition_to_exclude_Vista_scheduling_errors": {
+                      "actions": {
+                        "Set_FetchConditionToIncludeVistaIntegrationResults": {
+                          "inputs": {
+                            "name": "FetchConditionToExcudeVistaIntegrationResults",
+                            "value": "<condition attribute='mcs_name' operator='not-like' value='%Vista%' />"
+                          },
+                          "runAfter": {},
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@parameters('ExcludeVistaSchedulingErrors')",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Tenant_ID": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Get_secret:_CDS_Client_URL": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-url')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_Client_Secret": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_CDS_Tenant_ID": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-tenant-id')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Client_URL": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_Client_Id": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-id')}/value"
+                      },
+                      "runAfter": {},
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_Client_Secret": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-secret')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_Client_Id": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "HTTP:_Fetch_OAuth_Token": {
+                      "inputs": {
+                        "body": "client_id=@{body('Get_secret:_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_Client_Secret')?['value']}&scope=@{body('Get_secret:_CDS_Client_URL')?['value']}/.default",
+                        "headers": {
+                          "content-type": "application/x-www-form-urlencoded"
+                        },
+                        "method": "POST",
+                        "uri": "https://login.microsoftonline.com/@{body('Get_secret:_CDS_Tenant_ID')?['value']}/oauth2/v2.0/token"
+                      },
+                      "runAfter": {
+                        "Set_variable_Environment": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Get_bad_integration_results": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/mcs_integrationresults?fetchXml=@{outputs('URI_Encode_-_Bad_integration_results_FetchXML')}"
+                      },
+                      "runAfter": {
+                        "URI_Encode_-_Bad_integration_results_FetchXML": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Get_pending_Service_Appointments": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/serviceappointments?fetchXml=@{outputs('URI_Encode_-_Pending_service_appointments_FetchXML')}"
+                      },
+                      "runAfter": {
+                        "URI_Encode_-_Pending_service_appointments_FetchXML": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Get_status_code_metadata": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/EntityDefinitions(LogicalName='serviceappointment')/Attributes(LogicalName='statuscode')/Microsoft.Dynamics.CRM.StatusAttributeMetadata?$select=LogicalName&$expand=GlobalOptionSet($select=Options)"
+                      },
+                      "runAfter": {
+                        "HTTP:_Fetch_OAuth_Token": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Pending_service_appointments_FetchXML": {
+                      "description": "Pending = 3, TechnologyFailure = 917290001, InterfaceVIMTFailure = 917290002, InterfaceMVIFailure = 917290003, InterfaceFailure = 917290004, PartialVistaFailure = 917290005, CancelFailure = 917290006, VistaFailure = 917290007",
+                      "inputs": "<fetch no-lock='true'>\n  <entity name='serviceappointment'>\n    <attribute name='activityid' />\n    <attribute name='subject' />\n    <attribute name='statuscode' />\n    <attribute name='modifiedon' />\n    <attribute name='createdon' />\n    <attribute name='tmp_appointmentmodality' />\n    <attribute name='mcs_groupappointment' />\n    <attribute name='modifiedby' />\n    <attribute name='cvt_cancelremarks' />\n    <attribute name='cvt_technologyfailurestatus' />\n    <link-entity name='mcs_site' to='mcs_relatedprovidersite' from='mcs_siteid' alias='patSite' link-type='outer'>\n      <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='patFacility' link-type='outer'>\n        <attribute name='cvt_facilitytype' />\n        <attribute name='mcs_stationnumber' />\n      </link-entity>\n    </link-entity>\n    <link-entity name='mcs_site' to='mcs_relatedsite' from='mcs_siteid' alias='proSite' link-type='outer'>\n      <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='proFacility' link-type='outer'>\n        <attribute name='cvt_facilitytype' />\n        <attribute name='mcs_stationnumber' />\n      </link-entity>\n    </link-entity>\n    <link-entity name='appointment' to='mcs_appointmentid' from='activityid' alias='appointment' link-type='outer'>\n      <link-entity name='mcs_site' to='cvt_site' from='mcs_siteid' alias='apptSite' link-type='outer'>\n        <link-entity name='mcs_facility' to='mcs_facilityid' from='mcs_facilityid' alias='apptSiteFacility' link-type='outer' />\n      </link-entity>\n    </link-entity>\n    <filter>\n      <filter>\n        <filter>\n          <filter>\n            <condition attribute='createdon' operator='ge' value='@{variables('CreatedDateStart')}' />\n          </filter>\n          <filter>\n            <condition attribute='createdon' operator='le' value='@{variables('CreatedDateEnd')}' />\n          </filter>\n        </filter>\n        <filter type='or'>\n          <filter type='or'>\n            <condition attribute='cvt_facilitytype' entityname='patFacility' operator='eq' value='917290000' />\n            <condition attribute='cvt_facilitytype' entityname='proFacility' operator='eq' value='917290000' />\n          </filter>\n          <condition attribute='cvt_facilitytype' entityname='apptSiteFacility' operator='eq' value='917290000' />\n        </filter>\n      </filter>\n      <filter>\n        <condition attribute='statuscode' operator='in'>\n          <value>917290002</value>\n          <value>3</value>\n          <value>917290004</value>\n          <value>917290001</value>\n          <value>917290006</value>\n          <value>917290007</value>\n          <value>917290003</value>\n          <value>917290005</value>\n        </condition>\n      </filter>\n    </filter>\n    <order attribute='modifiedon' descending=\"true\" />\n  </entity>\n</fetch>",
+                      "runAfter": {
+                        "HTTP:_Get_status_code_metadata": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Set_variable_Environment": {
+                      "inputs": {
+                        "name": "Environment",
+                        "value": "@{if(contains(body('Get_secret:_CDS_Client_URL')?['value'],'dev3'),'DEV3',\r\nif(contains(body('Get_secret:_CDS_Client_URL')?['value'],'qa'),'QA/NPROD','PROD'))}"
+                      },
+                      "runAfter": {
+                        "Decide_whether_to_set_the_fetch_condition_to_exclude_Vista_scheduling_errors": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    },
+                    "URI_Encode_-_Bad_integration_results_FetchXML": {
+                      "inputs": "@encodeUriComponent(outputs('Bad_integration_results_FetchXML'))",
+                      "runAfter": {
+                        "Bad_integration_results_FetchXML": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "URI_Encode_-_Pending_service_appointments_FetchXML": {
+                      "inputs": "@encodeUriComponent(outputs('Pending_service_appointments_FetchXML'))",
+                      "runAfter": {
+                        "Pending_service_appointments_FetchXML": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    }
+                  },
+                  "runAfter": {
+                    "Initialize_FetchConditionToIncludeVistaIntegrationResults": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Scope"
+                }
+              },
+              "contentVersion": "1.0.0.0",
+              "outputs": {},
+              "parameters": {
+                "$connections": {
+                  "defaultValue": {},
+                  "type": "Object"
+                },
+                "AlertEmailAddresses": {
+                  "defaultValue": "anstein@microsoft.com",
+                  "type": "String"
+                },
+                "ExcludeVistaSchedulingErrors": {
+                  "defaultValue": true,
+                  "type": "Bool"
+                }
+              },
+              "triggers": {
+                "Every_x_minutes,_recurrence_": {
+                  "evaluatedRecurrence": {
+                    "frequency": "Minute",
+                    "interval": 5
+                  },
+                  "recurrence": {
+                    "frequency": "Minute",
+                    "interval": 5
+                  },
+                  "type": "Recurrence"
+                }
+              }
+            },
+            "integrationAccount": {
+              "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+            },
+            "integrationServiceEnvironment": {
+              "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+              "name": "[parameters('ISE_Name')]",
+              "type": "Microsoft.Logic/integrationServiceEnvironments"
+            },
+            "parameters": {
+              "$connections": {
+                "value": {
+                  "keyvault": {
+                    "connectionId": "[variables('connections_keyvault_externalid')]",
+                    "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                    "connectionProperties": {
+                      "authentication": {
+                        "type": "ManagedServiceIdentity"
+                      }
+                    },
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+                  },
+                  "office365": {
+                    "connectionId": "[variables('connections_office365_externalid')]",
+                    "connectionName": "[parameters('Office365_Connection_Name')]",
+                    "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/office365')]"
+                  }
+                }
+              }
+            },
+            "state": "Enabled"
+          },
+            "tags": {
+                "CKID": "195",
+                "Environment": "PREPROD",
+                "ProjectName": "Veterans Experience Integration Solution",
+                "VAAzureProgram": "EIS",
+                "VAECID": "AZG20181226001"
+            },
+            "type": "Microsoft.Logic/workflows"
+        }
+    ],
+    "variables": {
+        "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+        "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]",
+        "connections_office365_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('Office365_Connection_Name'))]",
+        "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+        "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]"
+    }
+}

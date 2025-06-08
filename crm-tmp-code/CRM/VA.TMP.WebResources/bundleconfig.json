@@ -1,0 +1,183 @@
+[
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/ServiceAppointment.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+      "Javascript/Common/MCS.Process.js",
+
+      "Javascript/Appointment/ServiceActivityOnSave.js",
+      "Javascript/Appointment/ServiceActivityOnLoad.js",
+      "Javascript/Appointment/ServiceActivity.RibbonFunctions.js",
+      "Javascript/Appointment/ServiceActivityOnChange.js",
+      "Javascript/Common/cvt_VIALogin.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/TSA.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/TSA/mcs_TSA.OnLoad.js",
+      "Javascript/TSA/mcs_TSA.OnChange.js",
+      "Javascript/TSA/mcs_TSAOnSave.js",
+      "Javascript/TSA/mcs_TSA.ButtonFunctions.js",
+      "Javascript/TSA/TSA.RibbonFunctions.js",
+      "Javascript/PatProvResources/ProvResources.RibbonFunctions.js",
+      "Javascript/PatProvResources/PatResources.RibbonFunctions.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/MTSA.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+
+      "Javascript/PatProvResources/ProvResources.RibbonFunctions.js",
+      "Javascript/Master TSA/cvt_MTSA.OnChange.js",
+      "Javascript/Master TSA/cvt_MTSA.OnLoad.js",
+      "Javascript/Master TSA/cvt_MTSA.OnSave.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/FieldMismatch.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/FieldMismatchValidation/cvt_FieldMismatch.RibbonFunctions.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/StagingComponent.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/StagingComponent/cvt_StagingComponent.js",
+      "Javascript/StagingComponent/cvt_StagingComponent.RibbonFunctions.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/StagingResource.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/StagingResource/cvt_StagingResource.js",
+      "Javascript/StagingResource/cvt_StagingResource.RibbonFunctions.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/ResourcePackage.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+      "Javascript/Scheduling Package/cvt_ResourcePackage.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/ParticipatingSite.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/Participating Site/cvt_ParticipatingSite.js",
+      "Javascript/Participating Site/cvt_ParticipatingSite.ButtonFunctions.js",
+      "Javascript/Participating Site/cvt_ParticipatingSite.RibbonFunctions.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/FacilityApproval.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/Facility Approval/cvt_FacilityApproval.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/User.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/User/mcs_User.js"
+    ]
+  },
+  {
+    "outputFileName": "Javascript/_Bundled Libraries/SchedulingResource.js",
+    "inputFiles": [
+      "Javascript/_Bundled Libraries/_AutoGenHeader.js",
+      "Javascript/Common/jQuery.1.7.1.js",
+      "Javascript/Common/jQuery.3.6.0.js",
+      "Javascript/Common/JSON.min.js",
+      "Javascript/Common/CrmRestKit.js",
+      "Javascript/Common/cvt_CommonFunctions.js",
+      "Javascript/Common/mcs_GlobalFunctions.js",
+      "Javascript/Common/XrmSvcToolkit.js",
+
+      "Javascript/Scheduling Resource/cvt_SchedulingResource.js"
+    ]
+  }
+]

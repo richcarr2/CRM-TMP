@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="DEVTEST-GOV-INTERNAL">
+  <AppService Name="vvs-lob-dev-tmp" ResourceGroup="VEIS-DEVTEST-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="Authority" Value="https://login.microsoftonline.us/vaazuregov.onmicrosoft.com" />
+        <AppSetting Key="Resource" Value="https://vaazuregov.onmicrosoft.com/5f24c14f-ee45-40d6-8c29-fe64c0b3fb72" />
+        <AppSetting Key="ShouldSendToken" Value="true" />
+        <AppSetting Key="EcBaseUri" Value="https://Va-veis-dev-apim.veis.va.gov" />
+        <AppSetting Key="EcCancelUri" Value="/ec/vvs/api/Cancel" />
+        <AppSetting Key="EcCreateUri" Value="/ec/vvs/api/Create" />
+        <AppSetting Key="EcUpdateUri" Value="/ec/vvs/api/Update" />
+        <AppSetting Key="SubscriptionId" Value="88784cf9396e41dab087c90a5da0c2c1" />
+        <AppSetting Key="CrmAppId" Value="" />
+        <AppSetting Key="CrmSecret" Value="" />
+        <AppSetting Key="CrmBaseOrgUri" Value="dvagov-tmp-dev2.crm9.dynamics.com" />
+        <AppSetting Key="CrmApiUri" Value="https://{0}/api/data/" />
+        <AppSetting Key="CrmXrmUri" Value="https://{0}/XRMServices/2011/Organization.svc/web" />
+        <AppSetting Key="IsProdApi" Value="false" />
+        <AppSetting Key="SubscriptionIdEast" Value="" />
+        <AppSetting Key="SubscriptionIdSouth" Value="" />
+        <AppSetting key="InstrumentationKey" Value="575cebfe-8828-fc25-9213-00855608c74e" />
+      </AppSettings>    
+  </AppService>
+</Azure>

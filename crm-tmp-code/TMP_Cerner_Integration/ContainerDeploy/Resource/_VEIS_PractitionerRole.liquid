@@ -1,0 +1,16 @@
+{
+    "fullUrl":"urn:uuid:{{ ID }}",
+    "resource":{
+        "resourceType": "PractitionerRole",
+        "id":"{{ ID }}",
+        "code": [
+            {
+                {% include 'DataType/VEIS_CWECodeableConcept' mapping: 'CodeSystem/VEIS_PractitionerRole', CWE: PractitionerRole_code -%}
+            }
+        ],
+    },
+    "request":{
+        "method":"PUT",
+        "url":"PractitionerRole/{{ ID }}",
+    },
+},

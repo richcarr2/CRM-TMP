@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5BB268C4-0288-4CE7-A27A-24C2363D54EE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VA.CVT_TSS.WebResources</RootNamespace>
+    <AssemblyName>VA.CVT_TSS.WebResources</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bundleconfig.json" />
+    <None Include="CRM Solution Files\solution.xml" />
+    <None Include="CRM Solution Files\[Content_Types].xml" />
+    <Content Include="HTML\cvt_GetConsultsForPatient.html" />
+    <Content Include="HTML\cvt_EmergencyContactViewer.html" />
+    <Content Include="HTML\cvt_ProviderPatientSIngleResourceSubgridDesc.html" />
+    <Content Include="HTML\crme_MviSearch.html" />
+    <Content Include="HTML\cvt_KPIform.html" />
+    <Content Include="HTML\cvt_VIALoginUI.html" />
+    <Content Include="HTML\cvt_vodUI.html" />
+    <Content Include="HTML\tmp_aboutpage.html" />
+    <Content Include="HTML\tmp_BuildParticipatingSitesTree.html" />
+    <Content Include="HTML\tmp_MergeRecords.html" />
+    <Content Include="HTML\tmp_servicetree.html" />
+    <Content Include="HTML\tmp_ResourceTree.html" />
+    <Content Include="HTML\tmp_SetResourceFieldButton.html" />
+    <Content Include="HTML\tmp_workhours.html" />
+    <Content Include="HTML\mcs_labelHtmlBlank.html" />
+    <Content Include="HTML\mcs_mvi_searchUI.html" />
+    <Content Include="Images\plus-plus.png" />
+    <Content Include="Images\plusplus32x32.svg" />
+    <Content Include="Images\plus_plus16x16.png" />
+    <Content Include="Javascript\Appointment\tmp_SetResourceField.js" />
+    <Content Include="Javascript\Appointment\tmp_openresourcetree.js" />
+    <Content Include="Javascript\Appointment\mcs_serviceactivity.min.js" />
+    <Content Include="Javascript\Appointment\tmp_app_onload.js" />
+    <Content Include="Javascript\Appointment\tmp_schedulerAddOn.js" />
+    <Content Include="Javascript\Archived Agreemnet\mcs_TSA.min.js" />
+    <Content Include="Javascript\Block Resource\cvt_AppointmentOnChange.js" />
+    <Content Include="Javascript\Block Resource\Appointment.OnLoad.js" />
+    <Content Include="Javascript\Block Resource\cvt_Appointment.OnSave.js" />
+    <Content Include="Javascript\Block Resource\AppointmentRibbon.js" />
+    <Content Include="Javascript\Common\cvt_Cerner.js" />
+    <Content Include="Javascript\Common\cvt_CommonFunctions.js" />
+    <Content Include="Javascript\Common\cvt_jquery.1.7.1.js" />
+    <Content Include="Javascript\Common\jQuery.3.6.0.js" />
+    <Content Include="Javascript\Common\jquery3.6.0.min.js" />
+    <Content Include="Javascript\Common\mcs_CrmRestKit.js" />
+    <Content Include="Javascript\Common\mcs_JSON.js" />
+    <Content Include="Javascript\Common\cvt_Process.js" />
+    <Content Include="Javascript\Common\mcs_GlobalFunctions.js" />
+    <Content Include="HTML\tmp_blank.html" />
+    <Content Include="Javascript\Facility Approval\cvt_FacilityApproval.js" />
+    <Content Include="Javascript\Feedback\mcs_scriptsfeedback_script.js" />
+    <Content Include="Javascript\FieldMismatchValidation\cvt_FieldMismatch.RibbonFunctions.js" />
+    <Content Include="Javascript\HTML\cvt_ViaLogin.js" />
+    <Content Include="Javascript\HTML\cvt_vodUI.js" />
+    <Content Include="Javascript\HTML\cvt_GetConsultsForPatient.js" />
+    <Content Include="Javascript\HTML\cvt_mvi_search.js" />
+    <Content Include="Javascript\Common\cvt_VIALogin.js" />
+    <Content Include="Javascript\Common\XrmSvcToolkit.js" />
+    <Content Include="Javascript\Component\cvt_Component.OnChange.js" />
+    <Content Include="Javascript\Facility\cvt_Facility.OnLoad.js" />
+    <Content Include="Javascript\Facility\mcs_facility.OnSave.js" />
+    <Content Include="Javascript\Group Resource\mcs_GroupResource.OnChangeLoad.js" />
+    <Content Include="Javascript\Group Resource\mcs_GroupResourceRibbonFunctions.js" />
+    <Content Include="Javascript\KPI\cvt_KPI.OnChange.js" />
+    <Content Include="Javascript\KPI\cvt_KPI.OnLoad.js" />
+    <Content Include="Javascript\Master TSA\cvt_MTSA.OnChange.js" />
+    <Content Include="Javascript\Master TSA\cvt_MTSA.OnLoad.js" />
+    <Content Include="Javascript\Master TSA\cvt_MTSA.OnSave.js" />
+    <Content Include="Javascript\Master TSA\mcs_MTSA.min.js" />
+    <Content Include="Javascript\Misc\cvt_SDK.Metadata.js" />
+    <Content Include="Javascript\Misc\cvt_MetadataQuery.js" />
+    <Content Include="Javascript\Misc\cvt_FieldMismatch.min.js.js" />
+    <Content Include="Javascript\Misc\new_preventAutoSave1.js" />
+    <Content Include="Javascript\Misc\new_AppointmentJS.js" />
+    <Content Include="Javascript\Misc\tmp_workflowwebapi.js" />
+    <Content Include="Javascript\Misc\tmp_tmpsite_library.js" />
+    <Content Include="Javascript\Misc\tmp_TMPResource_Deactivate.js" />
+    <Content Include="Javascript\Misc\tmp_TMPResourceGroup_Deactivate.js" />
+    <Content Include="Javascript\Misc\tmp_ClickButton.js" />
+    <Content Include="Javascript\Misc\tmp_OpenReserveResourceForm.js" />
+    <Content Include="Javascript\Misc\new_preventAutoSave.js" />
+    <Content Include="Javascript\Misc\mcs_Service_Activity.js" />
+    <Content Include="Javascript\Missing Resource\MissingResource.RibbonFunctions.js" />
+    <Content Include="Javascript\Missing Resource\MissingResource.js" />
+    <Content Include="Javascript\Participating Site\cvt_ParticipatingSite.js" />
+    <Content Include="Javascript\Participating Site\cvt_ParticipatingSite.RibbonFunctions.js" />
+    <Content Include="Javascript\Participating Site\cvt_ParticipatingSite.ButtonFunctions.js" />
+    <Content Include="Javascript\Participating Site\cvt_ParticipatingSitePrefilter.js" />
+    <Content Include="Javascript\Patient\cvt_Patient.js" />
+    <Content Include="Javascript\Patient\tmp_patientflags.js" />
+    <Content Include="Javascript\PatProvResources\mcs_PatProvResourcesOnLoad.js" />
+    <Content Include="Javascript\PatProvResources\mcs_PatProvResourcesOnChange.js" />
+    <Content Include="Javascript\Reserve Resource\cvt_AppointmentRibbon.js" />
+    <Content Include="Javascript\Reserve Resource\cvt_AppointmentOnLoad.js" />
+    <Content Include="Javascript\Scheduling Resource\cvt_SchedulingResource.js" />
+    <Content Include="Javascript\PatProvResources\mcs_PatProvResourcesOnChangeLoad.js" />
+    <Content Include="Javascript\PatProvResources\mcs_PatResourcesRibbonFunctions.js" />
+    <Content Include="Javascript\PatProvResources\mcs_ProvResourcesRibbonFunctions.js" />
+    <Content Include="Javascript\PhoneBook\cvt_PhoneBook.js" />
+    <Content Include="Javascript\PPE\cvt_PPEFeedbackLibrary.js" />
+    <Content Include="Javascript\PPE\cvt_PPEReviewLibrary.js" />
+    <Content Include="Javascript\Privilege\cvt_Privilege.OnSave.js" />
+    <Content Include="Javascript\Privilege\cvt_Privilege.OnChange.js" />
+    <Content Include="Javascript\Privilege\cvt_Privilege.OnLoad.js" />
+    <Content Include="Javascript\FPPEOPPE\cvt_QualityCheck.OnChange.js" />
+    <Content Include="Javascript\FPPEOPPE\cvt_QualityCheck.OnLoad.js" />
+    <Content Include="Javascript\FPPEOPPE\cvt_QualityCheck.OnSave.js" />
+    <Content Include="Javascript\ReccuringAppointments\mcs_RecurringServiceActivitiesOnLoad.js" />
+    <Content Include="Javascript\ReccuringAppointments\mcs_RecurringSAOnSave.js" />
+    <Content Include="Javascript\Scheduling Package\cvt_ResourcePackage.js" />
+    <Content Include="Javascript\ResourceGroup\cvt_ResourceGroupOnChange.js" />
+    <Content Include="Javascript\ResourceGroup\mcs_ResourceGroup.OnLoad.js" />
+    <Content Include="Javascript\ResourceGroup\mcs_ResourceGroup.OnSave.js" />
+    <Content Include="Javascript\Specialty\Specialty.js" />
+    <Content Include="Javascript\StagingComponent\cvt_StagingComponent.min.js" />
+    <Content Include="Javascript\StagingComponent\cvt_StagingComponent.RibbonFunctions.js" />
+    <Content Include="Javascript\StagingResource\cvt_StagingResource.min.js" />
+    <Content Include="Javascript\StagingResource\cvt_StagingResource.RibbonFunctions.js" />
+    <Content Include="Javascript\Participating Site\tmp_ShowMultipleParticipatingSitesTree.js" />
+    <Content Include="Javascript\TSA\mcs_PatResourcesRibbonFunctions.js" />
+    <Content Include="Javascript\TSA\mcs_TSA.ButtonFunctions.js" />
+    <Content Include="Javascript\TMP Resource\mcs_ResourceOnLoad.js" />
+    <Content Include="Javascript\TMP Resource\mcs_ResourceRibbonFunctions.js" />
+    <Content Include="Javascript\Appointment\mcs_ServiceActivity.RibbonFunctions.js" />
+    <Content Include="Javascript\Appointment\ServiceActivityOnChange.js" />
+    <Content Include="Javascript\Appointment\ServiceActivityOnLoad.js" />
+    <Content Include="Javascript\Appointment\ServiceActivityOnSave.js" />
+    <Content Include="Javascript\Site\mcs_Mcs_Site.js" />
+    <Content Include="Javascript\Team\cvt_Team.OnChange.js" />
+    <Content Include="Javascript\Team\cvt_Team.OnLoad.js" />
+    <Content Include="Javascript\HTML\cvt_EmergencyContactViewerPageScript.js" />
+    <Content Include="Javascript\TSA\mcs_TSA.OnChange.js" />
+    <Content Include="Javascript\TSA\mcs_TSA.OnLoad.js" />
+    <Content Include="Javascript\TSA\mcs_TSAOnSave.js" />
+    <Content Include="Javascript\TSA\cvt_TSA.RibbonFunctions.js" />
+    <Content Include="Javascript\User\mcs_User.OnSave.js" />
+    <Content Include="Javascript\User\mcs_User.RibbonFunctions.js" />
+    <None Include="CRM Solution Files\customizations.xml" />
+    <Content Include="StyleSheet\mcs_mvi_UI.css" />
+    <Content Include="XML\Component_Config.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CRM Solution Files\Workflows\ADMIN-ForceUpdateStatus-PendingSendtoCompleted-F47A992D-B773-4255-B889-1B82421C9253.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\DEMOWorkflow-2D1F3E52-5641-4AA2-BD2F-614D128B06EA.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\FeedbackAssignment-600F8BE7-12C4-4877-9642-140B0017E24A.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\Integration-ProxyAddPersonRetry-2A208121-3265-478D-8C17-408F3F13B132.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\Integration-ProxyAddPersonRetry-3B7AACB7-2B7F-4AF9-B711-A8282D68DB59.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\Integration-QueryDeviceChild-7061E494-4677-4ABE-B9D7-8DCF88B7894B.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\Integration-QueryDeviceParent-DD5857E1-A318-4D91-A227-D411E8E4054A.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\NotificationforTeamCreation-8627372C-6A74-4EFD-B752-B588E6630EBC.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\PrivilegingCreateRenewalEmail-FB53D787-C7E3-4E9C-8A20-404850D8799B.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\PrivilegingExpirationDateNotice-554B14DC-85AD-42DE-B198-F9BAE14599CE.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\PrivilegingInitialNotification-FBCA953D-EEC2-4A4C-B519-094877082876.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\PrivilegingPPESubmitted-7365CDDF-F0C1-468A-A722-8373FD2A9C72.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\PrivilegingUpdateofStatusReason-C597006D-0B77-4170-9F23-D1BAF0BD7558.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\Re-OpenServiceActivity-F9166186-75AC-4232-8457-E125A63F6ED2.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\ReplacementResource-26CDD7B6-7A94-47E2-BC3A-1169722E81F0.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\ReplacementUser-F18CA404-A532-4DA9-941F-866F2C9FA388.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\SaveSecurityRole-318C2B16-2DAD-4123-87B0-770CA32D8838.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\ServiceActivityCloseReminder-2F064058-EBAD-477D-BC6D-26B6C96FDDC2.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\ServiceActivityNotification-92D9F6C6-6063-4F00-BF45-FF80B0842BB6.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\test-21F48867-64ED-4AB9-AF77-333924798D65.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSA-DenyTSA-CF2BC300-A19F-440D-9055-DC8A9A55E102.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSA-RemindApprovertotakeaction-B2014FD9-1545-4482-9398-B54E504B7D8C.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSA-Revise-E0747FE3-4215-4958-9AF9-4F249AA1B315.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep1-AwaitingProvFTC-195750DF-B5DF-4A5B-B3FF-A29C280BC02A.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep2-AwatingProviderSC-AC75C046-5CE4-4981-BD20-FDD95EEEF641.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep3-AwaitingProviderCPOfficer-A2565F4B-755C-4B2F-806A-218B612C4CE8.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep4-AwaitingProviderChiefofStaff-EB62D141-FA4A-4461-A6CA-E5DA9BE17339.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep5-AwaitingPatientServiceChief-BB6BF3C9-41DB-4184-B18F-6A78B8BD2CF9.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep6-AwaitingPatientCPOfficer-D589A8FC-F432-425E-B4FD-67E6E3F6A257.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAApprovalStep7-AwaitingPatientChiefofStaff-8423B567-1FAB-461D-ACB6-59CEDDA7012A.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSADevelopment-PatientSiteNotification-CB0EF6B6-88C7-482C-B249-088D1BFC9342.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\TSAProductionNotification-1C730E6C-92B8-44E8-9452-FD788140E2E4.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\UserSetFacilityBasedonSite-7D88CF02-C545-464C-B92A-0B53E67AF8DD.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\UtilitySyncEffort-736EBF73-2636-4BB2-98BF-9CC50DB3A017.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\UtilityUser-SetEmailDeliveryMethod-FD601202-21BD-4C5E-BCBD-03E8FA01979F.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="CRM Solution Files\Workflows\UtilityUser-TurnoffE-mailsNonProd-BE0C5019-B723-4DF3-869E-CFFBD12F194F.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CRM Solution Files\Reports\AccountDistributionDetailrdl30ba3e44-c566-e311-9e25-00155d559835" />
+    <None Include="CRM Solution Files\Reports\AccountDistributionrdlc5cd2a3d-c566-e311-9e25-00155d559835" />
+    <None Include="CRM Solution Files\Reports\TSSResources-Componentsrdl913b152e-0258-e511-9c2d-00155d5575e0" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

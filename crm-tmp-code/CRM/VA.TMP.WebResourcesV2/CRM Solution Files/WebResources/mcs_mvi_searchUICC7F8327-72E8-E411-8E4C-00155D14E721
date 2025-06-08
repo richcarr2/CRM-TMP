@@ -1,0 +1,148 @@
+﻿<html>
+<head>
+</head>
+<body style="word-wrap: break-word;">
+    <link href="mcs_mvi_ui" rel="stylesheet" type="text/css">
+    <script src="ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="crme_jquery1.4.1.min.js" type="text/javascript"></script>
+    <script src="crme_SDK.REST.js" type="text/javascript"></script>
+    <script src="crme_json2.js" type="text/javascript"></script>
+    <script src="cvt_mvi_search.js" type="text/javascript"></script>
+    <script type="text/javascript">
+            $(document).ready(function () {
+                //Set up the form
+                hideAll();
+
+                //Bind the function to the Search Button
+                $("#SearchButton").bind("click", function () {
+                    searchForPatient();
+                });
+                //Bind function to the Clear Button
+                $('#ClearButton').bind("click", function () {
+                    resetForm();
+                });
+            });
+    </script>
+    <div id="searchByTraits" class="info">
+        <table id="searchTraits">
+            <tbody>
+                <tr>
+                    <td class="header" colspan="4"><h2 title="Patient Search">Patient Search</h2></td>
+                </tr>
+                <tr>
+                    <td title="First Name (Required)" class="td_left" ><label for="FirstNameTextBox">First Name </label><span class="required">*</span></td>
+                    <td class="td_left" title="First Name (Required)">
+                        <input name="firstName*" tabindex="2" class="formInputText" id="FirstNameTextBox" onfocus="clearField(this)" onfocusout="CheckRequiredField('#FirstNameTextBox', 'First Name', 'FirstNameNotification')" size="16" maxlength="30" aria-required="true" />
+                        <div id="FirstNameNotification" aria-live="assertive" role="alert"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Last Name (Required)" class="td_left"><label for="LastNameTextBox">Last Name </label><span class="required">*</span></td>
+                    <td class="td_left" title="Last Name (Required)">
+                        <input name="lastName*" tabindex="4" class="formInputText" id="LastNameTextBox" onfocus="clearField(this)" onfocusout="CheckRequiredField('#LastNameTextBox', 'Last Name', 'LastNameNotification')" size="16" maxlength="30" aria-required="true" />
+                        <div id="LastNameNotification" aria-live="assertive" role="alert"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Social Security Number (Format: 9 digits, no dashes) (Required)" class="td_left"><label for="SocialSecurityTextBox">Social Security Number (Format: 9 digits, no dashes)</label><span class="required">*</span></td>
+                    <td class="td_left" title="Social Security Number (Format: 9 digits, no dashes) (Required)">
+                        <input name="ssn*" tabindex="6" class="formInputText" id="SocialSecurityTextBox" onfocusout="CheckRequiredField('#SocialSecurityTextBox', 'Social Security Number', 'SSNotification')" size="16" maxlength="9" placeholder="123456789" value="" aria-required="true" />
+                        <div id="SSNotification" aria-live="assertive" role="alert"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td title="Date of Birth (Format: MM/DD/YYYY) (Required)" class="td_left"><label for="DateofBirthDateInput">Date of Birth (Format: MM/DD/YYYY)</label><span class="required">*</span></td>
+                    <td class="td_left" title="Date of Birth (Format: MM/DD/YYYY) (Required)">
+                        <input name="dateOfBirth*" tabindex="7" class="formInputText" type="text" id="DateofBirthDateInput" onfocusout="FormatDOB('field')" size="16" placeholder="MM/DD/YYYY" maxlength="10" aria-required="true" role="alert" />
+                        <div id="DOBNotification" aria-live="assertive" role="alert"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="buttons" class="info">
+        <table id="buttonTable">
+            <tbody>
+                <tr>
+                    <td class="td_left">
+                        <br />
+                        <button title="Search" style="width:200px" tabindex="9" id="SearchButton" class="button_normal_gradient">Search</button>
+                        &nbsp;
+                        <button title="Reset" tabindex="10" id="ClearButton">Reset</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br />
+    <div id="searchResults">
+        <div id="msgBoxWorking" class="info">
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Working on it.  This may take a few seconds..." rowspan="4" class="message_box_image"><img src="mcs_mvi_loading"></td>
+                    </tr>
+                    <tr>
+                        <td class="infoText">Working on it. This may take a few seconds...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxFailedValidation" class="info">
+            <br />
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Validation errors" rowspan="4" class="message_box_image"><img src="mcs_mvi_error" /></td>
+                    </tr>
+                    <tr>
+                        <td class="errorText">The information entered is not valid. Please make the corrections listed below.</td>
+                    </tr>
+                    <tr>
+                        <td class="header">Validation errors</td>
+                    </tr>
+                    <tr>
+                        <td><div id="validationErrors" aria-live="assertive"></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxSearchResultError" class="info">
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Error Details" rowspan="4" class="message_box_image"><img src="mcs_mvi_error" /></td>
+                    </tr>
+                    <tr>
+                        <td class="errorText">An error was returned from your search.</td>
+                    </tr>
+                    <tr>
+                        <td class="header">Error details</td>
+                    </tr>
+                    <tr>
+                        <td><span id="errorDetails" aria-live="assertive"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="msgBoxNoDataReturned" class="info">
+            <table>
+                <tbody>
+                    <tr>
+                        <td title="Warning. No Data Returned." rowspan="2" class="message_box_image"><img src="mcs_mvi_warning" /></td>
+                    </tr>
+                    <tr>
+                        <td class="infoText"><span id="warningDetails" aria-live="assertive"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="searchResultsGrid">
+            <p class="header">Search Results</p>
+            <table id="personSearchResultsTable" aria-live="assertive"></table>
+        </div>
+    </div>
+
+</body>
+</html>

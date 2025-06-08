@@ -1,0 +1,250 @@
+﻿//Page variables
+//Xrm = parent.Xrm;
+//CrmRestKit = parent.CrmRestKit;
+var counter = 0;
+var newVODId = null;
+var globalProvId = null;
+var invalidEmail = "";
+
+function requestVOD() {
+    //Disable the buttons
+    toggleIcon(false);
+
+    //Validate the Patient E-mail field exists
+    var patientEmail = $("#PatientEmailAddressTextBox").val();
+    var checkValidEmail = ValidateEmail(patientEmail);
+
+    if ((invalidEmail != patientEmail && checkValidEmail == false) || patientEmail.indexOf("@") == -1) {
+        invalidEmail = patientEmail;
+        hideAll();
+        
+        var message = "A potentially invalid character or format was detected for ' " + patientEmail + " '.  If you would like to continue using this email address, please click the REQUEST ON DEMAND VVC button again to continue with this email.  Please note that if this email address format is incorrect, it may not work properly.";
+       
+        if (patientEmail.indexOf("@") == -1)
+            message = "Invalid email format detected for: ' " + patientEmail + " '.  A valid email must contain '@' symbol.  Please correct the email and click the REQUEST ON DEMAND VVC button again.";
+
+        $("#validationErrors").text("");
+        $("#validationErrors").append(message);
+        $("#msgBoxFailedValidation").show();
+        toggleIcon(true);
+        return;
+    }
+    else
+        invalidEmail = "";
+    
+    if (globalProvId == null)
+    {
+        alert("No Provider selected, please select one before requesting a VOD.");
+        return;
+    }
+    //Reset Counter
+    counter = 0;
+
+    //Create a cvt_VOD record
+    var newVOD = {
+        'cvt_name': patientEmail,
+        'cvt_provider': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: globalProvId, LogicalName: "systemuser" },
+        'cvt_patientemail': patientEmail
+    };
+
+    var jsonEntity = window.JSON.stringify(newVOD);
+    var createRecordReq = new XMLHttpRequest();
+    var ODataPath = Xrm.Page.context.getClientUrl() + "/XRMServices/2011/OrganizationData.svc";
+    createRecordReq.open('POST', ODataPath + "/" + 'cvt_vodSet', false);
+    createRecordReq.setRequestHeader("Accept", "application/json");
+    createRecordReq.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    createRecordReq.send(jsonEntity);
+
+    newVODId = JSON.parse(createRecordReq.responseText).d.cvt_vodId;
+    waitForUpdate();
+}
+
+function manualCheckForVMR() {
+    hideAll();
+    $("#msgBoxWorking").show();
+    $("#msgBoxWorking").focus();
+    counter = 9;
+
+    setTimeout(function () { waitForUpdate(); }, 500);
+    
+}
+
+function refreshForm() {
+    $("#PatientEmailAddressTextBox").val("")
+    toggleIcon(true);
+    hideAll();
+    $("#PatientEmailAddressTextBox").focus();
+}
+function waitForUpdate() {
+    var calls = CrmRestKit.Retrieve("cvt_vod", newVODId, ['statuscode'], false);
+    calls.fail(
+            function (error) {
+                return;
+            });
+    calls.done(function (data) {
+        hideAll();
+
+        //Requested
+        switch (data.d.statuscode.Value) {
+            case 1: //Requested
+                showExecutingSearch();
+                counter++;
+                if (counter < 10) {
+                    setTimeout(function () { waitForUpdate(); }, 3000);
+                }
+                else {
+                    //Show error message
+                    $("#noResultText").text("");
+                    $("#noResultText").append("The VMR is still being generated.");
+                    hideAll();
+                    $("#msgBoxNoResult").show();
+                    return;
+                }  
+                break;
+            case 917290000: //Success
+                $("#msgBoxSuccess").show();
+                break;
+            case 917290001: //Failure
+                $("#errorText").text("");
+                //Find the Integration Result
+                var filter = "cvt_vod/Id eq (Guid'" + newVODId + "')";
+                calls = CrmRestKit.ByQuery("mcs_integrationresult", ['mcs_error'], filter, false);
+                calls.fail(
+                        function (error) {
+                            return;
+                        });
+                calls.done(function (data) {
+                    if (data && data.d.results && data.d.results.length > 0) {
+                        var integrationError = data.d.results[0].mcs_error;
+                        $("#errorText").append(" Error: " + integrationError);
+                        $("#errorText").append("<br/><br/>Please try again.");
+                        $("#RequestButton").attr('disabled', false);
+                        toggleIcon(true);
+                    }
+                });
+                $("#msgBoxFailedIntegration").show();
+                break;
+        }
+    });
+}
+
+//Show Executing Search
+function showExecutingSearch() {
+    hideAll();    
+    toggleIcon(false);
+
+    $("#msgBoxWorking").show();
+    $("#msgBoxWorking").focus();
+}
+
+//Hide all Message Divs
+function hideAll() {
+    $("#msgBoxWorking").hide();
+    $("#msgBoxFailedIntegration").hide();
+    $("#msgBoxFailedValidation").hide();
+    $("#msgBoxNoResult").hide();
+    $("#msgBoxSuccess").hide();
+}
+
+function toggleIcon(status)
+{
+    if (status == true) {
+        $("#ProviderLookupIcon").attr('onclick', 'openProviderLookup(this)');
+        $("#ProviderLookupIcon").attr('style', 'cursor: pointer;');
+        $("#PatientEmailAddressTextBox").attr('disabled', false);
+        $("#RequestButton").attr('disabled', false);
+    }
+    else {
+        $("#ProviderLookupIcon").attr('onclick', '');
+        $("#ProviderLookupIcon").attr('style', '');
+        $("#PatientEmailAddressTextBox").attr('disabled', true);
+        $("#RequestButton").attr('disabled', true);
+    }
+}
+
+function ValidateEmail(mail) {
+    if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail)) {
+        if (mail == "" ||  mail == null)
+            return false;
+        return true;
+    }
+    return false;
+}
+
+function getCurrentUserInformation() {
+    if (typeof (Xrm) == "undefined") { Xrm = parent.Xrm; }
+    if (typeof (Xrm) == "undefined") { Xrm = window.parent.Xrm; }
+    //Get the current user
+    var currentUserId = Xrm.Page.context.getUserId();
+    currentUserId = currentUserId.replace("{", "");
+    currentUserId = currentUserId.replace("}", "");
+
+    lookupUserRecord(currentUserId, 'onload');
+}
+
+function openProviderLookup(o) {
+    //Build Window Lookup
+    var URL = Xrm.Page.context.getClientUrl();
+    if (URL.match(/\/$/)) {
+        URL = URL.substring(0, URL.length - 1);
+    }
+
+    //Changed url to be dynamic based on function which looks up the OTC of the specificed entity. 
+    URL += "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&browse=0&objecttypes=8"; //Set OTC as appropriate to relationship;
+
+    var oUrl = Mscrm.CrmUri.create("/_controls/lookup/lookupinfo.aspx");
+    oUrl.get_query()["LookupStyle"] = "single";
+    oUrl.get_query()["browse"] = "0";
+    oUrl.get_query()["objecttypes"] = 8;
+
+    var lookupItems = new parent.window.Mscrm.CrmDialog(oUrl, '', '850', '700');
+    lookupItems.setCallbackReference(function (retVal) {
+        if ((retVal !== null) && (retVal !== undefined)) {
+            var returnedItems = retVal;
+            //process the selections
+            if (typeof (retVal) == "string") {
+                returnedItems = JSON.parse(retVal);
+            };
+            for (i = 0; i < returnedItems.items.length; i++) {              
+                //Retrieve CRM record                   
+                var providerId = returnedItems.items[i].id;
+                lookupUserRecord(providerId, 'icon');
+            }
+        }
+    });
+    lookupItems.show();
+}
+
+function lookupUserRecord(id, source) {
+    if (typeof (CrmRestKit) == "undefined") { CrmRestKit = parent.CrmRestKit; }
+    if (typeof (CrmRestKit) == "undefined") { CrmRestKit = window.parent.CrmRestKit; }
+
+    CrmRestKit.Retrieve('SystemUser', id, ['FirstName', 'LastName', 'InternalEMailAddress'], false)
+                    .fail(function () {
+                        //Failed to get User
+                    })
+                    .done(function (userRecord) {
+                        //Success getting Template
+                        if (userRecord && userRecord.d) {
+                            var userEmail = userRecord.d.InternalEMailAddress;
+                            if (userEmail != null) {
+                                $("#ProviderEmailAddressTextBox").val(userRecord.d.InternalEMailAddress);
+                                globalProvId = id;
+                                $("#PatientEmailAddressTextBox").focus();
+                            }
+                            else {
+                                $("#ProviderEmailAddressTextBox").val("");
+                                //Clear Global ProviderId variable
+                                globalProvId = null;
+
+                                if (source == 'onload') {
+                                    alert("Current user  (" + userRecord.d.FirstName + " " + userRecord.d.LastName + ") has no email address, please choose a different user for the provider.");
+                                }
+                                else {
+                                    alert("User selected (" + userRecord.d.FirstName + " " + userRecord.d.LastName + ") has no email address, please choose a different user for the provider.");
+                                    openProviderLookup(this);
+                                }
+                            }
+                        }
+                    });
+}

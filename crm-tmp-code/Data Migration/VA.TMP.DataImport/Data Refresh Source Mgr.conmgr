@@ -1,0 +1,13 @@
+﻿<?xml version="1.0"?>
+<DTS:ConnectionManager xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:ObjectName="Data Refresh Source Mgr"
+  DTS:DTSID="{DC6819D5-E146-4DAD-A51B-D624D5DC6685}"
+  DTS:CreationName="DynamicsCRM">
+  <DTS:ObjectData>
+    <CrmConnectionManager
+      ConnectionString="AuthenticationType=ActiveDirectory;ServiceEndpoint=Soap2011;DiscoveryServerUrl=http://pssc-crm2015.cloudapp.net/CVT-DEV2015;UserName=mnagao;Domain=pssc;OrganizationName=CVT-DEV2015;CrmServerUrl=http://pssc-crm2015.cloudapp.net/CVT-DEV2015;ProxyUsername=;ProxyMode=NoProxy;ProxyServer=;ProxyServerPort=0;BypassProxyOnLocal=False;HomeRealmUri=;ApiVersion=;ServiceTimeout=240;RetryOnIntermittentErrors=True;IgnoreCertificateErrors=False">
+      <Password
+        Sensitive="1" xmlns="www.microsoft.com/SqlServer/Dts">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA4gr5bH3ROkSGQH0sfnTxeAAAAAACAAAAAAADZgAAwAAAABAAAAAvFmYVc4/pQpATuadOOWsPAAAAAASAAACgAAAAEAAAALt2TiUuYIYgMlNolXM+xJBgAAAARcg53o8fZZ8Pa1RyUpjWotb/m9DnQ/WrRUWGuCiYgWO/qm7SXQ5aUhrAdYvlDRbI742MGyQSHqDlLrcjMW1Y3ezHwwzINYVl6woXd3SWE0cc8ngw8XwPpBQUCemtQFigFAAAAPhjut7Q3XTO5gkP1/oZ9r9ykHH3</Password>
+    </CrmConnectionManager>
+  </DTS:ObjectData>
+</DTS:ConnectionManager>

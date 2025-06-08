@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{159641D6-6404-4A2A-AE62-294DE0FE8301}") = "D365DataImport", "D365DataImport\D365DataImport.dtproj", "{068DFD3E-2DC3-4FA2-9B87-B6F526FDAAC9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Development|Default = Development|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{068DFD3E-2DC3-4FA2-9B87-B6F526FDAAC9}.Development|Default.ActiveCfg = Development
+		{068DFD3E-2DC3-4FA2-9B87-B6F526FDAAC9}.Development|Default.Build.0 = Development
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C96209CC-8425-4CCB-94D5-FC9DA12A326A}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://vhacdwtfs01.vha.med.va.gov:8080/tfs/projecttrackercollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = D365DataImport\\D365DataImport.dtproj
+		SccProjectName1 = D365DataImport
+		SccLocalPath1 = D365DataImport
+	EndGlobalSection
+EndGlobal

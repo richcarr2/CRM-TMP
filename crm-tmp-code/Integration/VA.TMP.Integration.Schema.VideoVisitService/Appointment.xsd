@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:p="https://staff.mobilehealth.va.gov/vamf/video-visits/1.0"
+  version="1.0"
+  targetNamespace="https://staff.mobilehealth.va.gov/vamf/video-visits/1.0">
+  <xs:complexType name="provider">
+    <xs:sequence>
+      <xs:element name="name" type="p:personName"/>
+      <xs:element name="id" type="p:personIdentifier"  minOccurs="0"/>
+      <xs:element name="vistaDateTime" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="contactInformation" type="p:contactInformation"/>
+      <xs:element name="virtualMeetingRoom" type="p:virtualMeetingRoom" minOccurs="0"/>
+      <xs:element name="location" type="p:location"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="personName">
+    <xs:sequence>
+      <xs:element name="firstName" type="xs:string"/>
+      <xs:element name="lastName" type="xs:string"/>
+      <xs:element name="middleInitial" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="personIdentifier">
+    <xs:sequence>
+      <xs:element name="assigningAuthority" type="xs:string"/>
+      <xs:element name="uniqueId" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="contactInformation">
+    <xs:sequence>
+      <xs:element name="mobile" type="xs:string" minOccurs="0"/>
+      <xs:element name="preferredEmail" type="xs:string" minOccurs="0"/>
+      <xs:element name="alternativeEmail" type="xs:string" minOccurs="0"/>
+      <xs:element name="timeZone" type="xs:int" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="virtualMeetingRoom">
+    <xs:sequence>
+      <xs:element name="conference" type="xs:string" minOccurs="0"/>
+      <xs:element name="pin" type="xs:string" minOccurs="0"/>
+      <xs:element name="url" type="xs:anyURI" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="location">
+    <xs:sequence>
+      <xs:element name="type" type="p:locationType"/>
+      <xs:element name="facility" type="p:facility" minOccurs="0"/>
+      <xs:element name="clinic" type="p:clinic" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="facility">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="siteCode" type="xs:string"/>
+      <xs:element name="timeZone" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="clinic">
+    <xs:sequence>
+      <xs:element name="ien" type="xs:string"/>
+      <xs:element name="name" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="appointment">
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="sourceSystem" type="xs:string"/>
+      <xs:element name="patients" type="p:patients"/>
+      <xs:element name="duration" type="xs:int"/>
+      <xs:element name="dateTime" type="xs:dateTime"/>
+      <xs:element name="status" type="p:status" minOccurs="0"/>
+      <xs:element name="schedulingRequestType" type="p:schedulingRequestType" minOccurs="0"/>
+      <xs:element name="appointmentKind" type="p:appointmentKind"/>
+      <xs:element name="type" type="p:appointmentType" minOccurs="0"/>
+      <xs:element name="bookingNotes" type="xs:string" minOccurs="0"/>
+      <xs:element name="desiredDate" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="providers" type="p:providers"/>
+    </xs:sequence>
+    <xs:attribute name="version" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="patient">
+    <xs:sequence>
+      <xs:element name="id" type="p:personIdentifier"/>
+      <xs:element name="vistaDateTime" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="name" type="p:personName"/>
+      <xs:element name="contactInformation" type="p:contactInformation"/>
+      <xs:element name="location" type="p:location"/>
+      <xs:element name="virtualMeetingRoom" type="p:virtualMeetingRoom" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="patients">
+    <xs:sequence minOccurs="0" maxOccurs="50">
+      <xs:element name="patient" type="p:patient"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="status">
+    <xs:sequence>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="code" type="p:statusCode" minOccurs="0"/>
+      <xs:element name="reason" type="p:reasonCode" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="providers">
+    <xs:sequence minOccurs="0" maxOccurs="50">
+      <xs:element name="provider" type="p:provider"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="personBookingStatus">
+    <xs:sequence>
+      <xs:element name="id" type="p:personIdentifier"/>
+      <xs:element name="status" type="p:status"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="personBookingStatuses">
+    <xs:sequence minOccurs="0" maxOccurs="50">
+      <xs:element name="personBookingStatus" type="p:personBookingStatus"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="cancelAppointmentRequest">
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="sourceSystem" type="xs:string"/>
+      <xs:element name="patientBookingStatuses" type="p:personBookingStatuses"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="appointmentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="COMPENSATION_AND_PENSION"/>
+      <xs:enumeration value="CLASS_II_DENTAL"/>
+      <xs:enumeration value="ORGAN_DONORS"/>
+      <xs:enumeration value="EMPLOYEE"/>
+      <xs:enumeration value="PRIMA_FACIA"/>
+      <xs:enumeration value="RESEARCH"/>
+      <xs:enumeration value="COLLATERAL_OF_VET"/>
+      <xs:enumeration value="SHARING_AGREEMENT"/>
+      <xs:enumeration value="REGULAR"/>
+      <xs:enumeration value="COMPUTER_GENERATED"/>
+      <xs:enumeration value="SERVICE_CONNECTED"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="locationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="VA"/>
+      <xs:enumeration value="NonVA"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="statusCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CHECKED_IN"/>
+      <xs:enumeration value="CHECKED_OUT"/>
+      <xs:enumeration value="NO_ACTION_TAKEN"/>
+      <xs:enumeration value="NO_SHOW"/>
+      <xs:enumeration value="CANCELLED_BY_CLINIC"/>
+      <xs:enumeration value="NO_SHOW_AND_AUTO_RE_BOOK"/>
+      <xs:enumeration value="CANCELLED_BY_CLINIC_AND_AUTO_RE_BOOK"/>
+      <xs:enumeration value="INPATIENT_APPOINTMENT"/>
+      <xs:enumeration value="CANCELLED_BY_PATIENT"/>
+      <xs:enumeration value="CANCELLED_BY_PATIENT_AND_AUTO_REBOOK"/>
+      <xs:enumeration value="FUTURE"/>
+      <xs:enumeration value="NON_COUNT"/>
+      <xs:enumeration value="DELETED"/>
+      <xs:enumeration value="ACTION_REQUIRED"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="reasonCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="APPOINTMENT_NO_LONGER_REQUIRED"/>
+      <xs:enumeration value="CLINIC_CANCELLED"/>
+      <xs:enumeration value="CLINIC_STAFFING"/>
+      <xs:enumeration value="DEATH_IN_FAMILY"/>
+      <xs:enumeration value="INPATIENT_STATUS"/>
+      <xs:enumeration value="OTHER"/>
+      <xs:enumeration value="PATIENT_DEATH"/>
+      <xs:enumeration value="PATIENT_NOT_ELIGIBLE"/>
+      <xs:enumeration value="SCHEDULING_CONFLICT_OR_ERROR"/>
+      <xs:enumeration value="TRANSFER_OPT_CARE_TO_OTHER_VA"/>
+      <xs:enumeration value="TRAVEL_DIFFICULTY"/>
+      <xs:enumeration value="UNABLE_TO_KEEP_APPOINTMENT"/>
+      <xs:enumeration value="WEATHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="vistaStatus">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="BOOKED"/>
+      <xs:enumeration value="FAILED_TO_BOOK"/>
+      <xs:enumeration value="RECEIVED"/>
+      <xs:enumeration value="FAILED_TO_RECEIVE"/>
+      <xs:enumeration value="CANCELLED"/>
+      <xs:enumeration value="FAILED_TO_CANCEL"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="schedulingRequestType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NEXT_AVAILABLE_APPT"/>
+      <xs:enumeration value="OTHER_THAN_NEXT_AVAILABLE_CLINICIAN_REQUESTED"/>
+      <xs:enumeration value="OTHER_THAN_NEXT_AVAILABLE_PATIENT_REQUESTED"/>
+      <xs:enumeration value="WALKIN_APPTOINTMENT"/>
+      <xs:enumeration value="MULTIPLE_APPTOINTMENT_BOOKING"/>
+      <xs:enumeration value="AUTO_REBOOK"/>
+      <xs:enumeration value="OTHER_THAN_NEXT_AVAILABLE_APPOINTMENT"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="appointmentKind">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CLINIC_BASED"/>
+      <xs:enumeration value="STORE_FORWARD"/>
+      <xs:enumeration value="MOBILE_ANY"/>
+      <xs:enumeration value="MOBILE_GFE"/>
+      <xs:enumeration value="ADHOC"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="validationError">
+    <xs:sequence/>
+    <xs:attribute name="fieldName" type="xs:string"/>
+    <xs:attribute name="errorMessage" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="validationErrors">
+    <xs:sequence>
+      <xs:element name="errors" type="p:validationError" minOccurs="0" maxOccurs="50"/>
+      <xs:element name="objectType" type="xs:string" minOccurs="0"/>
+      <xs:element name="requestObject" type="xs:anyType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="appointment" type="p:appointment"/>
+  <xs:element name="cancelAppointmentRequest" type="p:cancelAppointmentRequest"/>
+  <xs:element name="validationErrors" type="p:validationErrors"/>
+  <xs:element name="appointmentResponse" type="p:appointmentResponse"/>
+  <xs:element name="writeResults" type="p:writeResults"/>
+  <xs:element name="status" type="p:status"/>
+  <xs:complexType name="writeResult">
+    <xs:sequence>
+      <xs:element name="personId" type="xs:string"/>
+      <xs:element name="name" type="p:personName"/>
+      <xs:element name="facilityCode" type="xs:string"/>
+      <xs:element name="facilityName" type="xs:string"/>
+      <xs:element name="clinicIEN" type="xs:string"/>
+      <xs:element name="clinicName" type="xs:string"/>
+      <xs:element name="dateTime" type="xs:dateTime"/>
+      <xs:element name="vistaStatus" type="p:vistaStatus"/>
+      <xs:element name="reason" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="writeResults">
+    <xs:sequence minOccurs="0" maxOccurs="50">
+      <xs:element name="writeResult" type="p:writeResult"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="appointmentResponse">
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="writeResults" type="p:writeResults"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

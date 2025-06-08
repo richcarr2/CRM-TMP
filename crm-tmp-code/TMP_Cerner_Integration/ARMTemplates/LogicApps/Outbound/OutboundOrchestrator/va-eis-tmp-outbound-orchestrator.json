@@ -1,0 +1,567 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "type": "String"
+        },
+        "ISE_Name": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+            }
+        },
+        "IntegrationAccount_Name": {
+            "type": "string"
+        },
+        "ServiceBus_Connection_Name": {
+            "type": "string"
+        },
+        "KeyVault_Connection_Name": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+            }
+        }
+    },
+    "variables": {
+        "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+        "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+        "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+        "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]",
+        "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicApp_Name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "CKID": "195",
+                "Environment": "PREPROD",
+                "ProjectName": "Veterans Experience Integration Solution",
+                "VAAzureProgram": "EIS",
+                "VAECID": "AZG20181226001"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+          "properties": {
+            "state": "Enabled",
+            "integrationAccount": {
+              "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+            },
+            "integrationServiceEnvironment": {
+              "name": "[parameters('ISE_Name')]",
+              "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+              "type": "Microsoft.Logic/integrationServiceEnvironments"
+            },
+            "definition": {
+              "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+              "actions": {
+                "Compose": {
+                  "inputs": "@workflow()",
+                  "runAfter": {},
+                  "type": "Compose"
+                },
+                "Compose_failed_logging_message": {
+                  "inputs": {
+                    "Custom Attributes": {
+                      "AppointmentId": "@{triggerBody()?['AppointmentId']}",
+                      "DateTimeMessageSent": "@{triggerBody()?['DateTimeMessageSent']}",
+                      "ServiceAppointmentId": "@{triggerBody()?['ServiceAppointmentId']}",
+                      "action": "@{triggerBody()?['action']}"
+                    },
+                    "Errors": [
+                      "@body('Filter_array:_Filter_Errors')"
+                    ],
+                    "Message": "@{outputs('Compose_human_readable_failure_message')}",
+                    "Workflow Name": "@{workflow().name}",
+                    "Workflow Run ID": "@{workflow()['run']['name']}",
+                    "WorkflowStatus": "Failed"
+                  },
+                  "runAfter": {
+                    "Compose_human_readable_failure_message": [
+                      "Succeeded"
+                    ]
+                  },
+                  "trackedProperties": {
+                    "ErrorMessage": "@action()['outputs']"
+                  },
+                  "type": "Compose"
+                },
+                "Compose_human_readable_failure_message": {
+                  "inputs": "The Service Appointment or Reserve Resource creation, cancellation, or update did *NOT* successfully pass from TMP to the Orchestrator to the Outbound Worker. This indicates the integration is *NOT* functioning properly. Please reference the Errors property and contact technical support.",
+                  "runAfter": {
+                    "Filter_array:_Filter_Errors": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose_human_readable_success_message": {
+                  "inputs": "The Service Appointment or Reserve Resource creation, cancellation, or update was successfully received from TMP and passed to the Outbound Worker. This indicates the integration is functioning properly. No further action is required.",
+                  "runAfter": {
+                    "Try": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose"
+                },
+                "Compose_success_logging_message": {
+                  "inputs": {
+                    "Custom Attributes": {
+                      "AppointmentId": "@{triggerBody()?['AppointmentId']}",
+                      "DateTimeMessageSent": "@{triggerBody()?['DateTimeMessageSent']}",
+                      "ServiceAppointmentId": "@{triggerBody()?['ServiceAppointmentId']}",
+                      "action": "@{triggerBody()?['action']}"
+                    },
+                    "Errors": [],
+                    "Message": "@{outputs('Compose_human_readable_success_message')}",
+                    "Workflow Name": "@{workflow().name}",
+                    "Workflow Run ID": "@{workflow()['run']['name']}",
+                    "WorkflowStatus": "Success"
+                  },
+                  "runAfter": {
+                    "Compose_human_readable_success_message": [
+                      "Succeeded"
+                    ]
+                  },
+                  "trackedProperties": {
+                    "ErrorMessage": "@action()['outputs']"
+                  },
+                  "type": "Compose"
+                },
+                "Filter_array:_Filter_Errors": {
+                  "inputs": {
+                    "from": "@result('Try')",
+                    "where": "@equals(item()?['status'], 'Failed')"
+                  },
+                  "runAfter": {
+                    "Try": [
+                      "Failed",
+                      "Skipped",
+                      "TimedOut"
+                    ]
+                  },
+                  "type": "Query"
+                },
+                "HTTP:_Create_Failed_Integration_Result": {
+                  "description": "mcs_name field length = 100",
+                  "inputs": {
+                    "body": {
+                      "cvt_isclinicintegration": false,
+                      "mcs_error": "@{outputs('Compose_human_readable_failure_message')}",
+                      "mcs_integrationrequest": "@{body('Send_message_to_Service_bus')}",
+                      "mcs_name": "Outbound Orchestrator: Appt message received from TMP but failed to pass to Worker [Failure]",
+                      "mcs_payload": "@{triggerBody()}",
+                      "mcs_retry": false,
+                      "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{triggerBody()?['ServiceAppointmentId']})",
+                      "mcs_status": 803750003,
+                      "mcs_vimtrequest": "outbound-orchestrator"
+                    },
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "POST",
+                    "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/mcs_integrationresults"
+                  },
+                  "runAfter": {
+                    "Compose_failed_logging_message": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Create_Successful_Integration_Result": {
+                  "description": "mcs_name field length = 100",
+                  "inputs": {
+                    "body": {
+                      "cvt_isclinicintegration": false,
+                      "mcs_error": "@{outputs('Compose_human_readable_success_message')}",
+                      "mcs_integrationrequest": "@{body('Send_message_to_Service_bus')}",
+                      "mcs_name": "Outbound Orchestrator: Appt message received from TMP and passed to Worker [Success]",
+                      "mcs_payload": "@{triggerBody()}",
+                      "mcs_retry": false,
+                      "mcs_serviceappointmentid@odata.bind": "/serviceappointments(@{triggerBody()?['ServiceAppointmentId']})",
+                      "mcs_status": 803750002,
+                      "mcs_vimtrequest": "outbound-orchestrator",
+                      "mcs_vimtresponse": "@{outputs('Compose_success_logging_message')}"
+                    },
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "POST",
+                    "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/mcs_integrationresults"
+                  },
+                  "runAfter": {
+                    "Compose_success_logging_message": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Initialize_CernerOptionSetValue_variable": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "CernerOptionSetValue",
+                        "type": "integer",
+                        "value": 917290000
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_variable": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_IsCerner_variable": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "IsCerner",
+                        "type": "boolean",
+                        "value": false
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Initialize_CernerOptionSetValue_variable": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Initialize_variable": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "HTTPHeaders",
+                        "type": "string",
+                        "value": "@{triggerOutputs()['headers']}"
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "Compose": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "InitializeVariable"
+                },
+                "Response_to_client_-_Fail": {
+                  "inputs": {
+                    "body": "@outputs('Compose_failed_logging_message')",
+                    "statusCode": 500
+                  },
+                  "kind": "Http",
+                  "runAfter": {
+                    "HTTP:_Create_Failed_Integration_Result": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Response"
+                },
+                "Response_to_client_-_Success": {
+                  "inputs": {
+                    "body": "@outputs('Compose_success_logging_message')",
+                    "statusCode": 200
+                  },
+                  "kind": "Http",
+                  "runAfter": {
+                    "HTTP:_Create_Successful_Integration_Result": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Response"
+                },
+                "Terminate": {
+                  "inputs": {
+                    "runError": {
+                      "code": "@{outputs('Compose_failed_logging_message')}",
+                      "message": "@{outputs('Compose_failed_logging_message')}"
+                    },
+                    "runStatus": "Failed"
+                  },
+                  "runAfter": {
+                    "Response_to_client_-_Fail": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Terminate"
+                },
+                "Try": {
+                  "actions": {
+                    "Compose_content_JSON": {
+                      "inputs": {
+                        "Patients": "@triggerBody()['Patients']",
+                        "ServiceAppointment": [
+                          "@body('Service_Appointment_(HTTP)')?.value[0]"
+                        ]
+                      },
+                      "runAfter": {
+                        "Service_Appointment_(HTTP)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose_properties_JSON": {
+                      "inputs": {
+                        "Action": "@{triggerBody()?['action']}",
+                        "AppointmentId": "@{triggerBody()?['AppointmentId']}",
+                        "DateTimeMessageSentFromSource": "@{triggerBody()?['DateTimeMessageSent']}",
+                        "MessageSource": "@{triggerBody()?['MessageSource']}",
+                        "PluginCorrelationId": "@{triggerBody()?['PluginCorrelationId']}",
+                        "ServiceAppointmentId": "@{triggerBody()?['ServiceAppointmentId']}"
+                      },
+                      "runAfter": {
+                        "Compose_content_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Get_secret:_CDS_Client_Id": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-id')}/value"
+                      },
+                      "runAfter": {},
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_CDS_Client_Secret": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-secret')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Client_Id": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_CDS_Client_URL": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-client-url')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Client_Secret": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret:_CDS_Tenant_ID": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('cds-tenant-id')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Client_URL": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "HTTP:_Fetch_OAuth_Token": {
+                      "inputs": {
+                        "body": "client_id=@{body('Get_secret:_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_CDS_Client_Secret')?['value']}&scope=@{body('Get_secret:_CDS_Client_URL')?['value']}/.default",
+                        "headers": {
+                          "content-type": "application/x-www-form-urlencoded"
+                        },
+                        "method": "POST",
+                        "uri": "https://login.microsoftonline.com/@{body('Get_secret:_CDS_Tenant_ID')?['value']}/oauth2/v2.0/token"
+                      },
+                      "runAfter": {
+                        "Get_secret:_CDS_Tenant_ID": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Parse_message_into_JSON_object": {
+                      "inputs": {
+                        "content": "@triggerBody()",
+                        "schema": {
+                          "properties": {
+                            "AppointmentId": {
+                              "type": "string"
+                            },
+                            "DateTimeMessageSent": {
+                              "type": "string"
+                            },
+                            "ServiceAppointmentId": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "runAfter": {
+                        "HTTP:_Fetch_OAuth_Token": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ParseJson"
+                    },
+                    "Send_message_to_Service_bus": {
+                      "inputs": {
+                        "body": {
+                          "ContentData": "@{base64(outputs('Compose_content_JSON'))}",
+                          "ContentType": "text/plain",
+                          "CorrelationId": "@{workflow().run.name}",
+                          "Label": "tmp-outbound-dv",
+                          "Properties": "@outputs('Compose_properties_JSON')",
+                          "SessionId": "@{workflow().run.name}"
+                        },
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['servicebus']['connectionId']"
+                          }
+                        },
+                        "method": "post",
+                        "path": "/@{encodeURIComponent(encodeURIComponent('cdstriggertooutboundtopic'))}/messages",
+                        "queries": {
+                          "systemProperties": "None"
+                        }
+                      },
+                      "runAfter": {
+                        "Compose_properties_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "Service_Appointment_(FetchXML)": {
+                      "inputs": "<fetch no-lock='true'>\n  <entity name='serviceappointment'>\n    <all-attributes />\n    <filter>\n      <condition attribute='activityid' operator='eq' value='@{body('Parse_message_into_JSON_object')?['ServiceAppointmentId']}' />\n    </filter>\n  </entity>\n</fetch>",
+                      "runAfter": {
+                        "Parse_message_into_JSON_object": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Service_Appointment_(HTTP)": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{body('Get_secret:_CDS_Client_URL')?['value']}/api/data/v9.2/serviceappointments?fetchXml=@{outputs('Service_Appointment_(FetchXML)')}"
+                      },
+                      "runAfter": {
+                        "Service_Appointment_(FetchXML)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    }
+                  },
+                  "runAfter": {
+                    "Initialize_IsCerner_variable": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Scope"
+                }
+              },
+              "contentVersion": "1.0.0.0",
+              "outputs": {},
+              "parameters": {
+                "$connections": {
+                  "defaultValue": {},
+                  "type": "Object"
+                }
+              },
+              "triggers": {
+                "manual": {
+                  "inputs": {
+                    "method": "POST",
+                    "relativePath": "OutboundTriggerUpdate",
+                    "schema": {
+                      "properties": {
+                        "AppointmentId": {
+                          "type": "string"
+                        },
+                        "DateTimeMessageSent": {
+                          "type": "string"
+                        },
+                        "MessageSource": {
+                          "type": "string"
+                        },
+                        "Patients": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "PluginCorrelationId": {
+                          "type": "string"
+                        },
+                        "ServiceAppointmentId": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "kind": "Http",
+                  "type": "Request"
+                }
+              }
+            },
+            "parameters": {
+              "$connections": {
+                "value": {
+                  "keyvault": {
+                    "connectionId": "[variables('connections_keyvault_externalid')]",
+                    "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                    "connectionProperties": {
+                      "authentication": {
+                        "type": "ManagedServiceIdentity"
+                      }
+                    },
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+                  },
+                  "servicebus": {
+                    "connectionId": "[variables('connections_servicebus_externalid')]",
+                    "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                    "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+    ]
+}

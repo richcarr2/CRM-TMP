@@ -1,0 +1,6 @@
+{% capture identifiers -%}
+{% if SCH.1 and type == 'Composite' and compositeValue-%}{{SCH.1}},{{compositeValue}}
+{% elsif SCH.1 -%}{{SCH.1.Value}}
+{% endif -%}
+{% endcapture -%}
+{{ identifiers | generate_id_input: 'Schedule', false | generate_uuid }}

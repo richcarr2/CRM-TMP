@@ -1,0 +1,207 @@
+{
+    "fullUrl":"urn:uuid:{{ ID }}",
+    "resource":{
+        "extension": [
+            {
+                "url" : "{{ PID.10.Value | get_property: 'CodeSystem/VEIS_RaceCategory', 'system' }}",
+                "valueCoding" : {
+                    "system":"{{ PID.10.Value | get_property: 'CodeSystem/VEIS_RaceCategory', 'system' }}",
+                    "code":"{{ PID.10.Value | get_property: 'CodeSystem/VEIS_RaceCategory', 'code' }}",
+                    "display":"{{ PID.10.Value | get_property: 'CodeSystem/VEIS_RaceCategory', 'display' }}",
+                }
+            },
+        ],
+        "resourceType": "Patient",
+        "id":"{{ ID }}",
+        "identifier":
+        [
+            {
+                {% include 'DataType/CX' CX: PID.2 -%}
+            },
+            {% for p in PID.3.Repeats -%}
+            {
+                {% include 'DataType/VEIS_CX' CX: p -%}
+            },
+            {% endfor -%}
+            {
+                {% include 'DataType/CX' CX: PID.4 -%}
+            },
+            {
+                "value":"{{ PID.19.Value }}",
+                "type":
+                {
+                    "coding":
+                    [
+                        {
+                            {% if PID.19 -%}
+                            "code":"SS",
+                            {% endif -%}
+                            {% if PID.19 -%}
+                            "system":"http://terminology.hl7.org/CodeSystem/v2-0203",
+                            {% endif -%}
+                        },
+                    ],
+                },
+                {% if PID.19 -%}
+                "system":"http://hl7.org/fhir/sid/us-ssn",
+                {% endif -%}
+            },
+            {
+                {% include 'DataType/DLN' DLN: PID.20 -%}
+            },
+        ],
+        "name":
+        [
+            {% for p in PID.5.Repeats -%}
+            {
+                {% include 'DataType/XPN' XPN: p -%}
+            },
+            {% endfor -%}
+            {
+                {% include 'DataType/XPN' XPN: PID.9 -%}
+            },
+        ],
+        "birthDate":"{{ PID.7.Value | add_hyphens_date }}",
+        "gender":"{{ PID.8.Value | get_property: 'CodeSystem/Gender', 'code' }}",
+        "address":
+        [
+            {% for p in PID.11.Repeats -%}
+            {
+                {% include 'DataType/XAD' XAD: p -%}
+            },
+            {% endfor -%}
+            {
+                "district":"{{ PID.12.Value }}",
+            },
+        ],
+        "telecom":
+        [
+            {% for p in PID.13.Repeats -%}
+            {
+                {% include 'DataType/XTN' XTN: p -%}
+                {% if PID.13 -%}
+                "use":"home",
+                {% endif -%}
+            },
+            {
+                {% if p.4 -%}
+                "value": "{{ p.4.value }}",
+                "system":"email",
+                "use":"home",
+                {% endif -%}
+            },
+            {% endfor -%}
+            {% for p in PID.14.Repeats -%}
+            {
+                {% include 'DataType/XTN' XTN: p -%}
+                {% if PID.14 -%}
+                "use":"work",
+                {% endif -%}
+            },
+            {% endfor -%}
+            {% for p in PID.40.Repeats -%}
+            {
+                {% include 'DataType/XTN' XTN: p -%}
+            },
+            {% endfor -%}
+        ],
+        "communication":
+        [
+            {
+                "language":
+                {
+                    {% include 'DataType/CWECodeableConcept' mapping: 'CodeSystem/Language', CWE: PID.15 -%}
+                },
+                {% if PID.15 -%}
+                "preferred":true,
+                {% endif -%}
+            },
+        ],
+        "maritalStatus":
+        {
+            {% include 'DataType/CWECodeableConcept' mapping: 'CodeSystem/MaritalStatus', CWE: PID.16 -%}
+        },
+        {% if PID.25 == null -%}
+        "multipleBirthBoolean":"{{ PID.24.Value | get_property: 'CodeSystem/Yes_No', 'code' }}",
+        {% endif -%}
+        "multipleBirthInteger":"{{ PID.25.Value }}",
+        "deceasedDateTime":"{{ PID.29.Value | format_as_date_time }}",
+        {% if PID.29 == null -%}
+        "deceasedBoolean":"{{ PID.30.Value | get_property: 'CodeSystem/Yes_No', 'code' }}",
+        {% endif -%}
+        "meta":
+        {
+            "lastUpdated":"{{ PID.33.Value | format_as_date_time }}",
+        },
+        "active":"{{ PD1.16.Value | get_property: 'CodeSystem/RegistryStatus', 'code' }}",
+        "generalPractitioner":
+        [
+            {
+                {% if PD1.4 and PractitionerRole_ID_PD1_4 -%}
+                "reference":"PractitionerRole/{{ PractitionerRole_ID_PD1_4 }}",
+                {% endif -%}
+                {% if ROL.4 and PractitionerRole_ID_ROL_4 -%}
+                "reference":"PractitionerRole/{{ PractitionerRole_ID_ROL_4 }}",
+                {% endif -%}
+            },
+        ],
+        "contact":
+        [
+            {
+                "name":
+                {
+                    {% include 'DataType/XPN' XPN: NK1.2.Repeats[0] -%}
+                },
+                "address":
+                {
+                    {% include 'DataType/XAD' XAD: NK1.4.Repeats[0] -%}
+                },
+                "telecom":
+                [
+                    {% for n in NK1.5.Repeats -%}
+                    {
+                        {% include 'DataType/XTN' XTN: n -%}
+                    },
+                    {% endfor -%}
+                    {
+                        {% include 'DataType/XTN' XTN: NK1.6 -%}
+                    },
+                    {
+                        {% include 'DataType/XTN' XTN: NK1.40 -%}
+                    },
+                    {
+                        {% include 'DataType/XTN' XTN: NK1.41 -%}
+                    },
+                ],
+                "relationship":
+                [
+                    { {% include 'DataType/CWECodeableConcept' mapping: 'CodeSystem/ContactRole', CWE: NK1.7 -%} },
+                ],
+                "period":
+                {
+                    "start":"{{ NK1.8.Value | format_as_date_time }}",
+                    "end":"{{ NK1.9.Value | format_as_date_time }}",
+                },
+                "gender":"{{ NK1.15.Value | get_property: 'CodeSystem/Gender', 'code' }}",
+                "organization":
+                [
+                    {
+                        {% if NK1.30 and Organization_contact_name_ID_NK1_30 -%}
+                        "reference":"Organization.contact.name/{{ Organization_contact_name_ID_NK1_30 }}",
+                        {% endif -%}
+                        {% if NK1.31 and Organization_contact_telecom_ID_NK1_31 -%}
+                        "reference":"Organization.contact.telecom/{{ Organization_contact_telecom_ID_NK1_31 }}",
+                        {% endif -%}
+                        {% if NK1.32 and Organization_contact_address_ID_NK1_32 -%}
+                        "reference":"Organization.contact.address/{{ Organization_contact_address_ID_NK1_32 }}",
+                        {% endif -%}
+                    },
+                ],
+            },
+        ],
+    },
+    "request":{
+        "method":"PUT",
+        "url":"Patient/{{ ID }}",
+    },
+},

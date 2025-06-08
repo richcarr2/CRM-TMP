@@ -1,0 +1,56 @@
+﻿{
+    "fullUrl":"urn:uuid:{{ GUID }}",
+    "resource":{
+        "resourceType": "Location",
+        "id":"{{ GUID }}",
+        "identifier": [
+            {
+                "value": "{{ Location_ID.value }}",
+            }    
+        ],
+        "physicalType": {
+            {% assign physicalTypeCode = Location_physicalType | get_property: 'CodeSystem/VEIS_PhysicalType', 'code' -%}
+            {% if physicalTypeCode -%}
+            "coding":
+            [
+                {
+                    "code": "{{ physicalTypeCode }}",
+                    "display": "{{ Location_physicalType | get_property: 'CodeSystem/VEIS_PhysicalType', 'display' }}",
+                    "system": "{{ Location_physicalType | get_property: 'CodeSystem/VEIS_PhysicalType', 'system' }}",
+                },
+            ],
+            {% else -%}
+            "text": "{{ Location_physicalType }}", 
+            {% endif -%}
+        },
+        "partOf": {
+            {% if Location_partOf_reference -%}
+            "reference": "Location/{{ Location_partOf_reference }}",
+            {% endif -%}
+            {% if Location_partOf_display -%}
+            "display": "{{ Location_partOf_display }}",
+            {% endif -%}
+        },
+        {% include 'DataType/PL' PL: ROL.13 -%}
+        {% include 'DataType/PL' PL: PV1.3 -%}
+        {% include 'DataType/PL' PL: PV1.6 -%}
+        {% include 'DataType/PL' PL: PL -%}
+        {% include 'DataType/PL' PL: PR1.23.Repeats[0] -%}
+        {% include 'DataType/PL' PL: PRT.9.Repeats[0] -%}
+        {% include 'DataType/XONLocation' XON: ORC.21.Repeats[0] -%}
+        "address":
+        {
+            {% include 'DataType/XAD' XAD: ORC.22.Repeats[0] -%}
+            {% include 'DataType/XAD' XAD: RXA.28 -%}
+        },
+        "telecom":
+        [
+            { {% include 'DataType/XTN' XTN: ORC.23.Repeats[0] -%} },
+        ],
+        {% include 'DataType/PL' PL: RXA.27 -%}
+    },
+    "request":{
+        "method":"PUT",
+        "url":"Location/{{ GUID }}",
+    },
+},

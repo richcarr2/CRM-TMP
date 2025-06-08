@@ -1,0 +1,236 @@
+<html><head>
+    <meta charset="utf-8">
+    <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+        window.top.zInderHolder = 65000;
+        window.showModal = function (url, args, options) {
+            options = options || {};
+            if (typeof top.Layers === "undefined") {
+                top.Layers = new LayerFrames()
+                top.LayersAdded == 0 /*start of 0 based array*/
+            }
+            if (typeof Promise != 'undefined') {
+                /*modern browser support of Promise object implementation*/
+                return new Promise(function (fullfil, fail) {
+                    var cover = $('<div>')
+                        .css({
+                            position: "absolute",
+                            height: top.document.body.scrollHeight,
+                            width: "100%",
+                            top: "0",
+                            left: "0",
+                            "background-color": "rgba(0,0,0,0.5)",
+                            "z-index": window.top.zInderHolder/*"65000"*/
+                        })
+                        .appendTo(top.document.body);
+                    window.top.zInderHolder++
+                    var closebutton = $('<div>')
+                        .html("<div>Close</div><i class='fa fa-fw fa-window-close' style='font-size:30px;color:red;z-index:" + window.top.zInderHolder + "'></i>");
+                    closebutton.css({ "text-align": "right" });
+                    closebutton.appendTo(cover);
+                    var close = function () {
+                        iframe.remove();
+                        content.remove();
+                        cover.remove();
+                        fullfil(true)
+                        //window.top.window.openDialog = false;
+                    };
+                    closebutton.click(close);
+                    window.top.zInderHolder++
+                    var content = $('<div>')
+                        .addClass('dialog')
+                        .css({
+                            width: /*options.width ||*/ '94%',
+                            height: /*options.height ||*/ '94%',
+                            left: /*options.left ||*/ '3%',
+                            top: /*options.top ||*/ '3%',
+                            bottom: '5%',
+                            right: '5%',
+                            display: 'none',
+                            position: "absolute",
+                            "z-index": window.top.zInderHolder,
+                            "background-color": "white"
+                        })
+                        .appendTo(cover);
+                    window.top.zInderHolder++;
+                    var iframe = $('<iframe>').appendTo(content).attr("src", url)
+                        .on("load", function () {
+                            content.css({ display: 'block' });
+                        })
+                        .css({ width: "100%", height: "100%", border: "0" });
+
+                    window.showModal.dialogArguments = function () {
+                        return args;
+                    }
+                    window.showModal.returnValue = function (v) {
+                        close();
+                        fullfil(v);
+                    };
+                    window.showModal.cancel = function () {
+                        close();
+                        fail();
+                    };
+
+                    //window.top.window.openDialog = true;
+                }
+                );
+            }
+            else /*older browers works in all cases*/ {
+
+                var cover = $('<div>')
+                    .css({
+                        position: "absolute",
+                        height: top.document.body.scrollHeight,
+                        width: "100%",
+                        top: "0",
+                        left: "0",
+                        "background-color": "rgba(0,0,0,0.5)",
+                        "z-index": window.top.zInderHolder/*"65000"*/
+                    })
+                    .appendTo(top.document.body);
+                window.top.zInderHolder++
+                var closebutton = $('<div>')
+                    .html("<i class='fa fa-fw fa-window-close' style='font-size:30px;color:red;z-index:" + window.top.zInderHolder + "'></i>");
+                closebutton.css({ "text-align": "right", "margin-right": "60px" });
+                closebutton.appendTo(cover);
+                var close = function () {
+                    window.location.reload(true);
+
+                };
+                closebutton.click(close);
+                window.top.zInderHolder++
+                var content = $('<div>')
+                    .addClass('dialog')
+                    .css({
+                        width: /*options.width ||*/ '94%',
+                        height: /*options.height ||*/ '94%',
+                        left: /*options.left ||*/ '3%',
+                        top: /*options.top ||*/ '3%',
+                        bottom: '5%',
+                        right: '5%',
+                        display: 'none',
+                        position: "absolute",
+                        "z-index": window.top.zInderHolder,
+                        "background-color": "white"
+                    })
+                    .appendTo(cover);
+                window.top.zInderHolder++;
+                var content = $('<div>')
+                    .addClass('dialog')
+                    .css({
+                        width: /*options.width ||*/ '94%',
+                        height: /*options.height ||*/ '94%',
+                        left: /*options.left ||*/ '3%',
+                        top: /*options.top ||*/ '3%',
+                        bottom: '5%',
+                        right: '5%',
+                        display: 'none',
+                        position: "absolute",
+                        "z-index": window.top.zInderHolder,
+                        "background-color": "white"
+                    })
+                    .appendTo(cover);
+                window.top.zInderHolder++;
+                debugger;
+                var iframe = document.createElement('iframe');
+                //document.body.appendChild(iframe);
+                iframe.onload = function () {
+                    // contentWindow is set!
+                    alert("iframe")
+                    if (iframe.contentWindow.location != url) {
+                        iframe.contentWindow.location = url;
+                    }
+                };
+                //iframe.src = 'javascript:void((function(){var script = document.createElement(\'script\');' +
+                //  'script.innerHTML = "(function() {' +
+                //  'document.open();document.domain=\'' + document.domain +
+                //  '\';document.close();})();";' +
+                //  'document.write("<head>" + script.outerHTML + "</head><body></body>");})())';
+
+                //iframe.contentWindow.document.write('<div>foo</div>');
+                // iframe.contentWindow.location = url;
+                $(iframe).appendTo(content).on("load", function () {
+                    content.css({ display: 'block' });
+                }).css({ width: "100%", height: "100%", border: "0" });
+
+                //var iframe = $('<iframe>').appendTo(content).attr("src", url)
+                //    .on("load", function () {
+                //        content.css({ display: 'block' });
+                //    })
+                //    .css({ width: "100%", height: "100%", border: "0" });
+                window.showModal.dialogArguments = function () {
+                    return args;
+                }
+                window.showModal.returnValue = function (v) {
+                    close();
+
+                };
+                window.showModal.cancel = function () {
+                    close();
+                    fail();
+                };
+                window.top.showModal.cancel = function () {
+                    close();
+                    fail();
+                };
+            }
+
+        }
+        LayerFrames = function () {
+            this.previous = new Object();
+        }
+
+        buttonClick = function () {
+if(window.parent.Xrm.Page.getAttribute("serviceid").getValue() ==  null){
+window.parent.Xrm.Utility.alertDialog("Please select a service");
+return;
+}
+debugger;
+var parameters = {};
+parameters.ServiceId = window.parent.Xrm.Page.getAttribute("serviceid").getValue()[0].id;
+//"87af6027-b572-ea11-a814-001dd801877a";
+parameters.InputSource = "FormAssistant";
+var req = new XMLHttpRequest();
+req.open("POST", window.parent.Xrm.Page.context.getClientUrl() + "/api/data/v9.1/_GetServiceTreeData", false);
+req.setRequestHeader("OData-MaxVersion", "4.0");
+req.setRequestHeader("OData-Version", "4.0");
+req.setRequestHeader("Accept", "application/json");
+req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+req.onreadystatechange = function () {
+    if (this.readyState === 4) {
+        req.onreadystatechange = null;
+        if (this.status === 200) {
+            var results = JSON.parse(this.response);
+
+          window.top.results = results;
+ window.top.results.TreeObject = JSON.parse(window.top.results.TreeObject);
+ window.showModal('/webresources/tmp_servicetree', null, { edge: 'sunken', center: 'yes', height: '450px', width: '450px' })
+        } else {
+            window.parent.Xrm.Utility.alertDialog(this.statusText);
+        }
+    }
+};
+req.send(JSON.stringify(parameters));
+
+        }
+    </script>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+<meta></head>
+<body style="overflow-wrap: break-word;" onfocusout="parent.setEmailRange();">
+    <button onclick="buttonClick()">Set Resource</button>
+
+
+</body></html>

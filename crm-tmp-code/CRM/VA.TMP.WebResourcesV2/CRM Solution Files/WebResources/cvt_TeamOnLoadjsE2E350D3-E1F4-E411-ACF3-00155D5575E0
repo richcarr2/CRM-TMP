@@ -1,0 +1,31 @@
+﻿if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+if (typeof (MCS.Team) == "undefined") {
+    MCS.Team = {};
+}
+
+MCS.Team.OnLoad = {};
+
+MCS.Team.OnLoad.SetAdmin = function () {
+    var userName = "";
+    var currentAdmin = Xrm.Page.getAttribute("administratorid");
+    if (currentAdmin.getValue() != null)
+        return;
+    CrmRestKit.Retrieve('SystemUser', Xrm.Page.context.getUserId(), ['SystemUserId', 'FullName'], false).
+        fail(function (err) { alert(err.responseText); }).
+        done(function (data)
+        {
+            userName = data.d.FullName;
+        });
+    var newAdmin = { id: Xrm.Page.context.getUserId(), entityType: 'SystemUser', name: userName };
+    currentAdmin.setValue([newAdmin]);
+};
+
+MCS.Team.OnLoad.LockFields = function () {
+    if (Xrm.Page.ui.getFormType() != 1) {
+        Xrm.Page.getControl("cvt_type").setDisabled(true);
+        Xrm.Page.getControl("cvt_facility").setDisabled(true);
+        Xrm.Page.getControl("cvt_servicetype").setDisabled(true);
+    }
+};

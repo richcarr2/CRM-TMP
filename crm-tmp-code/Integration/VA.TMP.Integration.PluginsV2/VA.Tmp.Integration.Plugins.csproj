@@ -1,0 +1,87 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyOriginatorKeyFile>..\VA.TMP.Integration.VIMT.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>True</SignAssembly>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\CRM\MCSShared\CvtHelper.cs" Link="Links\CvtHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperData.cs" Link="Links\CvtHelperData.cs" />
+    <Compile Include="..\..\CRM\MCSShared\CvtHelperEmail.cs" Link="Links\CvtHelperEmail.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AILogicBase.cs" Link="Helpers\AILogicBase.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AppInsightsLogData.cs" Link="Helpers\AppInsightsLogData.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\AppInsightsLogger.cs" Link="Helpers\AppInsightsLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\HttpHelper.cs" Link="Helpers\HttpHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\Messages.cs" Link="Helpers\Messages.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\PluginLogger.cs" Link="Helpers\PluginLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\Logger\SerializationHelper.cs" Link="Helpers\SerializationHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSHelper.cs" Link="Links\MCSHelper.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSLogger.cs" Link="Links\MCSLogger.cs" />
+    <Compile Include="..\..\CRM\MCSShared\MCSSettings.cs" Link="Links\MCSSettings.cs" />
+    <Compile Include="..\..\CRM\MCSShared\PluginRunner.cs" Link="Links\PluginRunner.cs" />
+    <Compile Include="..\..\CRM\MCSShared\UtilityFunctions.cs" Link="Links\UtilityFunctions.cs" />
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.DataModel.cs" Link="Links\VA.TMP.DataModel.cs" />
+    <Compile Include="..\..\CRM\MCSShared\VA.TMP.Xrm.OptionSets.cs" Link="Links\VA.TMP.Xrm.OptionSets.cs" />
+    <Compile Include="..\VA.TMP.Integration.Common\HealthShareEnums.cs" Link="Links\HealthShareEnums.cs" />
+    <Compile Include="..\VA.TMP.Integration.Common\IntegrationSetting.cs" Link="Links\IntegrationSetting.cs" />
+    <Compile Include="..\VA.TMP.Integration.Common\RandomDigits.cs" Link="Links\RandomDigits.cs" />
+    <Compile Include="..\VA.TMP.Integration.Common\Serialization.cs" Link="Links\Serialization.cs" />
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseRequestMessage.cs" Link="Messages\TmpBaseRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Core\TmpBaseResponseMessage.cs" Link="Messages\TmpBaseResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Cerner\TmpCernerOutboundResponseMessage.cs" Link="Messages\TmpCernerOutboundResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareGetConsultsRequest.cs" Link="Messages\HealthShare\TmpHealthShareGetConsultsRequest.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareGetConsultsResponse.cs" Link="Messages\HealthShare\TmpHealthShareGetConsultsResponse.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeAndCancelAppointmentRequestMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeAndCancelAppointmentRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeAndCancelAppointmentResponseMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeAndCancelAppointmentResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelInboundRequestMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeCancelInboundRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelInboundResponseMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeCancelInboundResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelOutboundRequestMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeCancelOutboundRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareMakeCancelOutboundResponseMessage.cs" Link="Messages\HealthShare\TmpHealthShareMakeCancelOutboundResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareUpdateClinicRequestMessage.cs" Link="Messages\HealthShare\TmpHealthShareUpdateClinicRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.HealthShare\TmpHealthShareUpdateClinicResponseMessage.cs" Link="Messages\HealthShare\TmpHealthShareUpdateClinicResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\GetPersonIdentifiersRequestMessage.cs" Link="Messages\Mvi\GetPersonIdentifiersRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\GetPersonIdentifiersResponseMessage.cs" Link="Messages\Mvi\GetPersonIdentifiersResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\PersonSearchRequestMessage.cs" Link="Messages\Mvi\PersonSearchRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\PersonSearchResponseMessage.cs" Link="Messages\Mvi\PersonSearchResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\ProxyAddRequestMessage.cs" Link="Messages\Mvi\ProxyAddRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\ProxyAddResponseMessage.cs" Link="Messages\Mvi\ProxyAddResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Mvi\UnattendedSearchRequest.cs" Link="Messages\Mvi\UnattendedSearchRequest.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\Shared.cs" Link="Messages\Vvs\Shared.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitCreateRequestMessage.cs" Link="Messages\Vvs\VideoVisitCreateRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitCreateResponseMessage.cs" Link="Messages\Vvs\VideoVisitCreateResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitDeleteRequestMessage.cs" Link="Messages\Vvs\VideoVisitDeleteRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitDeleteResponseMessage.cs" Link="Messages\Vvs\VideoVisitDeleteResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitGetLoanedDevicesRequestMessage.cs" Link="Messages\Vvs\VideoVisitGetLoanedDevicesRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitGetLoanedDevicesResponseMessage.cs" Link="Messages\Vvs\VideoVisitGetLoanedDevicesResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitUpdateRequestMessage.cs" Link="Messages\Vvs\VideoVisitUpdateRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VideoVisit\VideoVisitUpdateResponseMessage.cs" Link="Messages\Vvs\VideoVisitUpdateResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomCreateRequestMessage.cs" Link="Messages\Vmr\VirtualMeetingRoomCreateRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomCreateResponseMessage.cs" Link="Messages\Vmr\VirtualMeetingRoomCreateResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomDeleteRequestMessage.cs" Link="Messages\Vmr\VirtualMeetingRoomDeleteRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VirtualMeetingRoomDeleteResponseMessage.cs" Link="Messages\Vmr\VirtualMeetingRoomDeleteResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VmrOnDemandCreateRequestMessage.cs" Link="Messages\Vmr\VmrOnDemandCreateRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VmrOnDemandCreateResponseMessage.cs" Link="Messages\Vmr\VmrOnDemandCreateResponseMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginRequestMessage.cs" Link="Messages\Via\ViaLoginRequestMessage.cs" />
+    <Compile Include="..\VA.TMP.Integration.Messages.Vista\ViaLoginResponseMessage.cs" Link="Messages\Via\ViaLoginResponseMessage.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.42" />
+    <PackageReference Include="Microsoft.CrmSdk.Workflow" Version="9.0.2.42" />
+    <PackageReference Include="System.Text.Json" Version="5.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Links\" />
+    <Folder Include="Messages\HealthShare\" />
+    <Folder Include="Messages\Mvi\" />
+    <Folder Include="Messages\Vmr\" />
+    <Folder Include="Messages\Via\" />
+  </ItemGroup>
+</Project>

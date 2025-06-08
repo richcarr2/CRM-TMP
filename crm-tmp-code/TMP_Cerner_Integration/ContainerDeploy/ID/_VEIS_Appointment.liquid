@@ -1,0 +1,5 @@
+{% capture identifiers -%}
+{% if SCH.1 -%}{{SCH.1.Value}}
+{% endif -%}
+{% endcapture -%}
+{{ identifiers | generate_id_input: 'Appointment', false | generate_uuid }}

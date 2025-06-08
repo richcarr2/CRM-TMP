@@ -1,0 +1,11 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_Service_Activity_OnSave = {};
+
+MCS.mcs_Service_Activity_OnSave.SetScheduled = function () {
+    var resources = Xrm.Page.getAttribute("resources").getValue();
+    if (resources != null)
+        Xrm.Page.getAttribute("cvt_scheduled").setValue(1);
+};

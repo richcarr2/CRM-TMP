@@ -1,0 +1,1229 @@
+{% comment %}
+Option set values
+{% endcomment %}
+
+{% assign facilityTypeCode_Vista = 917290001 %}
+{% assign facilityTypeCode_Cerner = 917290000 %}
+
+{% assign resourceTypeCode_VistaClinic = 251920000 %}
+{% assign resourceTypeCode_Room = 251920001 %}
+{% assign resourceTypeCode_Technology = 251920002 %}
+{% assign resourceTypeCode_UnassignedTCTTelepresenter = 251920003 %}
+
+{% comment %}
+	TMP Resource Counters by site
+{% endcomment %}
+
+{% assign patientSiteResourceCount = '' %}
+{% assign providerSiteResourceCount = '' %}
+{% assign groupPatientSiteResourceCount = '' %}
+
+{% comment %}
+	TMP Appointment Modality
+{% endcomment %}
+
+{% assign appointmentModality_OPTIONSETLABEL = 'UNKNOWN - NOT MAPPED' %}
+
+{% for modality in content.AppointmentModalities[0].OptionSet.Options %}
+	{% if content.ServiceAppointment[0].ServiceAppointment[0].tmp_appointmentmodality == modality.Value %}
+		{% assign appointmentModality_OPTIONSETLABEL = modality.Label.LocalizedLabels[0].Label %}
+	{% endif %}
+{% endfor %}
+
+{% for resource in content.TMPResources[0].value %}
+	{% if resource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+		{% if resource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+			{% assign patientSiteResourceCount = patientSiteResourceCount | Append: 'x' %}
+		{% elsif resource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+			{% assign patientSiteResourceCount = patientSiteResourceCount | Append: 'x' %}
+		{% endif %}
+	{% elsif resource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+		{% if resource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+			{% assign providerSiteResourceCount = providerSiteResourceCount | Append: 'x' %}
+		{% elsif resource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+			{% assign providerSiteResourceCount = providerSiteResourceCount | Append: 'x' %}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{% for groupResource in content.GroupAppointmentResources[0].value %}
+	{% if groupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+		{% if groupResource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+			{% assign groupPatientSiteResourceCount = groupPatientSiteResourceCount | Append: 'x' %}
+		{% elsif groupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+			{% assign groupPatientSiteResourceCount = groupPatientSiteResourceCount | Append: 'x' %}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{% assign patientCernerAILCount = '' %}
+
+{
+	"MessageId":"{{content.MessageId}}",
+	"ControlId":"{{content.ControlId}}",
+	"LogicAppRunId":"{{content.LogicAppRunId}}",
+	"AppointmentID":"{{content.ServiceAppointment[0].ServiceAppointment[0].activityid}}-{{content.Patient[0].contactid | Slice: 0, 11}}",
+	"AppointmentType":"{{appointmentModality_OPTIONSETLABEL}}",
+	"StartTime":"{{content.ServiceAppointment[0].ServiceAppointment[0].scheduledstart}}",
+	"Duration":"{{content.ServiceAppointment[0].ServiceAppointment[0].scheduleddurationminutes}}",
+	{% if content.ServiceAppointment[0].ServiceAppointment[0].mcs_groupappointment == true %}
+		{% if content.GroupAppointmentAction contains "Book" %}
+			"VisitStatus":"Confirmed",
+			"CancelCode":"",
+			"CancelReason":"",
+		{% else %}
+			"VisitStatus":"CANCELED",
+			"CancelCode":"PC",
+			"CancelReason":"OTHER",			
+		{% endif %}
+	{% else %}
+		{% if content.ServiceAppointment[0].ServiceAppointment[0].statecode == 2 %}
+			"VisitStatus":"CANCELED",
+		{% else %}
+			"VisitStatus":"Confirmed",
+		{% endif %}
+		{% if content.ServiceAppointment[0].ServiceAppointment[0].statuscode == 917290000 %}
+			"CancelCode":"C",
+		{% elsif content.ServiceAppointment[0].ServiceAppointment[0].statuscode == 9 %}
+			"CancelCode":"PC",
+		{% else %}
+			"CancelCode":"",
+		{% endif %}
+		{% if content.ServiceAppointment[0].ServiceAppointment[0].statecode == 2 %}
+			"CancelReason":"OTHER",
+		{% else %}
+			"CancelReason":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_cancelreason}}",
+		{% endif %}
+	{% endif %}
+	"CancelRemarks":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_cancelremarks}}",
+	"ClinicallyIndicatedDate":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_clinicallyindicateddate}}",
+	{% if content.ServiceAppointment[0].ServiceAppointment[0].cvt_cernercomments == null %}
+		"Comments":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_comments}}",
+	{% else %}
+		"Comments":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_cernercomments}}",
+	{% endif %}
+	"VvdUrl":"{{content.ServiceAppointment[0].ServiceAppointment[0].mcs_providerurl}}",
+	"SchedulerInfo":
+	[{
+		"SchedulerIdentifierType":"EDIPI",
+		"SchedulerName":"{{content.LastModifiedUser[0].DomainName}}",
+		"SchedulerIdentifierValue":"{{content.LastModifiedUser[0].EDIPI}}"
+	}],
+		"PatientInfo":
+			 
+		   {% comment %}
+				Group/patient appointment - get patients from Reserve Resources
+		   {% endcomment %}
+
+			{
+				"Identifiers":
+				[
+					{
+						"IdentifierType": "ICN",
+						"IdentifierValue":"{{content.Patient[0].["pi.mcs_identifier"]}}"
+					}
+				],
+				
+				"Name":"{{content.Patient[0].fullname}}"
+				
+			}
+		,
+
+	{% if content.Facilities[0].value[0].["ProviderFacility"] == null or providerSiteResourceCount.size == 0 %}
+		{% comment %}
+			Patient site only, no provider site. Must be either Cerner only or VistA with resources and Cerner has just the Provider.
+		{% endcomment %}
+		
+		{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] == facilityTypeCode_Vista %}
+			{% if content.Provider[0].value != null %}
+				{% if content.Provider[0].value.size > 0 %}
+					"ProviderFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+				{% else %}
+					"ProviderFacility":"",
+				{% endif %}
+			{% else %}
+				"ProviderFacility":"",
+			{% endif %}
+		{% else %}
+			"ProviderFacility":"",
+		{% endif %}
+		
+		"PatientFacility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+		
+		"PatientResources": 
+		{
+			"Facility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+			"ConsultId":"",
+			"RTCId": "",
+			"ParentRTCId": "",
+			"Resources":
+			[
+				{% comment %}
+					Group appointment - pull resources from Reserve resources
+				{% endcomment %}
+				
+				{% if content.ServiceAppointment[0].ServiceAppointment[0].mcs_groupappointment == true %}
+				
+					{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] != facilityTypeCode_Vista %}
+						{% for groupAppointmentSystemuserResource in content.GroupAppointmentSystemuserResources[0].value %}
+                        {
+							"ResourceType":"AIP",
+							"ResourceKey":"{{groupAppointmentSystemuserResource.["mcs_edipi"]}}",
+							"ResourceName":"{{groupAppointmentSystemuserResource.["fullname"]}}"
+                        },
+						{% endfor %}
+						
+						{% comment %}
+							{% if content.Provider[0].value != null %}
+								{% if content.Provider[0].value.size > 0 %}
+									{
+										"ResourceType":"AIP",
+										"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+										"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+									},
+								{% endif %}
+							{% endif %}
+						{% endcomment %}
+					{% endif %}
+			
+					{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+
+						{% if tmpGroupResource.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+						
+								{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Room"
+								},
+								{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Technology"
+								},
+								{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Unassigned TCT/Telepresenter"
+								},
+								{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+								{
+									"ResourceType":"AIL",
+									"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+								},
+								{% endif %}
+								
+						{% endif %}
+
+					{% endfor %}
+					
+				{% else %}
+						
+					{% comment %}
+						Pull resources from Service appointment (not group appointment) 
+						This is combined with any group resources in the section above.
+					{% endcomment %}
+				
+					{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] != facilityTypeCode_Vista %}
+						{% for systemuserResource in content.SystemuserResources[0].value %}
+                        {
+							"ResourceType":"AIP",
+							"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+							"ResourceName":"{{systemuserResource.["fullname"]}}"
+                        },
+						{% endfor %}
+						
+						{% comment %}
+							{% if content.Provider[0].value != null %}
+								{% if content.Provider[0].value.size > 0 %}
+									{
+										"ResourceType":"AIP",
+										"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+										"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+									},
+								{% endif %}
+							{% endif %}
+						{% endcomment %}
+					{% endif %}
+					
+					{% for tmpResource in content.TMPResources[0].value %}
+
+						
+						{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+						
+								{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Room"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Technology"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Unassigned TCT/Telepresenter"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+								{
+									"ResourceType":"AIL",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"{{tmpResource.["resource.mcs_name"]}}"
+								},
+								{% endif %}
+								
+						{% endif %}
+
+					{% endfor %}
+				{% endif %}
+			],
+		},
+		"ProviderResources":
+		{
+			{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] == facilityTypeCode_Vista %}
+				{% if content.Provider[0].value != null %}
+					{% if content.Provider[0].value.size > 0 %}
+						"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+					{% else %}
+						"Facility": "",
+					{% endif %}
+				{% else %}
+					"Facility": "",
+				{% endif %}
+			{% else %}
+				"Facility": "",
+			{% endif %}
+			{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] == facilityTypeCode_Vista %}
+				"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			{% else %}
+				"Facility": "",
+			{% endif %}
+			"ConsultId": "",
+			"RTCId": "",
+			"ParentRTCId": "",
+			"Resources":
+			[
+				{% if content.Facilities[0].value[0].["PatientFacilityType"] != null and content.Facilities[0].value[0].["PatientFacilityType"] == facilityTypeCode_Vista %}
+					{% for systemuserResource in content.SystemuserResources[0].value %}
+                    {
+						"ResourceType":"AIP",
+						"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+						"ResourceName":"{{systemuserResource.["fullname"]}}"
+                    },
+					{% endfor %}
+					{% comment %}
+						{% if content.Provider[0].value != null %}
+							{% if content.Provider[0].value.size > 0 %}
+								{
+									"ResourceType":"AIP",
+									"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+									"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+								},
+							{% endif %}
+						{% endif %}
+					{% endcomment %}
+				{% endif %}
+			],
+		},
+	{% elsif content.Facilities[0].value[0].["PatientFacility"] == null or patientSiteResourceCount.size == 0 %}
+		{% comment %}
+			Provider site only, no patient site. Must be either a Cerner only or a Group Appointment or we wouldn't be here. Swap everything to the patient side if not Group or if Group patient side is Cerner
+		{% endcomment %}
+		
+		{% if content.ServiceAppointment[0].ServiceAppointment[0].mcs_groupappointment == true and groupPatientSiteResourceCount > 0 %}
+			{% comment %}
+				If Patient side is VistA, build Patient side from Group Appointment and Provider side from Service Appointment
+			{% endcomment %}
+			{% comment %}
+				Begin JW Group Swap 20230207
+			{% endcomment %}
+			
+			{% if content.GroupPatientFacility[0].value[0].["PatientFacilityType"] == facilityTypeCode_Cerner %}
+				{% comment %}
+					Check provider for VistA and swap if so
+				{% endcomment %}
+				{% if content.Facilities[0].value[0].["ProviderFacilityType"] == facilityTypeCode_Vista %}
+					"PatientFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+					"ProviderFacility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+			
+					"PatientResources": 
+					{
+						"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+						"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].["cvt_proconsultien"]}}",
+						"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_prortcid}}",
+						"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentprovider}}",
+						"Resources":
+						[
+						   {% comment %}
+							 Resource Type = AIP section
+							   (hard coded - not from TMPResources section)
+						   {% endcomment %}
+
+						   {% if content.Provider[0].value != null %}
+							   {% if content.Provider[0].value.size > 0 %}
+								   {
+									  {% for clinicInfo in content.ClinicInfo[0].value  %}
+											{% if clinicInfo.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+												"ResourceType":"AIP",
+												"ResourceKey":"{{clinicInfo.["resource.cvt_defaultproviderduz"]}}",
+												"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+												{% break %}
+											{% endif %}
+									  {% endfor %}
+								   },
+							   {% endif %}
+						   {% endif %}
+
+						   {% comment %}
+							  Resource Type = AIL section 
+						   {% endcomment %}
+
+						   {% for clinicInfo in content.ClinicInfo[0].value %}
+								{% if clinicInfo.["mcs_facility.mcs_stationnumber"] == content.Facilities[0].value[0].["ProviderStationNumber"]  %}
+									{
+										"ResourceType":"AIL",
+										"ResourceKey":"{{clinicInfo.["resource.cvt_ien"]}}",
+										"ResourceName":"{{clinicInfo.["resource.mcs_name"]}}"
+									},	
+									{% break %}
+								{% endif %}
+							{% endfor %}
+						],
+					},
+					"ProviderResources":
+					{
+						"Facility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+						"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+						"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+						"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+						"Resources":
+						[
+							{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+								{% if tmpGroupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+									{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Room"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Technology"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Unassigned TCT/Telepresenter"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+										{% assign patientCernerAILCount = patientCernerAILCount | Append: 'x' %}
+										{
+											"ResourceType":"AIL",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+										},
+									{% endif %}
+								{% endif %}
+							{% endfor %}
+						],
+					},
+				{% else %}
+					"PatientFacility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+					"ProviderFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			
+					"PatientResources":
+					{
+						"Facility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+						"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+						"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+						"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+						"Resources":
+						[
+							{% if content.GroupPatientFacility[0].value[0].["PatientFacilityType"] == facilityTypeCode_Cerner %}
+								{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+									{% if tmpGroupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+										{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Room"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Technology"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Unassigned TCT/Telepresenter"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+											{% assign patientCernerAILCount = patientCernerAILCount | Append: 'x' %}
+											{
+												"ResourceType":"AIL",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+											},
+										{% endif %}
+									{% endif %}
+								{% endfor %}
+							{% else %}
+								{% comment %} Write VistA AIL {% endcomment %}
+								{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+									{% if tmpGroupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+										{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+											{
+												"ResourceType":"AIL",
+												"ResourceKey":"{{tmpGroupResource.["resource.cvt_ien"]}}",
+												"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+											},
+										{% endif %}
+									{% endif %}
+								{% endfor %}
+							{% endif %}
+						],
+					},
+					"ProviderResources":
+					{
+						"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+						"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+						"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+						"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+						"Resources":
+						[
+							{% for systemuserResource in content.SystemuserResources[0].value %}
+							{
+								"ResourceType":"AIP",
+								"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+								"ResourceName":"{{systemuserResource.["fullname"]}}"
+							},
+							{% endfor %}
+							{% comment %}
+								{% if content.Provider[0].value != null %}
+									{% if content.Provider[0].value.size > 0 %}
+										{
+											"ResourceType":"AIP",
+											"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+											"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+										},
+									{% endif %}
+								{% endif %}
+							{% endcomment %}
+					
+							{% for tmpResource in content.TMPResources[0].value %}
+
+								{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+						
+										{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Room"
+										},
+										{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Technology"
+										},
+										{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Unassigned TCT/Telepresenter"
+										},
+										{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic and patientCernerAILCount.size == 0 %}
+										{
+											"ResourceType":"AIL",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"{{tmpResource.["resource.mcs_name"]}}",
+										},
+										{% endif %}
+						
+								{% endif %}
+						
+							{% endfor %}
+						],
+					},
+				{% endif %}
+			{% else %}
+				"PatientFacility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+				"ProviderFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			
+				"PatientResources":
+				{
+					"Facility":"{{content.GroupPatientFacility[0].value[0].["PatientStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+						{% if content.GroupPatientFacility[0].value[0].["PatientFacilityType"] == facilityTypeCode_Cerner %}
+							{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+								{% if tmpGroupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+									{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Room"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Technology"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Unassigned TCT/Telepresenter"
+										},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+										{% assign patientCernerAILCount = patientCernerAILCount | Append: 'x' %}
+										{
+											"ResourceType":"AIL",
+											"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+										},
+									{% endif %}
+								{% endif %}
+							{% endfor %}
+						{% else %}
+							{% comment %} Write VistA AIL {% endcomment %}
+							{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+								{% if tmpGroupResource.["mcs_site.mcs_name"] == content.GroupPatientFacility[0].value[0].["PatientSiteName"] %}
+									{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+										{
+											"ResourceType":"AIL",
+											"ResourceKey":"{{tmpGroupResource.["resource.cvt_ien"]}}",
+											"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+										},
+									{% endif %}
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+					],
+				},
+				"ProviderResources":
+				{
+					"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+						{% for systemuserResource in content.SystemuserResources[0].value %}
+						{
+							"ResourceType":"AIP",
+							"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+							"ResourceName":"{{systemuserResource.["fullname"]}}"
+						},
+						{% endfor %}
+						{% comment %}
+							{% if content.Provider[0].value != null %}
+								{% if content.Provider[0].value.size > 0 %}
+									{
+										"ResourceType":"AIP",
+										"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+										"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+									},
+								{% endif %}
+							{% endif %}
+						{% endcomment %}
+					
+						{% for tmpResource in content.TMPResources[0].value %}
+
+							{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+						
+									{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Room"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Technology"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Unassigned TCT/Telepresenter"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic and patientCernerAILCount.size == 0 %}
+									{
+										"ResourceType":"AIL",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"{{tmpResource.["resource.mcs_name"]}}",
+									},
+									{% endif %}
+						
+							{% endif %}
+						
+						{% endfor %}
+					],
+				},
+			{% endif %}
+		{% else %}
+			"ProviderFacility":"",
+			"PatientFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			
+			"PatientResources":
+			{
+				"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+				"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+				"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+				"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+				"Resources":
+				[
+					{% for systemuserResource in content.SystemuserResources[0].value %}
+                    {
+						"ResourceType":"AIP",
+						"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+						"ResourceName":"{{systemuserResource.["fullname"]}}"
+                    },
+					{% endfor %}
+					{% comment %}
+						{% if content.Provider[0].value != null %}
+							{% if content.Provider[0].value.size > 0 %}
+								{
+									"ResourceType":"AIP",
+									"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+									"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+								},
+							{% endif %}
+						{% endif %}
+					{% endcomment %}
+					
+					{% for tmpResource in content.TMPResources[0].value %}
+
+						{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+						
+								{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Room"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Technology"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Unassigned TCT/Telepresenter"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+								{
+									"ResourceType":"AIL",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"{{tmpResource.["resource.mcs_name"]}}",
+								},
+								{% endif %}
+						
+						{% endif %}
+						
+					{% endfor %}
+				],
+			},
+			"ProviderResources":
+			{
+				"Facility":"",
+				"ConsultId":"",
+				"RTCId": "",
+				"ParentRTCId": "",
+				"Resources":
+				[],
+			},
+		{% endif %}
+
+	{% else %}
+		{% if content.Facilities[0].value[0].["ProviderFacilityType"] == null or content.Facilities[0].value[0].["ProviderFacilityType"] == facilityTypeCode_Vista %}
+			
+			"ProviderFacility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+			"PatientFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			
+			{% comment %}
+				PatientResources where Provider Facility = Vista [Vista does not care about resources]
+			{% endcomment %}
+
+			"PatientResources": 
+			{
+				"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+				"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].["cvt_proconsultien"]}}",
+				"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_prortcid}}",
+				"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentprovider}}",
+				"Resources":
+				[
+				   {% comment %}
+					 Resource Type = AIP section
+					   (hard coded - not from TMPResources section)
+				   {% endcomment %}
+
+				   {% if content.Provider[0].value != null %}
+					   {% if content.Provider[0].value.size > 0 %}
+						   {
+							  {% for clinicInfo in content.ClinicInfo[0].value  %}
+									{% if clinicInfo.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+										"ResourceType":"AIP",
+										"ResourceKey":"{{clinicInfo.["resource.cvt_defaultproviderduz"]}}",
+										"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+										{% break %}
+									{% endif %}
+							  {% endfor %}
+						   },
+					   {% endif %}
+				   {% endif %}
+
+				   {% comment %}
+					  Resource Type = AIL section 
+				   {% endcomment %}
+
+				   {% for clinicInfo in content.ClinicInfo[0].value %}
+						{% if clinicInfo.["mcs_facility.mcs_stationnumber"] == content.Facilities[0].value[0].["ProviderStationNumber"]  %}
+							{
+								"ResourceType":"AIL",
+								"ResourceKey":"{{clinicInfo.["resource.cvt_ien"]}}",
+								"ResourceName":"{{clinicInfo.["resource.mcs_name"]}}"
+							},	
+							{% break %}
+						{% endif %}
+					{% endfor %}
+				],
+			},
+
+			{% comment %}
+				ProviderResources where Provider Facility = Vista   [Cerner resources] [and always pass AIP when the side we are writing is Cerner]
+			{% endcomment %}
+
+			"ProviderResources":
+			{
+				"Facility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+				"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+				"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+				"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+				"Resources":
+				[
+					{% comment %}
+						{% if content.Provider[0].value != null %}
+							{% if content.Provider[0].value.size > 0 %}
+								{
+									"ResourceType":"AIP",
+									"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+									"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+								},
+							{% endif %}
+						{% endif %}
+					{% endcomment %}
+					{% comment %}
+						Group appointment - pull resources from Reserve resources
+					{% endcomment %}
+					
+						{% if content.ServiceAppointment[0].ServiceAppointment[0].mcs_groupappointment == true %}
+							{% for groupAppointmentSystemuserResource in content.GroupAppointmentSystemuserResources[0].value %}
+                            {
+								"ResourceType":"AIP",
+								"ResourceKey":"{{groupAppointmentSystemuserResource.["mcs_edipi"]}}",
+								"ResourceName":"{{groupAppointmentSystemuserResource.["fullname"]}}"
+                            },
+							{% endfor %}
+						   
+						   {% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+
+								{% comment %}
+									If Facility = Provider, output resource
+								{% endcomment %}
+
+								{% if tmpGroupResource.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+									
+									{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Room"
+									},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Technology"
+									},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Unassigned TCT/Telepresenter"
+									},
+									{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+									{
+										"ResourceType":"AIL",
+										"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+									},
+									{% endif %}
+									
+								{% endif %}
+			
+							{% endfor %}	
+						
+						{% else %}
+							{% for systemuserResource in content.SystemuserResources[0].value %}
+                            {
+								"ResourceType":"AIP",
+								"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+								"ResourceName":"{{systemuserResource.["fullname"]}}"
+                            },
+							{% endfor %}
+						{% endif %}
+						
+					{% comment %}
+						Pull resources from Service appointment (not group appointment)
+						This is combined with any group resources in the section above.
+					{% endcomment %}
+					
+						{% for tmpResource in content.TMPResources[0].value %}
+
+							{% comment %}
+								If Facility = Provider, output resource
+							{% endcomment %}
+
+							{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+								
+							
+								{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Room"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Technology"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+								{
+									"ResourceType":"AIG",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"TMP Unassigned TCT/Telepresenter"
+								},
+								{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+								{
+									"ResourceType":"AIL",
+									"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+									"ResourceName":"{{tmpResource.["resource.mcs_name"]}}"
+								},
+								{% endif %}
+								
+							{% endif %}
+			
+						{% endfor %}
+				],
+
+			},
+		
+		{% else %}
+		
+		
+			"ProviderFacility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+			"PatientFacility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+			
+			{% if content.Facilities[0].value[0].["PatientFacilityType"] == null or content.Facilities[0].value[0].["PatientFacilityType"] == facilityTypeCode_Vista %}
+			
+				{% comment %}
+					PatientResources where Provider Facility = Vista [Vista does not care about resources]
+					The patient is Vista - Vista does not care about AIG's
+				{% endcomment %}
+
+				"PatientResources": 
+				{
+					"Facility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+				
+						{% for clinicInfo in content.ClinicInfo[0].value  %}
+							{% if clinicInfo.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+								{
+									"ResourceType":"AIL",
+									"ResourceKey":"{{clinicInfo.["resource.cvt_ien"]}}",
+									"ResourceName":"{{clinicInfo.["resource.mcs_name"]}}"
+								}	
+								{% break %}
+							{% endif %}
+						{% endfor %}
+					],
+				},
+
+				"ProviderResources":
+				{
+					"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+						{% for systemuserResource in content.SystemuserResources[0].value %}
+                        {
+							"ResourceType":"AIP",
+							"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+							"ResourceName":"{{systemuserResource.["fullname"]}}"
+                        },
+						{% endfor %}
+						{% comment %}
+							{% if content.Provider[0].value != null %}
+								{% if content.Provider[0].value.size > 0 %}
+								{
+									"ResourceType": "AIP",
+									{% if content.Provider[0].value[0].["mcs_edipi"] != null %}
+										{% if content.Provider[0].value[0].["mcs_edipi"] != "" %}
+											"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+										{% else %}
+											"ResourceKey":"",
+										{% endif %}
+									{% else %}
+										"ResourceKey":"",
+									{% endif %}
+									"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+								},
+								{% endif %}
+							{% endif %}
+						{% endcomment %}
+					
+						{% for tmpResource in content.TMPResources[0].value %}
+
+							{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+							
+									{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Room"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Technology"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Unassigned TCT/Telepresenter"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+									{
+										"ResourceType":"AIL",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"{{tmpResource.["resource.mcs_name"]}}",
+									},
+									{% endif %}
+							
+							{% endif %}
+							
+						{% endfor %}
+					],
+				},
+
+			{% else %}
+
+				{% comment %}
+					PatientResources where Patient Facility = Cerner
+					The patient is Cerner
+				{% endcomment %}
+
+				"PatientResources": 
+				{
+					"Facility":"{{content.Facilities[0].value[0].["PatientStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+						{% comment %}
+							Group appointment - pull resources from Reserve resources
+						{% endcomment %}
+						
+							{% if content.ServiceAppointment[0].ServiceAppointment[0].mcs_groupappointment == true %}
+							
+								{% for tmpGroupResource in content.GroupAppointmentResources[0].value %}
+
+									{% if tmpGroupResource.["mcs_site.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+									
+										{% if tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpGroupResource.["resource.mcs_outboundcernerid"] != null %}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Room"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_Technology %}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Technology"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+											{
+												"ResourceType":"AIG",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"TMP Unassigned TCT/Telepresenter"
+											},
+										{% elsif tmpGroupResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+											{% assign patientCernerAILCount = patientCernerAILCount | Append: 'x' %}
+											{
+												"ResourceType":"AIL",
+												"ResourceKey":"{{tmpGroupResource.["resource.mcs_outboundcernerid"]}}",
+												"ResourceName":"{{tmpGroupResource.["resource.mcs_name"]}}"
+											},
+										{% endif %}
+											
+									{% endif %}
+
+								{% endfor %}
+								
+							{% endif %}
+							
+						{% comment %}
+							Pull resources from Service appointment (not group appointment) 
+							This is combined with any group resources in the section above.
+						{% endcomment %}
+					
+							{% for tmpResource in content.TMPResources[0].value %}
+
+								{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["PatientSiteName"]  %}
+								
+									{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Room"
+										},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Technology"
+										},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Unassigned TCT/Telepresenter"
+										},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic %}
+										{% assign patientCernerAILCount = patientCernerAILCount | Append: 'x' %}
+										{
+											"ResourceType":"AIL",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"{{tmpResource.["resource.mcs_name"]}}"
+										},
+									{% endif %}
+										
+								{% endif %}
+
+							{% endfor %}
+					],
+				},
+
+				"ProviderResources":
+				{
+					"Facility":"{{content.Facilities[0].value[0].["ProviderStationNumber"]}}",
+					"ConsultId":"{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patconsultien}}",
+					"RTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_patrtcid}}",
+					"ParentRTCId": "{{content.ServiceAppointment[0].ServiceAppointment[0].cvt_rtcparentpatient}}",
+					"Resources":
+					[
+						{% for systemuserResource in content.SystemuserResources[0].value %}
+                        {
+							"ResourceType":"AIP",
+							"ResourceKey":"{{systemuserResource.["mcs_edipi"]}}",
+							"ResourceName":"{{systemuserResource.["fullname"]}}"
+                        },
+						{% endfor %}
+						{% comment %}
+							{% if content.Provider[0].value != null %}
+								{% if content.Provider[0].value.size > 0 %}
+								{
+									"ResourceType": "AIP",
+									{% if content.Provider[0].value[0].["mcs_edipi"] != null %}
+										{% if content.Provider[0].value[0].["mcs_edipi"] != "" %}
+											"ResourceKey":"{{content.Provider[0].value[0].["mcs_edipi"]}}",
+										{% else %}
+											"ResourceKey":"",
+										{% endif %}
+									{% else %}
+										"ResourceKey":"",
+									{% endif %}
+									"ResourceName":"{{content.Provider[0].value[0].["fullname"]}}"
+								},
+								{% endif %}
+							{% endif %}
+						{% endcomment %}
+					
+						{% for tmpResource in content.TMPResources[0].value %}
+
+							{% if tmpResource.["mcs_site4.mcs_name"] == content.Facilities[0].value[0].["ProviderSiteName"]  %}
+							
+									{% if tmpResource.["resource.mcs_type"] == resourceTypeCode_Room and tmpResource.["resource.mcs_outboundcernerid"] != null %}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Room"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_Technology%}
+									{
+										"ResourceType":"AIG",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"TMP Technology"
+									},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_UnassignedTCTTelepresenter %}
+										{
+											"ResourceType":"AIG",
+											"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+											"ResourceName":"TMP Unassigned TCT/Telepresenter"
+										},
+									{% elsif tmpResource.["resource.mcs_type"] == resourceTypeCode_VistaClinic and patientCernerAILCount.size == 0 %}
+									{
+										"ResourceType":"AIL",
+										"ResourceKey":"{{tmpResource.["resource.mcs_outboundcernerid"]}}",
+										"ResourceName":"{{tmpResource.["resource.mcs_name"]}}",
+									},
+									{% endif %}
+							
+							{% endif %}
+							
+						{% endfor %}
+					],
+				},
+
+			{% endif %}
+
+		{% endif %}
+	{% endif %}
+}

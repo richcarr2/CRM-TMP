@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://schemas.datacontract.org/2004/07/Vyopta.UcManager"
+	targetNamespace="http://schemas.datacontract.org/2004/07/Vyopta.UcManager"
+  elementFormDefault="unqualified"
+  attributeFormDefault="unqualified">
+  <xs:complexType name="ScheduleMeetingRequest">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="EncounterId" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="EndTime" type="xs:dateTime" />
+      <xs:element minOccurs="0" name="GuestName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="GuestPin" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="HostName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="HostPin" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="MeetingRoomName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="MiscData" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="StartTime" type="xs:dateTime" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ScheduleMeetingRequest" nillable="true" type="tns:ScheduleMeetingRequest" />
+  <xs:complexType name="ScheduleMeetingResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="DialingAlias" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="EncounterId" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="MiscData" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ScheduleMeetingResponse" nillable="true" type="tns:ScheduleMeetingResponse" />
+  <xs:complexType name="DeleteMeetingRequest">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="EncounterId" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="MiscData" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="DeleteMeetingRequest" nillable="true" type="tns:DeleteMeetingRequest" />
+  <xs:complexType name="DeleteMeetingResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="MiscData" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="DeleteMeetingResponse" nillable="true" type="tns:DeleteMeetingResponse" />
+</xs:schema>

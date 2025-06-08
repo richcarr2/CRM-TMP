@@ -1,0 +1,1167 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Target_Environment": {
+      "type": "String",
+      "metadata": {
+        "description": ""
+      },
+      "allowedValues": [
+        "dev",
+        "qa",
+        "nprod",
+        "east-prod",
+        "southwest-prod"
+      ]
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "defaultValue": "va-eis-tmp-integration-acct-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the target ISE for this environment"
+      }
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "ISE_ResourceGroup": "[resourceGroup().name]",
+    "LogicApp_Name": "[concat('va-eis-tmp-inbound-processing-S13-', parameters('Target_Environment'))]",
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[variables('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(variables('ISE_ResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Filter_array:_Filter_Errors": {
+              "inputs": {
+                "from": "@result('Scope:_Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Failed_Integration_Result": {
+              "inputs": {
+                "body": {
+                  "cvt_visibletouser": true,
+                  "mcs_error": "Reserve Resource with mcs_cernerappointmentid: @{body('Parse_JSON')?['cernerAppointmentId']} failed to reschedule. The Logic App Action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "mcs_integrationrequest": "@{triggerBody()}",
+                  "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Reschedule",
+                  "mcs_result": "Logic App error",
+                  "mcs_status": 803750003,
+                  "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                  "mcs_veisprocesssubtype": 799900002,
+                  "mcs_veisprocesstype": 803750000
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                  "Content-Type": "application/json",
+                  "Prefer": "return=representation"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Filter_array:_Filter_Errors": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Initialize_variable:_Activity_Id": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Activity Id",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_PATCH_Request_Body": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PATCH Request Body",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Activity_Id": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resource_Conflict_Descriptions": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resource Conflict Descriptions",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_TMP_Site_OData_Lookup": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_TMP_Site_OData_Lookup": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "TMP Site OData Lookup",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_PATCH_Request_Body": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Response:_200": {
+              "inputs": {
+                "body": {
+                  "code": "Login app ran successfully",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 200
+              },
+              "kind": "Http",
+              "runAfter": {
+                "Scope:_Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Response:_500": {
+              "inputs": {
+                "body": {
+                  "code": "@{first(body('Filter_array:_Filter_Errors'))['status']}",
+                  "message": "Reserve Resource with mcs_cernerappointmentid: @{body('Parse_JSON')?['cernerAppointmentId']} failed to create. The Logic App Action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 500
+              },
+              "kind": "Http",
+              "runAfter": {
+                "HTTP:_Create_Failed_Integration_Result": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Scope:_Try": {
+              "actions": {
+                "Condition:_If_Reserve_Resource_Exists": {
+                  "actions": {
+                    "Condition:_If_resources_are_missing_or_there_are_resource_conflicts": {
+                      "actions": {
+                        "Condition:_Check_if_resources_are_conflicting": {
+                          "actions": {
+                            "HTTP:_Create_Resource_Conflict_Integration_Result": {
+                              "inputs": {
+                                "body": {
+                                  "cvt_visibletouser": true,
+                                  "mcs_appointmentid@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                  "mcs_error": "One or more resources have conflicts with existing Reserve Resource or Service Appointments: @{body('Join')}",
+                                  "mcs_integrationrequest": "@{triggerBody()}",
+                                  "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Reschedule",
+                                  "mcs_result": "Reserve Resource updated with warnings",
+                                  "mcs_status": 803750001,
+                                  "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                                  "mcs_veisprocesssubtype": 799900002,
+                                  "mcs_veisprocesstype": 803750000
+                                },
+                                "headers": {
+                                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                },
+                                "method": "POST",
+                                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                              },
+                              "runAfter": {
+                                "Join": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Http"
+                            },
+                            "Join": {
+                              "description": "Concatenate all elements in the the Resource Conflict Descriptions array with a line break.",
+                              "inputs": {
+                                "from": "@body('Parse_JSON')?['resourceConflicts']",
+                                "joinWith": "\n"
+                              },
+                              "runAfter": {},
+                              "type": "Join"
+                            }
+                          },
+                          "expression": {
+                            "and": [
+                              {
+                                "greater": [
+                                  "@length(body('Parse_JSON')?['resourceConflicts'])",
+                                  0
+                                ]
+                              }
+                            ]
+                          },
+                          "runAfter": {
+                            "Condition:_Check_if_resources_are_missing": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "If"
+                        },
+                        "Condition:_Check_if_resources_are_missing": {
+                          "actions": {
+                            "Compose:_Get_Unique_Missing_Resources": {
+                              "inputs": "@union(body('Parse_JSON')?['resourcesMissingInTMP'],body('Parse_JSON')?['resourcesMissingInTMP'])",
+                              "runAfter": {},
+                              "type": "Compose"
+                            },
+                            "For_each_Resource_not_in_TMP": {
+                              "actions": {
+                                "Condition:_Missing_Resource_Record_Exists": {
+                                  "actions": {
+                                    "Condition": {
+                                      "actions": {
+                                        "HTTP_-_Update_Missing_Patient_Resource": {
+                                          "inputs": {
+                                            "body": {
+                                              "mcs_edipi": "@if(equals(items('For_each_Resource_not_in_TMP')['EDIPI'],null),null,items('For_each_Resource_not_in_TMP')['EDIPI'])",
+                                              "mcs_name": "@{items('For_each_Resource_not_in_TMP')['Id']}",
+                                              "mcs_type": 803750002
+                                            },
+                                            "headers": {
+                                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                              "Prefer": "return=representation"
+                                            },
+                                            "method": "PATCH",
+                                            "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_missingresources(@{body('Parse_JSON_-_Missing_Resources')[0]?['mcs_missingresourceid']})"
+                                          },
+                                          "runAfter": {
+                                            "Parse_JSON_-_Missing_Resources": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "type": "Http"
+                                        },
+                                        "Parse_JSON_-_Missing_Resources": {
+                                          "inputs": {
+                                            "content": "@body('HTTP:_Get_Missing_Resource_Record')['value']",
+                                            "schema": {
+                                              "properties": {
+                                                "@@odata.etag": {
+                                                  "type": "string"
+                                                },
+                                                "_createdby_value": {
+                                                  "type": "string"
+                                                },
+                                                "_createdonbehalfby_value": {},
+                                                "_mcs_patient_value": {},
+                                                "_mcs_tmpreslource_value": {},
+                                                "_mcs_tmpsite_value": {},
+                                                "_mcs_user_value": {},
+                                                "_modifiedby_value": {
+                                                  "type": "string"
+                                                },
+                                                "_modifiedonbehalfby_value": {},
+                                                "_ownerid_value": {
+                                                  "type": "string"
+                                                },
+                                                "_owningbusinessunit_value": {
+                                                  "type": "string"
+                                                },
+                                                "_owningteam_value": {},
+                                                "_owninguser_value": {
+                                                  "type": "string"
+                                                },
+                                                "createdon": {
+                                                  "type": "string"
+                                                },
+                                                "importsequencenumber": {},
+                                                "mcs_edipi": {},
+                                                "mcs_email": {},
+                                                "mcs_missingresourceid": {
+                                                  "type": "string"
+                                                },
+                                                "mcs_name": {
+                                                  "type": "string"
+                                                },
+                                                "mcs_type": {
+                                                  "type": "integer"
+                                                },
+                                                "modifiedon": {
+                                                  "type": "string"
+                                                },
+                                                "overriddencreatedon": {},
+                                                "statecode": {
+                                                  "type": "integer"
+                                                },
+                                                "statuscode": {
+                                                  "type": "integer"
+                                                },
+                                                "timezoneruleversionnumber": {},
+                                                "utcconversiontimezonecode": {},
+                                                "versionnumber": {
+                                                  "type": "integer"
+                                                }
+                                              },
+                                              "type": [
+                                                "array",
+                                                "object"
+                                              ]
+                                            }
+                                          },
+                                          "runAfter": {},
+                                          "type": "ParseJson"
+                                        }
+                                      },
+                                      "expression": {
+                                        "and": [
+                                          {
+                                            "equals": [
+                                              "@items('For_each_Resource_not_in_TMP')['ResourceType']",
+                                              "Patient"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "runAfter": {},
+                                      "type": "If"
+                                    },
+                                    "HTTP:_Create_Reserve_Resource_Missing_Resource": {
+                                      "description": "Create a record in the intermediary table \"Reserve Resource Missing Resource\". This ensures that there is a N:N relation between the Reserve Resource and Missing Resource tables because a resource can be missing for many Reserve Resources.",
+                                      "inputs": {
+                                        "body": {
+                                          "mcs_MissingResource@odata.bind": "/mcs_missingresources(@{body('HTTP:_Get_Missing_Resource_Record')['value'][0]['mcs_MissingResourceId']})",
+                                          "mcs_ReserveResource@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                          "mcs_name": " - @{items('For_each_Resource_not_in_TMP')['Id']}"
+                                        },
+                                        "headers": {
+                                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                          "Prefer": "return=representation"
+                                        },
+                                        "method": "POST",
+                                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.1/mcs_reserveresourcemissingresources"
+                                      },
+                                      "runAfter": {
+                                        "Condition": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "Http"
+                                    }
+                                  },
+                                  "else": {
+                                    "actions": {
+                                      "Switch:_ResourceType": {
+                                        "cases": {
+                                          "Equipment": {
+                                            "actions": {
+                                              "HTTP:_Create_Missing_Resource_Record_(Equipment)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_TMPSite@odata.bind": "@variables('TMP Site OData Lookup')",
+                                                    "mcs_name": "@{items('For_each_Resource_not_in_TMP')['Id']}",
+                                                    "mcs_type": 803750000
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_missingresources"
+                                                },
+                                                "runAfter": {},
+                                                "type": "Http"
+                                              },
+                                              "HTTP:_Create_Reserve_Resource_Missing_Resource_(Equipment)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_MissingResource@odata.bind": "/mcs_missingresources(@{body('HTTP:_Create_Missing_Resource_Record_(Equipment)')['mcs_missingresourceid']})",
+                                                    "mcs_ReserveResource@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                                    "mcs_name": " - @{items('For_each_Resource_not_in_TMP')['Id']}"
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.1/mcs_reserveresourcemissingresources"
+                                                },
+                                                "runAfter": {
+                                                  "HTTP:_Create_Missing_Resource_Record_(Equipment)": [
+                                                    "Succeeded"
+                                                  ]
+                                                },
+                                                "type": "Http"
+                                              }
+                                            },
+                                            "case": "Equipment"
+                                          },
+                                          "Patient": {
+                                            "actions": {
+                                              "HTTP:_Create_Missing_Resource_Record_(Patient)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_edipi": "@{items('For_each_Resource_not_in_TMP')['EDIPI']}",
+                                                    "mcs_name": "@{items('For_each_Resource_not_in_TMP')['Id']}",
+                                                    "mcs_type": 803750002
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_missingresources"
+                                                },
+                                                "runAfter": {},
+                                                "type": "Http"
+                                              },
+                                              "HTTP:_Create_Reserve_Resource_Missing_Resource_(Patient)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_MissingResource@odata.bind": "/mcs_missingresources(@{body('HTTP:_Create_Missing_Resource_Record_(Patient)')['mcs_missingresourceid']})",
+                                                    "mcs_ReserveResource@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                                    "mcs_name": " - @{items('For_each_Resource_not_in_TMP')['Id']}"
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.1/mcs_reserveresourcemissingresources"
+                                                },
+                                                "runAfter": {
+                                                  "HTTP:_Create_Missing_Resource_Record_(Patient)": [
+                                                    "Succeeded"
+                                                  ]
+                                                },
+                                                "type": "Http"
+                                              }
+                                            },
+                                            "case": "Patient"
+                                          },
+                                          "Provider": {
+                                            "actions": {
+                                              "HTTP:_Create_Missing_Resource_Record_(Provider)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_TMPSite@odata.bind": "@variables('TMP Site OData Lookup')",
+                                                    "mcs_name": "@{items('For_each_Resource_not_in_TMP')['Id']}",
+                                                    "mcs_type": 803750001
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_missingresources"
+                                                },
+                                                "runAfter": {},
+                                                "type": "Http"
+                                              },
+                                              "HTTP:_Create_Reserve_Resource_Missing_Resource_(Provider)": {
+                                                "inputs": {
+                                                  "body": {
+                                                    "mcs_MissingResource@odata.bind": "/mcs_missingresources(@{body('HTTP:_Create_Missing_Resource_Record_(Provider)')['mcs_missingresourceid']})",
+                                                    "mcs_ReserveResource@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                                    "mcs_name": " - @{items('For_each_Resource_not_in_TMP')['Id']}"
+                                                  },
+                                                  "headers": {
+                                                    "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                                    "Prefer": "return=representation"
+                                                  },
+                                                  "method": "POST",
+                                                  "uri": "@{parameters('CDS Client URL')}/api/data/v9.1/mcs_reserveresourcemissingresources"
+                                                },
+                                                "runAfter": {
+                                                  "HTTP:_Create_Missing_Resource_Record_(Provider)": [
+                                                    "Succeeded"
+                                                  ]
+                                                },
+                                                "type": "Http"
+                                              }
+                                            },
+                                            "case": "Provider"
+                                          }
+                                        },
+                                        "default": {
+                                          "actions": {}
+                                        },
+                                        "expression": "@items('For_each_Resource_not_in_TMP')['ResourceType']",
+                                        "runAfter": {},
+                                        "type": "Switch"
+                                      }
+                                    }
+                                  },
+                                  "expression": {
+                                    "and": [
+                                      {
+                                        "greater": [
+                                          "@length(body('HTTP:_Get_Missing_Resource_Record')['value'])",
+                                          0
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "runAfter": {
+                                    "HTTP:_Get_Missing_Resource_Record": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "If"
+                                },
+                                "HTTP:_Get_Missing_Resource_Record": {
+                                  "inputs": {
+                                    "headers": {
+                                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                    },
+                                    "method": "GET",
+                                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_missingresources?$filter=mcs_name eq '@{items('For_each_Resource_not_in_TMP')['Id']}'"
+                                  },
+                                  "runAfter": {},
+                                  "type": "Http"
+                                }
+                              },
+                              "foreach": "@outputs('Compose:_Get_Unique_Missing_Resources')",
+                              "runAfter": {
+                                "Compose:_Get_Unique_Missing_Resources": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Foreach"
+                            },
+                            "HTTP:_Create_Missing_Resources_Integration_Result": {
+                              "inputs": {
+                                "body": {
+                                  "cvt_visibletouser": true,
+                                  "mcs_appointmentid@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                  "mcs_error": "The following resources were not found in TMP: @{body('Join:_Concatenate_Resources_not_in_TMP')}",
+                                  "mcs_integrationrequest": "@{triggerBody()}",
+                                  "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Reschedule",
+                                  "mcs_result": "Reserve Resource updated with warnings",
+                                  "mcs_status": 803750001,
+                                  "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                                  "mcs_veisprocesssubtype": 799900002,
+                                  "mcs_veisprocesstype": 803750000
+                                },
+                                "headers": {
+                                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                },
+                                "method": "POST",
+                                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                              },
+                              "runAfter": {
+                                "Join:_Concatenate_Resources_not_in_TMP": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Http"
+                            },
+                            "Join:_Concatenate_Resources_not_in_TMP": {
+                              "inputs": {
+                                "from": "@body('Select:_Missing_Resource_Descriptions')",
+                                "joinWith": ";"
+                              },
+                              "runAfter": {
+                                "Select:_Missing_Resource_Descriptions": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Join"
+                            },
+                            "Select:_Missing_Resource_Descriptions": {
+                              "inputs": {
+                                "from": "@outputs('Compose:_Get_Unique_Missing_Resources')",
+                                "select": "@item()?['Description']"
+                              },
+                              "runAfter": {
+                                "Compose:_Get_Unique_Missing_Resources": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Select"
+                            }
+                          },
+                          "expression": {
+                            "and": [
+                              {
+                                "greater": [
+                                  "@length(body('Parse_JSON')?['resourcesMissingInTMP'])",
+                                  0
+                                ]
+                              }
+                            ]
+                          },
+                          "runAfter": {},
+                          "type": "If"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "HTTP:_Create_Successful_Integration_Result": {
+                            "inputs": {
+                              "body": {
+                                "mcs_appointmentid@odata.bind": "/appointments(@{variables('Activity ID')})",
+                                "mcs_integrationrequest": "@{triggerBody()}",
+                                "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']}Reschedule",
+                                "mcs_result": "Reserve Resource updated",
+                                "mcs_status": 803750002,
+                                "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                                "mcs_veisprocesssubtype": 799900002,
+                                "mcs_veisprocesstype": 803750000
+                              },
+                              "headers": {
+                                "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                              },
+                              "method": "POST",
+                              "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                            },
+                            "runAfter": {},
+                            "type": "Http"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "or": [
+                          {
+                            "greater": [
+                              "@length(body('Parse_JSON')?['resourcesMissingInTMP'])\r\n",
+                              0
+                            ]
+                          },
+                          {
+                            "greater": [
+                              "@length(body('Parse_JSON')?['resourceConflicts'])",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Condition:_TMP_Site_OData_Lookup_Exists": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Condition:_TMP_Site_OData_Lookup_Exists": {
+                      "actions": {
+                        "HTTP:_Update_Reserve_Resource_(TMP_Site)": {
+                          "inputs": {
+                            "body": {
+                              "cvt_site_appointment@odata.bind": "@{variables('TMP Site OData Lookup')}"
+                            },
+                            "headers": {
+                              "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                              "Content-Type": "application/json",
+                              "Prefer": "return=representation"
+                            },
+                            "method": "PATCH",
+                            "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments(@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']})"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(variables('TMP Site OData Lookup'))",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Set_variable:_Activity_Id": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Condition:_scheduleddurationMinutes_!=_null": {
+                      "actions": {
+                        "Compose:_Add_scheduleddurationMinutes_Property": {
+                          "inputs": "@addProperty(variables('PATCH Request Body'),'scheduleddurationminutes',body('Parse_JSON')?['scheduledDurationMinutes'])",
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Set_variable:_PATCH_Request_Body_(scheduleddurationMinutes)": {
+                          "inputs": {
+                            "name": "PATCH Request Body",
+                            "value": "@outputs('Compose:_Add_scheduleddurationMinutes_Property')"
+                          },
+                          "runAfter": {
+                            "Compose:_Add_scheduleddurationMinutes_Property": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@body('Parse_JSON')?['scheduledDurationMinutes']",
+                                null
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Condition:_scheduledend_!=_null": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Condition:_scheduledend_!=_null": {
+                      "actions": {
+                        "Compose:_Add_scheduledend_Property": {
+                          "inputs": "@addProperty(variables('PATCH Request Body'),'scheduledend',body('Parse_JSON')?['scheduledEnd'])",
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Set_variable:_PATCH_Request_Body_(scheduledend)": {
+                          "inputs": {
+                            "name": "PATCH Request Body",
+                            "value": "@outputs('Compose:_Add_scheduledend_Property')"
+                          },
+                          "runAfter": {
+                            "Compose:_Add_scheduledend_Property": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@body('Parse_JSON')?['scheduledEnd']",
+                                null
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Condition:_scheduledstart_!=_null": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "Condition:_scheduledstart_!=_null": {
+                      "actions": {
+                        "Compose:_Add_scheduledstart_Property": {
+                          "inputs": "@addProperty(variables('PATCH Request Body'),'scheduledstart',body('Parse_JSON')?['scheduledStart'])",
+                          "runAfter": {},
+                          "type": "Compose"
+                        },
+                        "Set_variable:_PATCH_Request_Body_(scheduledstart)": {
+                          "inputs": {
+                            "name": "PATCH Request Body",
+                            "value": "@outputs('Compose:_Add_scheduledstart_Property')"
+                          },
+                          "runAfter": {
+                            "Compose:_Add_scheduledstart_Property": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable"
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@body('Parse_JSON')?['scheduledStart']",
+                                null
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "Set_variable:_PATCH_Request_Body_(statecode)": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "HTTP:_Update_Reserve_Resource": {
+                      "inputs": {
+                        "body": "@variables('PATCH Request Body')",
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                          "Content-Type": "application/json",
+                          "Prefer": "return=representation"
+                        },
+                        "method": "PATCH",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments(@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']})"
+                      },
+                      "runAfter": {
+                        "Condition:_scheduleddurationMinutes_!=_null": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Set_variable:_Activity_Id": {
+                      "inputs": {
+                        "name": "Activity Id",
+                        "value": "@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']}"
+                      },
+                      "runAfter": {
+                        "HTTP:_Update_Reserve_Resource": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable"
+                    },
+                    "Set_variable:_PATCH_Request_Body_(statecode)": {
+                      "inputs": {
+                        "name": "PATCH Request Body",
+                        "value": {
+                          "appointment_activity_parties": "@body('Select_Activity_Party_List_from_resourcesInTMP')",
+                          "description": "@{body('Parse_JSON')?['cernerComments']}",
+                          "statecode": 3
+                        }
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "HTTP:_Create_Missing_Appointment_Integration_Result": {
+                        "inputs": {
+                          "body": {
+                            "cvt_visibletouser": true,
+                            "mcs_error": "Could not reschedule. An existing Reserve Resource with Cerner Appointment Id @{body('Parse_JSON')?['cernerAppointmentId']} was not found.",
+                            "mcs_integrationrequest": "@{triggerBody()}",
+                            "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Reschedule",
+                            "mcs_result": "Reserve Resource not found",
+                            "mcs_status": 803750001,
+                            "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                            "mcs_veisprocesssubtype": 799900002,
+                            "mcs_veisprocesstype": 803750000
+                          },
+                          "headers": {
+                            "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                          },
+                          "method": "POST",
+                          "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('HTTP:_Get_Reserve_Resource')['value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Get_Reserve_Resource": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Condition:_Site_Id_Exists": {
+                  "actions": {
+                    "Set_variable:_TMP_Site_OData_Lookup": {
+                      "inputs": {
+                        "name": "TMP Site OData Lookup",
+                        "value": "/sites(@{body('Parse_JSON')?['siteId']})"
+                      },
+                      "runAfter": {},
+                      "type": "SetVariable"
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@body('Parse_JSON')?['siteId']",
+                            ""
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                },
+                "Get_secret:_CDS_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {
+                    "Parse_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Get_Reserve_Resource": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments?$filter=mcs_cernerappointmentid eq '@{body('Parse_JSON')?['cernerAppointmentId']}'"
+                  },
+                  "runAfter": {
+                    "Select_Activity_Party_List_from_resourcesInTMP": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Parse_JSON": {
+                  "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                      "properties": {
+                        "RawHL7": {},
+                        "WorkerLogicAppRunId": {},
+                        "activityPartyList": {},
+                        "cernerAppointmentId": {},
+                        "cernerBuildingId": {},
+                        "cernerClinicId": {},
+                        "cernerComments": {},
+                        "cernerFacilityId": {},
+                        "cernerLocationId": {},
+                        "cernerMessageType": {},
+                        "cernerProviders": {},
+                        "cernerResources": {},
+                        "cernerSchedulerUserEDIPI": {},
+                        "patientICN": {},
+                        "resourceConflicts": {},
+                        "resourcesInTMP": {},
+                        "resourcesMissingInTMP": {},
+                        "scheduledDurationMinutes": {},
+                        "scheduledEnd": {},
+                        "scheduledStart": {},
+                        "siteId": {}
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "runAfter": {},
+                  "type": "ParseJson"
+                },
+                "Select_Activity_Party_List_from_resourcesInTMP": {
+                  "inputs": {
+                    "from": "@body('Parse_JSON')?['resourcesInTMP']",
+                    "select": "@item()?['reserveResourceActivityPartyValue']"
+                  },
+                  "runAfter": {
+                    "Condition:_Site_Id_Exists": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Select"
+                }
+              },
+              "runAfter": {
+                "Initialize_variable:_Resource_Conflict_Descriptions": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "inputs": {},
+              "kind": "Http",
+              "type": "Request"
+            }
+          }
+        },
+        "parameters": {
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

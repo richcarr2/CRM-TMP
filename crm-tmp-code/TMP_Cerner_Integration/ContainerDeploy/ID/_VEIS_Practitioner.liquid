@@ -1,0 +1,21 @@
+{% capture identifiers -%}
+    {% if type == 'First' and XCN-%}{{XCN.Repeats[0].1.Value}},{{XCN.Repeats[0].9.Value}}
+    {% elsif type == 'EDIPI' and XCN and XCN.9.value == 'EDIPI' -%}{{XCN.Repeats[0].1.Value}},{{XCN.Repeats[0].9.Value}}
+    {% elsif type == 'AssigningAuthority' -%}
+        {% for p in XCN.Repeats -%}
+            {% if p.9.Value == authority -%}
+                {{p.1.Value}},{{p.9.Value}}
+                {% break -%}
+            {% elsif p.13.Value == authority -%}
+                {{p.1.Value}},{{p.13.Value}}
+                {% break -%}
+            {% endif -%}
+        {% endfor -%}
+    {% elsif CNN.1 and CNN.9 -%}{{CNN.1.Value}},{{CNN.9.Value}}
+    {% elsif CNN.1 and CNN.10 -%}{{CNN.1.Value}},{{CNN.10.Value}}
+    {% elsif CNN -%}{{CNN.Value}}
+    {% elsif XCN.1 and XCN.9 -%}{{XCN.1.Value}},{{XCN.9.Value}}
+    {% elsif XCN -%}{{XCN.Value}}
+    {% endif -%}
+{% endcapture -%}
+{{ identifiers | generate_id_input: 'Practitioner', false | generate_uuid }}

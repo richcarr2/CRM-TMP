@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "VA.TMP.CRM.Reports", "Reports\VA.TMP.CRM.Reports.rptproj", "{3E453ADA-6184-4AED-9019-10D6E093D8CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Default = Debug|Default
+		DebugLocal|Default = DebugLocal|Default
+		Release|Default = Release|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Debug|Default.ActiveCfg = Debug
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Debug|Default.Build.0 = Debug
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Debug|Default.Deploy.0 = Debug
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.DebugLocal|Default.ActiveCfg = DebugLocal
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.DebugLocal|Default.Build.0 = DebugLocal
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Release|Default.ActiveCfg = Release
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Release|Default.Build.0 = Release
+		{3E453ADA-6184-4AED-9019-10D6E093D8CA}.Release|Default.Deploy.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://va-crmprojects.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Reports\\VA.TMP.CRM.Reports.rptproj
+		SccProjectName1 = Reports
+		SccLocalPath1 = Reports
+	EndGlobalSection
+EndGlobal

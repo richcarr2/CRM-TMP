@@ -1,0 +1,207 @@
+﻿//Library Name: mcs_TSA.OnChange.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_TSA_OnChange = {};
+
+//Called from StatusReason
+MCS.mcs_TSA_OnChange.ProductionLock = function () {
+    var status = Xrm.Page.getAttribute("statuscode").getValue();
+    var isProduction = (status == 251920000) ? true : false;
+    //Draft or Revision
+    var notEditable = (status != 1 && status != 917290007) ? true : false;
+    var groupApptOption = (Xrm.Page.getAttribute("cvt_groupappointment") != null) ? Xrm.Page.getAttribute("cvt_groupappointment").getValue() : false;
+    var label = (groupApptOption == true) ? "Group Appointment " : "";
+
+    label += (isProduction == true) ? "TSA(Production Lock) ~ Save in Draft to Edit" : "TSA-Draft";
+
+    Xrm.Page.ui.tabs.get("tab_7").setLabel(label);
+    var alwaysDisable = [
+        'cvt_relatedprovidersiteid',
+        'cvt_servicetype',
+        'cvt_servicesubtype',
+        'cvt_groupappointment',
+        'cvt_provistaclinic',
+//        'cvt_providersiteservicechief',
+        'cvt_patvistaclinic',
+        'cvt_servicescope',
+//        'cvt_patientsiteservicechief',
+        'cvt_availabletelehealthmodalities'
+    ];
+
+    var disabledFields = [
+        'cvt_servicelevels',
+        'cvt_relatedpatientsiteid',
+        'mcs_capacity',
+        'ownerid',
+        'cvt_duration',
+        'cvt_startevery',
+        'cvt_admissioncriteria',
+        'cvt_otheradmissioncriteriadetails',
+        'cvt_dischargecriteria',
+        'cvt_otherdischargecriteriadetails',
+        'cvt_informationrequiredbeforevisit',
+        'cvt_responsetimeroutineconsultations',
+        'cvt_lastminutecancellations',
+        'cvt_lastminutecancellationdetails',
+        //'cvt_returningpatientappointmentlength',
+        'cvt_responsetimeroutineconsultations',
+        'cvt_responsetimestoreforward',
+        'cvt_providerstaffemergencyresponsibilities',
+        'cvt_patientstaffemergencyresponsibilities',
+        //'cvt_providersiteadminpoc',
+        'cvt_providersiteclinicalpoc',
+        'cvt_relatedpatientsiteid',
+        //'cvt_patientsiteadminpoc',
+        'cvt_patientsiteclinicalpoc',
+        'cvt_patientfacility'
+    ];
+
+    for (fields in alwaysDisable) {
+        Xrm.Page.getControl(alwaysDisable[fields]).setDisabled(true);
+    }
+    for (fields in disabledFields) {
+        Xrm.Page.getControl(disabledFields[fields]).setDisabled(notEditable);
+    }
+    if (!notEditable) {
+        MCS.mcs_TSA_OnChange.GroupAppt();
+        MCS.mcs_TSA_OnChange.ChangeType();
+    }
+};
+
+MCS.mcs_TSA_OnChange.GroupAppt = function () {
+    var patSite = Xrm.Page.getAttribute("cvt_relatedpatientsiteid");
+    var patSiteControl = Xrm.Page.getControl("cvt_relatedpatientsiteid");
+    var patFac = Xrm.Page.getAttribute("cvt_patientfacility");
+    var patFacControl = Xrm.Page.getControl("cvt_patientfacility");
+    var status = Xrm.Page.getAttribute("statuscode").getValue();
+    //var initialstatus = Xrm.Page.getAttribute("cvt_initialstatus");
+    var groupApptOptionValue = (Xrm.Page.getAttribute("cvt_groupappointment") != null) ? Xrm.Page.getAttribute("cvt_groupappointment").getValue() : null;
+    var label = "";
+
+    if (groupApptOptionValue == 1) {
+        patSite.setRequiredLevel("none");
+        patSite.setValue(null);
+        patSiteControl.setVisible(false);    
+        //patFacControl.setVisible(true);
+        patFacControl.setDisabled(false);
+        patFac.setRequiredLevel("required");
+
+        if (status == 251920000) 
+            label = 'Group Appointment TSA(Production Lock) ~ Save in Draft to Edit';       
+        else 
+            label = 'Group Appointment TSA-Draft';
+    }
+    else {
+        patSiteControl.setVisible(true);
+        patSite.setRequiredLevel("required");
+        //patFacControl.setVisible(false);
+        patFacControl.setDisabled(true);
+        patFac.setRequiredLevel("none");
+        Xrm.Page.getControl("mcs_capacity").setDisabled(true);
+        if (status == 251920000) 
+            label = 'TSA(Production Lock) ~ Save in Draft to Edit';        
+        else 
+            label = 'TSA-Draft';       
+    }
+    //initialstatus.setValue(4);
+    Xrm.Page.ui.tabs.get("tab_7").setLabel(label);
+};
+
+MCS.mcs_TSA_OnChange.StoreForward = function () {
+    //Check if this TSA is store forward
+    var SFT = Xrm.Page.getAttribute("cvt_availabletelehealthmodalities").getValue() == 917290001;
+    Xrm.Page.getControl("cvt_groupappointment").setVisible(!SFT);
+    Xrm.Page.getControl("cvt_responsetimeroutineconsultations").setVisible(!SFT);
+    Xrm.Page.getControl("cvt_responsetimestoreforward").setVisible(SFT);
+    Xrm.Page.getControl("cvt_providerstaffemergencyresponsibilities").setVisible(!SFT);
+    Xrm.Page.getControl("mcs_capacity").setVisible(!SFT);
+
+    Xrm.Page.ui.tabs.get('tab_8').sections.get('tab_8_section_1').setVisible(!SFT);
+    Xrm.Page.ui.tabs.get('tab_8').sections.get('tab_8_section_4').setVisible(!SFT);
+
+    if (MCS.mcs_TSA_OnLoad.FormType == MCS.cvt_Common.FORM_TYPE_CREATE && Xrm.Page.getAttribute("cvt_consultationandschedulingpathway").getValue() == null && SFT) {
+        var workloadText = "Referring provider sends imaging consult to imager \n" +
+        "imaging appt scheduled \nimaging is performed \npatient side encounter is closed \n" +
+        "consult sent to the reader \nreader reviews images and provides clinical opinions \n" +
+        "closing consult \nprovider side encounter is closed";
+
+        Xrm.Page.getAttribute("cvt_consultationandschedulingpathway").setValue(workloadText);
+        if (Xrm.Page.getAttribute("cvt_dischargecriteria").getValue() == null)
+            Xrm.Page.getAttribute("cvt_dischargecriteria").setValue(917290000);
+    }
+};
+
+MCS.mcs_TSA_OnChange.ChangeType = function () {
+    if (Xrm.Page.ui.getFormType() == MCS.cvt_Common.FORM_TYPE_CREATE) {
+        Xrm.Page.getAttribute("cvt_servicescope").setValue(917290001);
+        Xrm.Page.getAttribute("cvt_servicescope").setSubmitMode("always");
+    }
+    Xrm.Page.getAttribute("cvt_type").setSubmitMode("always");
+
+    if (Xrm.Page.getAttribute("cvt_type").getValue() == true) { //CVT to Home
+        Xrm.Page.getControl("cvt_groupappointment").setVisible(false);
+        Xrm.Page.getControl("mcs_capacity").setDisabled(true);
+        Xrm.Page.getAttribute("mcs_capacity").setSubmitMode("always");
+        Xrm.Page.getControl("cvt_servicescope").setDisabled(true);
+
+        Xrm.Page.getControl("cvt_patientstaffemergencyresponsibilities").setVisible(false);
+        Xrm.Page.getControl("cvt_relatedpatientsiteid").setVisible(false);
+        Xrm.Page.getControl("cvt_patientfacility").setVisible(false);
+        Xrm.Page.getAttribute("cvt_relatedpatientsiteid").setRequiredLevel("none");
+
+        Xrm.Page.getControl("cvt_responsetimestoreforward").setVisible(false);
+        Xrm.Page.ui.tabs.get("tab_patient").setVisible(false);
+    }
+};
+
+MCS.mcs_TSA_OnChange.setInterIntraFacility = function () {
+    var patSiteObj = Xrm.Page.getAttribute("cvt_relatedpatientsiteid");
+    var patFacObj = Xrm.Page.getAttribute("cvt_patientfacility");
+    var serviceScope = Xrm.Page.getAttribute("cvt_servicescope");
+    //Prov site will always be on the form, so go ahead and getValue, Pat Site or Pat Facility will be on form, don't get both
+    var provSite = Xrm.Page.getAttribute("cvt_relatedprovidersiteid").getValue();
+
+    if (patSiteObj != null)
+        patSiteObj = patSiteObj.getValue();
+    if (patFacObj != null)
+        patFacObj = patFacObj.getValue();
+
+    //determine if the form is displaying facility or site for patients (based on group or individual)
+    var facOrSite = patSiteObj == null ? "facility" : "site";
+    //if either pat site/facility or provider site are not populated, do nothing, otherwise, set intrafacility or interfacility for the user
+    if (provSite == null || ((facOrSite == "site" && patSiteObj == null) || (facOrSite == "facility" && patFacObj == null)))
+        return;
+    else {
+        //Query Facility for both records and match them
+        var provFacilityId = MCS.mcs_TSA_OnChange.QueryFacility(provSite[0].id).Id;
+        var patFacilityId = facOrSite == "facility" ? patFacObj[0].id : MCS.mcs_TSA_OnChange.QueryFacility(patSiteObj[0].id).Id;
+
+        //Clean both guids for the compare
+        if (MCS.cvt_Common.compareGUIDS(patFacilityId, provFacilityId) == true) { //if facility for patient and provider site are the same, then set service scope to intra-facility
+            if (serviceScope.getValue() != 917290001) 
+                serviceScope.setValue(917290001);
+        }
+        else { // if facility for patient and provider site are different, then set service scope to inter-facility
+            if (serviceScope.getValue() != 917290000)
+                serviceScope.setValue(917290000);                  
+        }
+        serviceScope.setSubmitMode("always");
+    }
+};
+
+MCS.mcs_TSA_OnChange.QueryFacility = function (siteID) {
+    var facilityId;
+    var call = CrmRestKit.Retrieve('mcs_site', siteID, ['mcs_FacilityId'], false);
+    call.fail(
+        function (error) {
+            return;
+        }).done(function (site) {
+            if (site && site.d) {
+                facilityId = site.d.mcs_FacilityId;
+            }
+        });
+    return facilityId;
+    
+};

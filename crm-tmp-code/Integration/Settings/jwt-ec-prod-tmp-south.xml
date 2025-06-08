@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PROD-GOV-INTERNAL">
+  <AppService Name="jwt-ec-prod-tmp-south" ResourceGroup="VEIS-PROD-GOV-INTERNAL-INT-SOUTH-API-RG">
+      <AppSettings>
+        <AppSetting Key="Issuer" Value="gov.va.vamf.tmp-azure-south.v1" />
+        <AppSetting Key="Authenticated" Value="true" />
+        <AppSetting Key="AuthenticationAuthority" Value="gov.va.iam.ssoi.v1" />
+        <AppSetting Key="IdType" Value="secid" />
+        <AppSetting Key="VamfAuthRole" Value="staff" />
+        <AppSetting Key="Loa" Value="3" />
+        <AppSetting Key="CertificateUrl" Value="https://vaprodsouthveiskv1.vault.usgovcloudapi.net/secrets/jwt-ec-prod-tmp-south-prod-vaec-va-gov/a6e5a6163af0467fb2f1d3d0a93a28c8" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="BaseUri" Value="https://staff.mobile.va.gov" />
+        <AppSetting Key="EncryptUri" Value="/users/v2/session" />
+        <AppSetting Key="RefererUri" Value="https://tmp.va.gov" />
+        <AppSetting Key="InstrumentationKey" Value="" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="9E267C74C3A8B5F9671CEE7593F1770E94125E13" />
+      </AppSettings>    
+  </AppService>
+</Azure>

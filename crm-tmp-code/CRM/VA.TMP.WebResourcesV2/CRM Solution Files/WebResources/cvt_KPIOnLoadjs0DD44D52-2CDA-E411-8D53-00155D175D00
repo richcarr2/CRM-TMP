@@ -1,0 +1,49 @@
+﻿//Library Name: cvt_KPI.OnLoad.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.cvt_KPI_OnLoad = {};
+
+MCS.cvt_KPI_OnLoad.OnLoad = function () {
+    if (Xrm.Page.ui.getFormType() == 1) { //Create
+        {
+            MCS.cvt_Common.Notifications("Add", 3, 'Please determine if this is a template.');
+            
+            //Editable only on create
+            Xrm.Page.getControl("cvt_template").setDisabled(false);
+            Xrm.Page.getControl("cvt_responsetype").setDisabled(false);
+        }
+    }
+    //If not a template
+    if (Xrm.Page.getAttribute("cvt_template").getValue() != true) {
+        Xrm.Page.ui.tabs.get('tab_general').sections.get('section_response').setVisible(true);
+        Xrm.Page.ui.tabs.get('tab_3').sections.get('section_qc').setVisible(true);
+
+        //If not - include correct reponse field
+        if (Xrm.Page.getAttribute("cvt_responsetype").getValue() != null) {
+            //make one visible
+            switch (Xrm.Page.getAttribute("cvt_responsetype").getValue()) {
+                case 917290000: //Boolean
+                    Xrm.Page.getControl("cvt_responseboolean").setVisible(true);
+                    break;
+                case 917290001: //Whole Number
+                    Xrm.Page.getControl("cvt_responsewholenumber").setVisible(true);
+                    break;
+                case 917290002: //Date
+                    Xrm.Page.getControl("cvt_responsedate").setVisible(true);
+                    break;
+                case 917290003: //Text
+                    Xrm.Page.getControl("cvt_responsetext").setVisible(true);
+                    break;
+            }
+        }
+
+        //Hide response type
+        Xrm.Page.getControl("cvt_responsetype").setDisabled(true);
+    }
+    else { //Template
+        Xrm.Page.ui.tabs.get('tab_general').sections.get('section_setup').setVisible(true);
+        MCS.cvt_Common.Notifications("Add", 3, 'Record is a template.');
+    }
+};

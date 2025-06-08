@@ -1,0 +1,350 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "type": "String"
+        },
+        "ISE_Name": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+            }
+        },
+        "IntegrationAccount_Name": {
+            "type": "string"
+        },
+        "KeyVault_Connection_Name": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+            }
+        },
+        "DataLake_URL": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+        "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+        "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]",
+        "VEIS_OAuth_URL": "[concat('https://login.microsoftonline.us/',subscription().tenantId,'/oauth2/v2.0/token')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicApp_Name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "CKID": "195",
+                "Environment": "DEVTEST",
+                "ProjectName": "Veterans Experience Integration Solution",
+                "VAAzureProgram": "EIS",
+                "VAECID": "AZG20181226001",
+                "displayName": "LogicApp"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "integrationAccount": {
+                    "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+                },
+                "integrationServiceEnvironment": {
+                    "name": "[parameters('ISE_Name')]",
+                    "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+                    "type": "Microsoft.Logic/integrationServiceEnvironments"
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "DL Url": {
+                            "defaultValue": "https://vaeistmpdatalakedev.dfs.core.usgovcloudapi.net",
+                            "type": "String"
+                        },
+                        "VEIS OAuth URL": {
+                            "defaultValue": "https://login.microsoftonline.us/f7c49e36-971b-42c7-b244-a88eed6c0bf6/oauth2/v2.0/token",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "relativePath": "DataLakeAPIWrapper",
+                                "schema": {
+                                    "properties": {
+                                        "Data": {
+                                            "properties": {
+                                                "FileContent": {
+                                                    "type": "string"
+                                                },
+                                                "FileName": {
+                                                    "type": "string"
+                                                },
+                                                "FolderName": {
+                                                    "type": "string"
+                                                },
+                                                "FolderPath": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "Operation": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Filter_array:_Filter_Errors": {
+                            "runAfter": {
+                                "Scope:_Try": [
+                                    "Failed",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Query",
+                            "inputs": {
+                                "from": "@result('Scope:_Try')",
+                                "where": "@equals('', 'Failed')"
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "Scope:_Try": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "DataLakeAPIWrapper ran successfully\nWorkflow ID:  '@{workflow().run.name}'",
+                                "statusCode": 200
+                            }
+                        },
+                        "Response_to_client": {
+                            "runAfter": {
+                                "Filter_array:_Filter_Errors": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "code": "Error",
+                                    "message": "The Logic App Action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'. Workflow ID: @{workflow().run.name}"
+                                },
+                                "statusCode": 500
+                            }
+                        },
+                        "Scope:_Try": {
+                            "actions": {
+                                "Get_secret_-_DL_Client_Id": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/secrets/@{encodeURIComponent('datalake-client-id')}/value"
+                                    }
+                                },
+                                "Get_secret_-_DL_Client_Secret": {
+                                    "runAfter": {
+                                        "Get_secret_-_DL_Client_Id": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/secrets/@{encodeURIComponent('datalake-client-secret')}/value"
+                                    }
+                                },
+                                "HTTP:_Fetch_OAuth_Token": {
+                                    "runAfter": {
+                                        "Get_secret_-_DL_Client_Secret": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Http",
+                                    "inputs": {
+                                        "body": "client_id=@{body('Get_secret_-_DL_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret_-_DL_Client_Secret')?['value']}&scope=https://datalake.azure.net/.default",
+                                        "headers": {
+                                            "content-type": "application/x-www-form-urlencoded"
+                                        },
+                                        "method": "POST",
+                                        "uri": "@parameters('VEIS OAuth URL')"
+                                    }
+                                },
+                                "Switch_on_Operation": {
+                                    "runAfter": {
+                                        "HTTP:_Fetch_OAuth_Token": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "cases": {
+                                        "Create_/_save_file": {
+                                            "case": "CreateFile",
+                                            "actions": {
+                                                "Append_-_Flush_stream": {
+                                                    "runAfter": {
+                                                        "Append_file": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "type": "Raw",
+                                                            "value": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                                        },
+                                                        "headers": {
+                                                            "x-ms-content-type": "text/plain",
+                                                            "x-ms-version": "2018-11-09"
+                                                        },
+                                                        "method": "PATCH",
+                                                        "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?action=flush&position=@{length(triggerBody()?['Data']?['FileContent'])}"
+                                                    }
+                                                },
+                                                "Append_file": {
+                                                    "runAfter": {
+                                                        "Create_file": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "type": "Raw",
+                                                            "value": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                                        },
+                                                        "body": "@triggerBody()?['Data']?['FileContent']",
+                                                        "headers": {
+                                                            "Content-Length": "@{length(triggerBody()?['Data']?['FileContent'])}",
+                                                            "x-ms-version": "2018-11-09"
+                                                        },
+                                                        "method": "PATCH",
+                                                        "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?action=append&position=0"
+                                                    }
+                                                },
+                                                "Create_file": {
+                                                    "runAfter": {},
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "type": "Raw",
+                                                            "value": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                                        },
+                                                        "headers": {
+                                                            "x-ms-version": "2018-11-09"
+                                                        },
+                                                        "method": "PUT",
+                                                        "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}?resource=file"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "Create_directory": {
+                                            "case": "CreateFolder",
+                                            "actions": {
+                                                "Create_Directory": {
+                                                    "runAfter": {},
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "type": "Raw",
+                                                            "value": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                                        },
+                                                        "headers": {
+                                                            "x-ms-version": "2018-11-09"
+                                                        },
+                                                        "method": "PUT",
+                                                        "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FolderName']}?resource=directory"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "Get_File": {
+                                            "case": "GetFile",
+                                            "actions": {
+                                                "Get_file": {
+                                                    "runAfter": {},
+                                                    "type": "Http",
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "type": "Raw",
+                                                            "value": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                                                        },
+                                                        "headers": {
+                                                            "x-ms-version": "2018-11-09"
+                                                        },
+                                                        "method": "GET",
+                                                        "uri": "@{parameters('DL Url')}/@{triggerBody()?['Data']?['FolderPath']}/@{triggerBody()?['Data']?['FileName']}"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": {
+                                        "actions": {}
+                                    },
+                                    "expression": "@triggerBody()?['Operation']",
+                                    "type": "Switch"
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "Scope"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "keyvault": {
+                                "connectionId": "[variables('connections_keyvault_externalid')]",
+                                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+                            }
+                        }
+                    },
+                    "DL URL": {
+                        "value": "[parameters('DataLake_URL')]"
+                    },
+                    "VEIS OAuth URL": {
+                        "value": "[variables('VEIS_OAuth_URL')]"
+                    }
+                }
+            }
+        }
+    ]
+}

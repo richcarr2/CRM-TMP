@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "name": "ContainerDeploy (Templates)",
+            "path": "c:\\Users\\VHANTXMooreR1\\Desktop\\Code\\TMP_Cerner_Integration\\ContainerDeploy"
+        },
+        {
+            "path": "c:\\Users\\VHANTXMooreR1\\Desktop\\Code\\TMP_Cerner_Integration\\ContainerDeploy\\SampleData"
+        }
+    ],
+    "settings": {
+        "workbench.editor.enablePreview": false,
+        "diffEditor.renderSideBySide": false,
+        "microsoft.health.fhir.converter.templateFolder": "c:\\Users\\VHANTXMooreR1\\Desktop\\Code\\TMP_Cerner_Integration\\ContainerDeploy",
+        "microsoft.health.fhir.converter.resultFolder": "c:\\Users\\VHANTXMooreR1\\AppData\\Roaming\\Code\\User\\workspaceStorage\\3717fcf84dc2810a2b0c449dd2ba3508\\ms-azuretools.vscode-health-fhir-converter\\fhirConverterResult"
+    }
+}

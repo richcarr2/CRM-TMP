@@ -1,0 +1,100 @@
+﻿//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.mcs_Service_Activity_OnLoad = {};
+
+//Global Variables
+var CachedCapacityValue = null;
+var totalPatients = new Array();
+var totalGroupPatients = new Array();
+
+//This onLoad function is the master function that coordinates the actual scripts that run
+MCS.mcs_Service_Activity_OnLoad.OnLoad = function () {
+    //Add Scripting events to fields for when fields change
+    Xrm.Page.getAttribute("cvt_type").addOnChange(MCS.mcs_Service_Activity.CVTtoHome);
+    Xrm.Page.getAttribute("mcs_groupappointment").addOnChange(MCS.mcs_Service_Activity.GroupAppt);
+    Xrm.Page.getAttribute("mcs_groupappointment").addOnChange(MCS.mcs_Service_Activity.EnableTSA);
+    Xrm.Page.getAttribute("mcs_groupappointment").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_groupappointment").addOnChange(MCS.mcs_Service_Activity.CreateName);
+    Xrm.Page.getAttribute("cvt_telehealthmodality").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_relatedsite").addOnChange(MCS.mcs_Service_Activity.EnableTSA);
+    Xrm.Page.getAttribute("mcs_relatedsite").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_relatedprovidersite").addOnChange(MCS.mcs_Service_Activity.EnableTSA);
+    Xrm.Page.getAttribute("mcs_relatedprovidersite").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_servicetype").addOnChange(MCS.mcs_Service_Activity.EnableServiceSubType);
+    Xrm.Page.getAttribute("mcs_servicetype").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_servicetype").addOnChange(MCS.mcs_Service_Activity.CreateName);
+    Xrm.Page.getAttribute("mcs_servicesubtype").addOnChange(MCS.mcs_Service_Activity.EnableTSA);
+    Xrm.Page.getAttribute("mcs_servicesubtype").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("cvt_relatedproviderid").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_relatedtsa").addOnChange(MCS.mcs_Service_Activity.GetTSAData);
+    Xrm.Page.getAttribute("mcs_relatedtsa").addOnChange(MCS.mcs_Service_Activity.HandleOnChangeTSALookup);
+    Xrm.Page.getAttribute("mcs_relatedtsa").addOnChange(MCS.mcs_Service_Activity.ClearResources);
+    Xrm.Page.getAttribute("mcs_relatedtsa").addOnChange(MCS.mcs_Service_Activity.filterSubGrid);
+    Xrm.Page.getAttribute("mcs_capacity").addOnChange(MCS.mcs_Service_Activity.CheckCapacity);
+    //Xrm.Page.getAttribute("mcs_capacity").addOnChange(MCS.mcs_Service_Activity.CalculateRemainingCapacity);
+    Xrm.Page.getAttribute("mcs_remainingcapacity").addOnChange(MCS.mcs_Service_Activity.RemainingCapacity);
+    //Xrm.Page.getAttribute("cvt_patientcount").addOnChange(MCS.mcs_Service_Activity.CalculateRemainingCapacity);
+    //Xrm.Page.getAttribute("customers").addOnChange(MCS.mcs_Service_Activity.CalculateRemainingCapacity);
+    //Xrm.Page.getAttribute("customers").addOnChange(MCS.mcs_Service_Activity.CreateName);
+    //Xrm.Page.getAttribute("resources").addOnChange(MCS.mcs_Service_Activity.SchedulingInfo);
+
+    //Run the following functions when the form loads
+    MCS.mcs_Service_Activity_OnLoad.CheckCapacity();
+    MCS.mcs_Service_Activity.EnableServiceSubType();
+    MCS.mcs_Service_Activity.EnableTSA();
+    MCS.mcs_Service_Activity.GroupAppt();
+    //MCS.mcs_Service_Activity_OnLoad.Patients();
+    //MCS.mcs_ServiceActivity.filterSubGrid();
+    MCS.mcs_Service_Activity_OnLoad.SetDefaultDateTime();
+    //Form_onload();
+    MCS.mcs_Service_Activity.GetTSAData();
+    MCS.mcs_Service_Activity.HandleOnChangeTSALookup();
+    MCS.mcs_Service_Activity.CVTtoHome();
+    MCS.mcs_Service_Activity_OnLoad.RemoveNotification();
+    MCS.mcs_Service_Activity_OnLoad.ShowMVI();
+};
+
+
+//Set capacity to Required and cache the original value into global variable for later use
+MCS.mcs_Service_Activity_OnLoad.CheckCapacity = function () {
+    var capacity = Xrm.Page.getAttribute("mcs_capacity");
+    capacity.setRequiredLevel("required");
+    if (capacity.getValue() == null)
+        capacity.setValue(1);
+    CachedCapacityValue = capacity.getValue();
+};
+
+//If the Service is not loaded, default the start and end time to 8:30-9:30
+MCS.mcs_Service_Activity_OnLoad.SetDefaultDateTime = function () {
+    //Set Default Datetime if the TSA Service has not been loaded yet. 
+    if (Xrm.Page.getAttribute("serviceid").getValue() == null) {
+        MCS.cvt_Common.DateTime('scheduledstart', 8, 30);
+        MCS.cvt_Common.DateTime('scheduledend', 9, 30);
+        Xrm.Page.getAttribute("scheduleddurationminutes").setValue(60);
+    }
+};
+
+//unsupported modification to clear out the incorrect notification that the resources do not match the service rules listed (they are in the appointments per design)
+MCS.mcs_Service_Activity_OnLoad.RemoveNotification = function () {
+    //Group and Update Form
+    if ((Xrm.Page.getAttribute("mcs_groupappointment").getValue() == true) && (Xrm.Page.ui.getFormType() != 1)) {
+        var notificationsList = Sys.Application.findComponent('crmNotifications');
+        if (notificationsList) {
+            //Hide message
+            notificationsList.SetVisible(false);
+        }
+    }
+};
+
+//Read the configuration value from Active Settings to determine whether or not to display the Patient Search (MVI) iFrame as well as the patients field
+MCS.mcs_Service_Activity_OnLoad.ShowMVI = function () {
+    var showMVI = MCS.cvt_Common.MVIConfig();
+    Xrm.Page.ui.tabs.get("tab_7").setVisible(showMVI);
+    Xrm.Page.getControl("customers").setVisible(showMVI);
+    if (showMVI)
+        Xrm.Page.ui.tabs.get("tab_7").setFocus();
+    else
+        Xrm.Page.getControl("cvt_type").setFocus();
+};

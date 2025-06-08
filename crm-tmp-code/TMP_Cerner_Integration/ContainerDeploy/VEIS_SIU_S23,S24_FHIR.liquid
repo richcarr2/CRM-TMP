@@ -1,0 +1,71 @@
+{
+    "resourceType": "Bundle",
+    "type": "batch",
+    "entry": [
+        {% assign firstSegments = hl7v2Data | get_first_segments: 'MSH|PID|SCH|AIL|AIP|AIG' -%}
+
+        {% evaluate sendingFacilityGUID using 'ID/VEIS_Organization' HD: firstSegments.MSH.4 -%}
+        {% evaluate messageHeaderGUID using 'ID/VEIS_MessageHeader' MSH: firstSegments.MSH -%}
+        {% evaluate appointmentId using 'ID/VEIS_Appointment' SCH: firstSegments.SCH, type: 'First'-%}
+        {% evaluate EnteredByPersonGUID using 'ID/VEIS_Practitioner' XCN: firstSegments.SCH.20, type: 'First' -%}
+
+        {% comment %} Maps the MSH segment to a MessageHeader resource {% endcomment %}
+        {% if messageHeaderGUID -%}
+            {% include 'Resource/VEIS_MessageHeader' MSH: firstSegments.MSH, sendingFacilityGUID: sendingFacilityGUID, GUID: messageHeaderGUID -%}
+        {% endif -%}
+
+        {% comment %} Maps the MSH segment to an Organization resource {% endcomment %}
+        {% if sendingFacilityGUID -%}
+            {% include 'Resource/VEIS_Organization' MSH: firstSegments.MSH, ID: sendingFacilityGUID -%}
+        {% endif -%}
+
+        {% comment %} Maps the MSH segment to a Provenance resource {% endcomment %}
+        {% evaluate provenanceId using 'ID/VEIS_Provenance' MSH: firstSegments.MSH, baseId: appointmentId -%}
+        {% if provenanceId -%}
+            {% include 'Resource/VEIS_Provenance' SCH: firstSegments.SCH, Practitioner_GUID_SCH_20: EnteredByPersonGUID, MSH: firstSegments.MSH, ID: provenanceId, REF: appointmentId -%}
+        {% endif -%}
+
+        {% comment %} Maps each AIP segment to a Schedule resource and creates Practitioner for each unique EDIPI {% endcomment %}
+        {% assign AIPSegmentLists = hl7v2Data | get_segment_lists: 'AIP' -%}
+        {% for AIPSegment in AIPSegmentLists.AIP -%}
+            {% evaluate PractitionerId using 'ID/VEIS_Practitioner' XCN: AIPSegment.3, type: 'EDIPI' -%}
+            {% evaluate ScheduleGUID using 'ID/VEIS_Schedule' SCH: firstSegments.SCH, type: 'Composite', compositeValue: AIPSegment.6.value -%}
+            {% if PractitionerId -%}
+                {% evaluate practitionerRoleMedicalPractitionerGUID using 'ID/VEIS_PractitionerRole' XCN: AIPSegment.3-%}
+                {% if practitionerRoleMedicalPractitionerGUID -%}
+                    {% include 'Resource/VEIS_PractitionerRole' PractitionerRole_code: '158965000', Practitioner_GUID_SCH_20: EnteredByPersonGUID, ID: practitionerRoleMedicalPractitionerGUID, -%}
+                    {% include 'Reference/VEIS_PractitionerRole/VEIS_Practitioner' ID: practitionerRoleMedicalPractitionerGUID, REF: PractitionerId -%}
+                {% endif -%}
+                {% include 'Resource/VEIS_Practitioner' AIP: AIPSegment, ID: PractitionerId -%}
+                {% if ScheduleGUID -%}
+                    {% include 'Resource/VEIS_Schedule' AIP: AIPSegment, GUID: ScheduleGUID, Actor_Reference: PractitionerId -%}
+                {% endif -%}
+            {% endif -%}
+        {% endfor -%}
+
+        {% assign AIGSegmentLists = hl7v2Data | get_segment_lists: 'AIG' -%}
+        {% for AIGSegment in AIGSegmentLists.AIG -%}
+            {% if AIGSegment.4.value == 'TMP Room' -%} {% comment %} If the resource type is equal to TMP Room, create a location resource {% endcomment %}
+                {% evaluate AIGLocationGUID using 'ID/VEIS_Location' PL: AIGSegment.3, type: 'First' -%}
+                {% if AIGLocationGUID -%} 
+                    {% if appointmentId -%} {% comment %} If there is a SCH segment, include a reference to the room in the appointment resource {% endcomment %}
+                        {% include 'Resource/VEIS_Appointment' Parctipant_Type_Text: 'TMP Room', AIG: AIGSegment, Location_ID: AIGSegment.3, ID: appointmentId, Location_GUID: AIGLocationGUID -%}
+                    {% endif -%}
+                    {% if locationFacilityGUID -%} {% comment %} If a facility is included in the message, create a location resource with a partOf attribute referencing the facility {% endcomment %}
+                        {% include 'Resource/VEIS_Location' Location_partOf_display: firstSegments.AIL.3.4.value, Location_partOf_reference: locationFacilityGUID, Location_physicalType: 'Room', Location_ID: AIGSegment.3, GUID: AIGLocationGUID -%} {% comment %} Should I added reference to AIL.3.4? {% endcomment %}   
+                    {% else -%} {% comment %} Otherwise, create a location resource with no references {% endcomment %}
+                        {% include 'Resource/VEIS_Location' Location_physicalType: 'Room', Location_ID: AIGSegment.3, GUID: AIGLocationGUID -%}
+                    {% endif -%}
+                {% endif -%}
+            {% elsif AIGSegment.4.value == 'TMP Technology' -%} {% comment %} If the resource type is equal to TMP Technology, create a device resource  {% endcomment %}
+                {% evaluate AIGHealthcareServiceGUID using 'ID/VEIS_HealthcareService' AIG: AIGSegment, type: 'First' -%}
+                {% if AIGHealthcareServiceGUID -%} 
+                    {% if appointmentId -%} {% comment %} If there is a SCH segment, include a reference to the HealthcareService in the appointment resource {% endcomment %}
+                        {% include 'Resource/VEIS_Appointment' Parctipant_Type_Text: 'TMP Technology', AIG: AIGSegment, HealthcareService_GUID: AIGHealthcareServiceGUID, ID: appointmentId-%}
+                    {% endif -%}
+                    {% include 'Resource/VEIS_HealthcareService' AIG: AIGSegment, GUID: AIGHealthcareServiceGUID -%}
+                {% endif -%}
+            {% endif -%}
+        {% endfor -%}
+    ] 
+    }

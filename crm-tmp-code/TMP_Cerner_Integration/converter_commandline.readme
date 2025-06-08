@@ -1,0 +1,10 @@
+# command for logging in on Gov Cloud
+az cloud set --name AzureUSGovernment
+
+echo "<contaner key>" | .\Converter.Tool\oras.exe login <container name>.azurecr.us -u <container name> -p 
+
+# pull DEV templtes
+.\Converter.Tool\Microsoft.Health.Fhir.Liquid.Converter.Tool.exe pull <container name>.azurecr.us/fhir-converter:main .\ContainerDeploy
+
+# push to downstream
+.\Converter.Tool\Microsoft.Health.Fhir.Liquid.Converter.Tool.exe push <container name>.azurecr.us/fhir-converter:main .\ContainerDeploy

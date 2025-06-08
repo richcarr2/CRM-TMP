@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentConfig>
+  <LookupField id="cvt_componenttype"
+             label="Component Type">
+    <ComponentType id="hiddenByDefault">
+      <Field id="cvt_cevnalias"/>
+      <Field id="cvt_isdnnumber"/>
+      <Field id="cvt_h323id"/>
+      <Field id="cvt_e164alias"/>
+      <Field id="cvt_sipuri"/>
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_networkaddress"/>
+      <Field id="cvt_webinterfaceurl"/>
+    </ComponentType>
+    <ComponentType id="Codec, Hardware"
+                   description="Codec, Hardware is ...">
+      <Field id="cvt_cevnalias"/>
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_tmssystemname"/>
+      <Field id="cvt_tmsid"/>
+    </ComponentType>
+    <ComponentType id="Codec Monitor Combo - Desktop"
+                   description="Codec Monitor Combo - Desktop is ...">
+      <Field id="cvt_cevnalias"/>
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_tmssystemname"/>
+      <Field id="cvt_tmsid"/>
+    </ComponentType>
+    <ComponentType id="Dermatoscope Peripheral"
+                   description="Dermatoscope Peripheral is ...">
+    </ComponentType>
+    <ComponentType id="CPU-Desktop"
+                   description="CPU-Desktop is ...">
+      <Field id="cvt_computername"/>
+      <Field id="cvt_ipaddress"/>
+    </ComponentType>
+    <ComponentType id="Digital Stethoscope Peripheral"
+                   description="Digital Stethoscope Peripheral is ...">
+      <Field id="cvt_ipaddress"/>
+    </ComponentType>
+    <ComponentType id="CPU-Laptop"
+                   description="CPU-Laptop is ...">
+      <Field id="cvt_computername"/>
+      <Field id="cvt_ipaddress"/>
+    </ComponentType>
+    <ComponentType id="TEMS (Telemedicine Encounter Management Software)"
+               description="Telemedicine Encounter Management is ...">
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_interfacedperipherals"/>
+    </ComponentType>
+    <ComponentType id="TEMS (Telemed Encounter Management Software)"
+               description="Telemedicine Encounter Management is ...">
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_interfacedperipherals"/>
+    </ComponentType>
+    <ComponentType id="Telemedicine Encounter Management Software"
+               description="Telemedicine Encounter Management is ...">
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_interfacedperipherals"/>
+    </ComponentType>
+    <ComponentType id="Telemed Encounter Management Software"
+               description="Telemedicine Encounter Management is ...">
+      <Field id="cvt_ipaddress"/>
+      <Field id="cvt_interfacedperipherals"/>
+    </ComponentType>
+    <ComponentType id="Codec, Software"
+               description="Codec, Software is ...">
+      <Field id="cvt_evnaccountname"/>
+    </ComponentType>
+    <ComponentType id="CVT Patient Tablet"
+           description="CVT Patient Tablet is ...">
+    </ComponentType>
+    <ComponentType id="Audiology Peripheral"
+                      description="Audiology Peripheral is...">
+      <Field id="cvt_interfacedperipherals"/>
+    </ComponentType>
+    <ComponentType id="Camera, Asynchronous Desktop"
+                   description="Camera, Asynchronous Desktop is...">
+    </ComponentType>
+    <ComponentType id="Camera, Asynchronous Hand Held"
+                   description="Camera, Asynchronous Hand Held is ...">
+    </ComponentType>
+    <ComponentType id="Camera, Hand Held Examination"
+                   description="Camera, Hand Held Examination is ...">
+    </ComponentType>
+    <ComponentType id="Camera, Videoconferencing/Web"
+                   description="Camera, Videoconferencing/Web is ...">
+    </ComponentType>
+    <ComponentType id="Cart"
+                   description="Cart is ...">
+    </ComponentType>
+    <ComponentType id="Laryngoscope Peripheral"
+               description="Laryngoscope Peripheral is ...">
+    </ComponentType>
+    <ComponentType id="Light Source for Scopes"
+                   description="Light Source for Scopes is ...">
+    </ComponentType>
+    <ComponentType id="Monitor is"
+                   description="Monitor is ...">
+    </ComponentType>
+    <ComponentType id="Otoscope Peripheral"
+                    description="Otoscope Peripheral is ...">
+    </ComponentType>
+    <ComponentType id="Virtual Meeting Space"
+               description="Codec Monitor Combo - Desktop is ...">
+      <Field id="cvt_webinterfaceurl"/>
+    </ComponentType>
+  </LookupField>
+</ComponentConfig>

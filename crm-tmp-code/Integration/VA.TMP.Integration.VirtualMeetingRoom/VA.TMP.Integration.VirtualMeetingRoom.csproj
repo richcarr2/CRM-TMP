@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{79E91015-1B76-4C3A-A869-2C5696EF7000}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VA.TMP.Integration.VirtualMeetingRoom</RootNamespace>
+    <AssemblyName>VA.TMP.Integration.VirtualMeetingRoom</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\VA.TMP.Integration.VIMT.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=2.0.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.12\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.12\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.12\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.3\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Unity.Abstractions, Version=5.11.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.Abstractions.5.11.1\lib\net47\Unity.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Container, Version=5.11.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.Container.5.11.1\lib\net47\Unity.Container.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Interception, Version=5.11.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.Interception.5.11.1\lib\net47\Unity.Interception.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MessageHandler\VirtualMeetingRoomDeleteHandler.cs" />
+    <Compile Include="MessageHandler\VirtualMeetingRoomCreateHandler.cs" />
+    <Compile Include="MessageHandler\VmrOnDemandCreateHandler.cs" />
+    <Compile Include="PipelineSteps\Create\01 - StartProcessing.cs" />
+    <Compile Include="PipelineSteps\Create\02 - ConnectToCrm.cs" />
+    <Compile Include="PipelineSteps\Create\03 - GetIntegrationSettings.cs" />
+    <Compile Include="PipelineSteps\Create\04 - GetServiceAppointmentStep.cs" />
+    <Compile Include="PipelineSteps\Create\12 - SetMeetingRoomName.cs" />
+    <Compile Include="PipelineSteps\Create\13 - GeneratePins.cs" />
+    <Compile Include="PipelineSteps\Create\14 - SetMiscData.cs" />
+    <Compile Include="PipelineSteps\Create\20 - SerializeVmr.cs" />
+    <Compile Include="PipelineSteps\Create\21 - ValidateXml.cs" />
+    <Compile Include="PipelineSteps\Create\22 - CreateMeetingRoomRequest.cs" />
+    <Compile Include="PipelineSteps\Create\23 - CreateUrls.cs" />
+    <Compile Include="PipelineSteps\Create\24 - CompareUrls.cs" />
+    <Compile Include="PipelineSteps\Create\98 - CreateResponse.cs" />
+    <Compile Include="PipelineSteps\Create\99 - StopProcessing.cs" />
+    <Compile Include="PipelineSteps\Delete\01 - StartProcessing.cs" />
+    <Compile Include="PipelineSteps\Delete\02 - ConnectToCrm.cs" />
+    <Compile Include="PipelineSteps\Delete\03 - GetIntegrationSettings.cs" />
+    <Compile Include="PipelineSteps\Delete\10 - DeleteMeetingRoomRequest.cs" />
+    <Compile Include="PipelineSteps\Delete\08 - SerializeVmr.cs" />
+    <Compile Include="PipelineSteps\Delete\09 - ValidateXml.cs" />
+    <Compile Include="PipelineSteps\Delete\98 - CreateResponse.cs" />
+    <Compile Include="PipelineSteps\Delete\99 - StopProcessing.cs" />
+    <Compile Include="PipelineSteps\OnDemand\01 - StartProcessing.cs" />
+    <Compile Include="PipelineSteps\OnDemand\02 - ConnectToCrm.cs" />
+    <Compile Include="PipelineSteps\OnDemand\03 - GetIntegrationSettings.cs" />
+    <Compile Include="PipelineSteps\OnDemand\04 - GetVodStep.cs" />
+    <Compile Include="PipelineSteps\OnDemand\12 - SetMeetingRoomName.cs" />
+    <Compile Include="PipelineSteps\OnDemand\13 - GeneratePins.cs" />
+    <Compile Include="PipelineSteps\OnDemand\14 - SetMiscData.cs" />
+    <Compile Include="PipelineSteps\OnDemand\20 - SerializeVmr.cs" />
+    <Compile Include="PipelineSteps\OnDemand\21 - ValidateXml.cs" />
+    <Compile Include="PipelineSteps\OnDemand\22 - CreateMeetingRoomRequest.cs" />
+    <Compile Include="PipelineSteps\OnDemand\23 - CreateUrls.cs" />
+    <Compile Include="PipelineSteps\OnDemand\98 - CreateResponse.cs" />
+    <Compile Include="PipelineSteps\OnDemand\99 - StopProcessing.cs" />
+    <Compile Include="Processor\VirtualMeetingRoomDeleteProcessor.cs" />
+    <Compile Include="Processor\VirtualMeetingRoomCreateProcessor.cs" />
+    <Compile Include="Processor\VmrOnDemandCreateProcessor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StateObject\VirtualMeetingRoomDeleteStateObject.cs" />
+    <Compile Include="StateObject\VirtualMeetingRoomCreateStateObject.cs" />
+    <Compile Include="StateObject\VmrOnDemandCreateStateObject.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\EC\Virtual Meeting Room\Ec.VirtualMeetingRoom.Messages\Ec.VirtualMeetingRoom.Messages.csproj">
+      <Project>{34b5d573-4f84-48cf-86fd-ab49d701ef95}</Project>
+      <Name>Ec.VirtualMeetingRoom.Messages</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Common\VA.TMP.Integration.Common.csproj">
+      <Project>{a0e8519c-1f20-434e-a076-b1d708201ca8}</Project>
+      <Name>VA.TMP.Integration.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Context.Interface\VA.TMP.Integration.Context.Interface.csproj">
+      <Project>{4250ea97-012f-4ce0-b476-1a9bd96a345c}</Project>
+      <Name>VA.TMP.Integration.Context.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Context\VA.TMP.Integration.Context.csproj">
+      <Project>{7e9f52f1-7861-41c5-9d83-228edf1c7dab}</Project>
+      <Name>VA.TMP.Integration.Context</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Core.Exceptions\VA.TMP.Integration.Core.Exceptions.csproj">
+      <Project>{DE3C1B34-1991-4A67-B201-60EDC4E7C1E0}</Project>
+      <Name>VA.TMP.Integration.Core.Exceptions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Core\VA.TMP.Integration.Core.csproj">
+      <Project>{c8cd62e0-88ee-4f35-bc2c-816b2058bf2b}</Project>
+      <Name>VA.TMP.Integration.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Messages.VirtualMeetingRoom\VA.TMP.Integration.Messages.VirtualMeetingRoom.csproj">
+      <Project>{08a964fd-a3e7-4a20-b5a3-49f6710e7cd5}</Project>
+      <Name>VA.TMP.Integration.Messages.VirtualMeetingRoom</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Rest.Interface\VA.TMP.Integration.Rest.Interface.csproj">
+      <Project>{595c8176-40cf-454e-8db1-780912be9ca9}</Project>
+      <Name>VA.TMP.Integration.Rest.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Rest\VA.TMP.Integration.Rest.csproj">
+      <Project>{abd47875-58c2-4aa8-90e9-a63b7549a28e}</Project>
+      <Name>VA.TMP.Integration.Rest</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Schema.VirtualMeetingRoom\VA.TMP.Integration.Schema.VirtualMeetingRoom.csproj">
+      <Project>{67c22ea0-11a6-49a4-82ef-e29467fda32b}</Project>
+      <Name>VA.TMP.Integration.Schema.VirtualMeetingRoom</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Token.Interface\VA.TMP.Integration.Token.Interface.csproj">
+      <Project>{3e1b0c8d-c400-4895-9056-1de73b8bdb20}</Project>
+      <Name>VA.TMP.Integration.Token.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VA.TMP.Integration.Token\VA.TMP.Integration.Token.csproj">
+      <Project>{c7b317e3-20da-4e23-8866-a6916fd9de2c}</Project>
+      <Name>VA.TMP.Integration.Token</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

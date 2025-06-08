@@ -1,0 +1,16 @@
+<HTML><HEAD>
+<META charset=utf-8></HEAD>
+<BODY>﻿
+<SCRIPT type=text/javascript src="ClientGlobalContext.js.aspx"></SCRIPT>
+
+<SCRIPT type=text/javascript src="mcs_json.js"></SCRIPT>
+
+<SCRIPT type=text/javascript src="cvt_jquery.1.7.1.js"></SCRIPT>
+
+<SCRIPT type=text/javascript src="mcs_CRMRestKit.js"></SCRIPT>
+
+<SCRIPT type=text/javascript src="cvt_EmergencyContactViewerPageScript"></SCRIPT>
+ <LINK rel=stylesheet type=text/css href="cvt_TwitterBootStrap">
+<P id=HTMLBody></P>
+<SCRIPT>onLoad()</SCRIPT>
+</BODY></HTML>

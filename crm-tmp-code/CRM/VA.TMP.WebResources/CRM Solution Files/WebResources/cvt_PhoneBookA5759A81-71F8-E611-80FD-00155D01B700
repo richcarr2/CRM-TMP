@@ -1,0 +1,17 @@
+﻿MCS = {};
+MCS.PhoneBook = {};
+MCS.PhoneBook.SetName = function () {
+    var name = "";
+    var providerObj = Xrm.Page.getAttribute("cvt_provider");
+    var provider = "";
+    if (providerObj != null && providerObj.getValue() != null) {
+        provider = providerObj.getValue()[0].name;
+        name += provider;
+    }
+    var startTime = Xrm.Page.getAttribute("cvt_starttime").getValue();
+    if (startTime != null && startTime != "")
+        name += ": " + startTime.toLocaleDateString();
+
+    Xrm.Page.getAttribute("cvt_name").setValue(name);
+};
+

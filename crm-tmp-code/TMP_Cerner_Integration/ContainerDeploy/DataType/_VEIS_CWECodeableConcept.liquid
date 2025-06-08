@@ -1,0 +1,11 @@
+﻿"coding":
+[
+    {
+    	{% if mapping -%}
+			"code":"{{ CWE | get_property: mapping, 'code' }}",
+			"display":"{{ CWE | get_property: mapping, 'display' }}",
+			"system":"{{ CWE | get_property: mapping, 'system' }}",
+			"version":"{{ CWE| get_property: mapping, 'version' }}",
+        {% endif -%}
+    }
+],

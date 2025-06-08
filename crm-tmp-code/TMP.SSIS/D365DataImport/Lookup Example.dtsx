@@ -1,0 +1,1614 @@
+﻿<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="6/2/2019 6:38:58 PM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="VHACDWDWHETL15"
+  DTS:CreatorName="VHAMASTER\VHAJITBROWNT"
+  DTS:DTSID="{4D06CE61-3A59-4353-92A6-6DC076AC0727}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="15.0.1300.371"
+  DTS:LocaleID="1033"
+  DTS:ObjectName="Lookup Example"
+  DTS:PackageType="5"
+  DTS:VersionBuild="64"
+  DTS:VersionGUID="{CE6B86F1-BA0E-4B3C-BC8D-164CD1419AD4}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:Variables>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{6F3D6607-CC74-4796-B40E-3BDA4AD0988D}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="dtMaxDateTime">
+      <DTS:VariableValue
+        DTS:DataType="7">1/1/1900</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{53D9F324-1B0B-4670-91F3-676C90D5B6E4}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="intCompletedRowCount">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{A1D18323-C6BD-4F18-9F94-7F179E015161}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="intInitialRowCount">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{09842D1E-C943-4A75-93E6-15DE7722CD4E}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="intRowsInserted">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{1E81653E-5ACE-41F3-9CDB-05B35858A1EB}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="intRowsTransfered">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{DD0FA428-CE61-4081-A2D6-F6AA950B30FB}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="intRowsUpdated">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{BFAF4C11-2F66-415B-9D9C-732D2C4DE0EC}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strEntityName">
+      <DTS:VariableValue
+        DTS:DataType="8">stringmap</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{738160D3-D25E-4D35-BC11-5D626A665041}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strSchema">
+      <DTS:VariableValue
+        DTS:DataType="8">dbo</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{F92186B4-56F1-46F5-A083-12C00E6925E3}"
+      DTS:Expression="&quot;INSERT ssis.Audit &#xA;&#xA;(&#xA;&#x9;[TableName]&#xA;&#x9;,[PkgName]&#xA;&#x9;,[PkgGUID]&#xA;&#x9;,[ExecStartDT]&#xA;&#x9;,[ExecStopDT]&#xA;&#x9;,[ExtractRowCnt]&#xA;&#x9;,[InsertRowCnt]&#xA;&#x9;,[UpdateRowCnt]&#xA;&#x9;,[ErrorRowCnt]&#xA;&#x9;,[TableInitialRowCnt]&#xA;&#x9;,[TableFinalRowCnt]&#xA;&#x9;,[TableMaxDateTime]&#xA;&#x9;,[PackageStatusID]&#xA;)&#xA;VALUES&#xA;(&quot; + &#xA; @[User::strEntityName] + &quot;, &quot; +&#xA; @[System::PackageName] + &quot;, &quot; + &#xA; @[System::PackageID] + &quot;, &quot; + &#xA; (DT_WSTR, 50) @[System::StartTime] + &quot;, &quot; +&#xA; (DT_WSTR, 50) GETDATE() + &quot;, &quot; + &#xA; (DT_WSTR, 50) @[User::intRowsTransfered] + &quot;, &quot; +&#xA; (DT_WSTR, 50) @[User::intRowsInserted] + &quot;, &quot; +&#xA; (DT_WSTR, 50) @[User::intRowsUpdated] + &quot;, &quot; +&#xA; &quot;0&quot; + &quot;, &quot; +&#xA; (DT_WSTR, 50) @[User::intInitialRowCount] + &#xA;(DT_WSTR, 50) @[User::intCompletedRowCount] +&#xA;(DT_WSTR, 50) @[User::dtMaxDateTime] +&#xA;&quot;1&quot;&#xA;+ &quot;)&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strSQLAudit">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{97898FB7-5AE0-4A9B-B0E5-CB70E18D549F}"
+      DTS:Expression="&quot;SELECT MAX(&quot; +  @[$Project::ModifiedOnColumn] + &quot;)&#xA;FROM &quot; +  @[User::strEntityName]"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strSQLMaxDateTime">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{CB0928D5-7D51-41F4-B95B-873DC4C65595}"
+      DTS:Expression="&quot;SELECT COUNT(*)&#xA;from &quot; +  @[User::strEntityName]"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strSQLRowCount">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{F75E81F1-84D3-41B7-A63B-F6B83F7CE194}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;TRUNCATE TABLE util.&quot; +  @[User::strEntityName]"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="strSQLTruncate">
+      <DTS:VariableValue
+        DTS:DataType="8">TRUNCATE TABLE util.stringmap</DTS:VariableValue>
+    </DTS:Variable>
+  </DTS:Variables>
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\DFT - Load Table"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:DTSID="{C7D5BDAD-A200-4A28-80DE-AF34289ABE40}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="DFT - Load Table"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <pipeline
+          version="1">
+          <components>
+            <component
+              refId="Package\DFT - Load Table\D365_Source"
+              componentClassID="Microsoft.ManagedComponentHost"
+              contactInfo="KingswaySoft Inc.; http://www.kingswaysoft.com; support@kingswaysoft.com; Copyright (c) 2011-2018 KingswaySoft Inc."
+              description="Extract data from Microsoft Dynamics 365 CE/CRM."
+              name="D365_Source"
+              usesDispositions="true"
+              version="3">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the type of source data from Microsoft Dynamics CRM."
+                  expressionType="Notify"
+                  name="SourceType"
+                  typeConverter="KingswaySoft.IntegrationToolkit.DynamicsCrm.CrmSourceType">0</property>
+                <property
+                  dataType="System.String"
+                  description="Dynamics CRM entity to retrieve data from."
+                  expressionType="Notify"
+                  name="SourceEntity">stringmap</property>
+                <property
+                  dataType="System.String"
+                  description="FetchXML statement."
+                  expressionType="Notify"
+                  name="FetchXML"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the batch size of the query."
+                  expressionType="Notify"
+                  name="BatchSize">2000</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specify the maximum number of rows to be returned from the Dynamics 365/CRM server (Specify 0 to read all satisfying records)."
+                  expressionType="Notify"
+                  name="MaxRowsReturned">0</property>
+                <property
+                  dataType="System.Null"
+                  description="The caller to be used for CRM impersonation when reading from CRM server."
+                  expressionType="Notify"
+                  name="ImpersonateAs" />
+                <property
+                  dataType="System.Null"
+                  description="Specifies the output timezone for CRM datetime fields."
+                  expressionType="Notify"
+                  name="OutputTimezone"
+                  typeConverter="KingswaySoft.IntegrationToolkit.Common.DescriptiveEnumTypeConverter`1[[KingswaySoft.IntegrationToolkit.DynamicsCrm.CrmSourceOutputTimezone" />
+                <property
+                  dataType="System.String"
+                  name="UserComponentTypeName">KingswaySoft.IntegrationToolkit.DynamicsCrm.CrmSourceComponent</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\DFT - Load Table\D365_Source.Connections[DynamicsCRM]"
+                  connectionManagerID="{C9962FD0-7F95-464E-8056-4DAA0C8D1714}:external"
+                  connectionManagerRefId="Project.ConnectionManagers[Source]"
+                  description="Dynamics CRM Connection Manager"
+                  name="DynamicsCRM" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output]"
+                  name="Primary Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributename]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[attributename]"
+                      length="100"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributename]"
+                      name="attributename"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributevalue]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[attributevalue]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributevalue]"
+                      name="attributevalue"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[displayorder]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[displayorder]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[displayorder]"
+                      name="displayorder"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[langid]"
+                      dataType="i4"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[langid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[langid]"
+                      name="langid"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecode]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[objecttypecode]"
+                      length="64"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecode]"
+                      name="objecttypecode"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecodename]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[objecttypecodename]"
+                      length="255"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecodename]"
+                      name="objecttypecodename"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[organizationid]"
+                      dataType="guid"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[organizationid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[organizationid]"
+                      name="organizationid"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]"
+                      dataType="guid"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[stringmapid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]"
+                      name="stringmapid"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[value]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[value]"
+                      length="4000"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[value]"
+                      name="value"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[versionnumber]"
+                      dataType="i8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[versionnumber]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[versionnumber]"
+                      name="versionnumber"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[attributename]"
+                      dataType="wstr"
+                      length="100"
+                      name="attributename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[attributevalue]"
+                      dataType="i4"
+                      name="attributevalue" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[displayorder]"
+                      dataType="i4"
+                      name="displayorder" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[langid]"
+                      dataType="i4"
+                      name="langid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[objecttypecode]"
+                      dataType="wstr"
+                      length="64"
+                      name="objecttypecode" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[objecttypecodename]"
+                      dataType="wstr"
+                      length="255"
+                      name="objecttypecodename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[organizationid]"
+                      dataType="guid"
+                      name="organizationid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[stringmapid]"
+                      dataType="guid"
+                      name="stringmapid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[value]"
+                      dataType="wstr"
+                      length="4000"
+                      name="value" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].ExternalColumns[versionnumber]"
+                      dataType="i8"
+                      name="versionnumber" />
+                  </externalMetadataColumns>
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\DFT - Load Table\LKP - Check If Record Exists"
+              componentClassID="Microsoft.Lookup"
+              contactInfo="Lookup;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;6"
+              description="Joins additional columns to the data flow by looking up values in a table. For example, join to the 'employee id' column the employees table to get 'hire date' and 'employee name'. We recommend this transformation when the lookup table can fit into memory."
+              name="LKP - Check If Record Exists"
+              usesDispositions="true"
+              version="6">
+              <properties>
+                <property
+                  dataType="System.String"
+                  description="Specifies the SQL statement that generates the lookup table."
+                  expressionType="Notify"
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">select * from [dbo].[StringMap]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies a SQL statement that uses parameters to generate the lookup table."
+                  expressionType="Notify"
+                  name="SqlCommandParam"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">select * from (select * from [dbo].[StringMap]) [refTable]
+where [refTable].[stringmapid] = ?</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the type of connection used to access the reference dataset."
+                  name="ConnectionType"
+                  typeConverter="LookupConnectionType">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the cache type of the lookup table."
+                  name="CacheType"
+                  typeConverter="CacheType">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies how the Lookup transformation handles rows without matching entries in the reference data set."
+                  name="NoMatchBehavior"
+                  typeConverter="LookupNoMatchBehavior">1</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the percentage of the cache that is allocated for rows with no matching entries in the reference dataset."
+                  name="NoMatchCachePercentage">0</property>
+                <property
+                  dataType="System.Int32"
+                  description="Maximum Memory Usage for Reference Cache on a 32 bit platform."
+                  name="MaxMemoryUsage">25</property>
+                <property
+                  dataType="System.Int64"
+                  description="Maximum Memory Usage for Reference Cache on a 64 bit platform."
+                  name="MaxMemoryUsage64">25</property>
+                <property
+                  dataType="System.String"
+                  description="Indicates whether to reference metadata in an XML format."
+                  name="ReferenceMetadataXml">&lt;referenceMetadata&gt;&lt;referenceColumns&gt;&lt;referenceColumn name="attributename" dataType="DT_WSTR" length="100" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="attributevalue" dataType="DT_I4" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="displayorder" dataType="DT_I4" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="langid" dataType="DT_I4" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="objecttypecode" dataType="DT_WSTR" length="64" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="objecttypecodename" dataType="DT_WSTR" length="255" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="organizationid" dataType="DT_GUID" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="stringmapid" dataType="DT_GUID" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="value" dataType="DT_WSTR" length="4000" precision="0" scale="0" codePage="0"/&gt;&lt;referenceColumn name="versionnumber" dataType="DT_I8" length="0" precision="0" scale="0" codePage="0"/&gt;&lt;/referenceColumns&gt;&lt;/referenceMetadata&gt;</property>
+                <property
+                  containsID="true"
+                  dataType="System.String"
+                  description="Specifies the list of lineage identifiers that map to the parameters that the SQL statement in the SQLCommand property uses. Entries in the list are separated by semicolons."
+                  name="ParameterMap">#{Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]};</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Determines whether duplicate keys in the reference data should be treated as errors when full cache mode is used."
+                  name="TreatDuplicateKeysAsError">false</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\DFT - Load Table\LKP - Check If Record Exists.Connections[OleDbConnection]"
+                  connectionManagerID="{003E6829-6930-489D-B71B-4A20BEEC6EF1}:external"
+                  connectionManagerRefId="Project.ConnectionManagers[Destination]"
+                  description="Connection manager used to access lookup data."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input]"
+                  name="Lookup Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input].Columns[stringmapid]"
+                      cachedDataType="guid"
+                      cachedName="stringmapid"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]">
+                      <properties>
+                        <property
+                          dataType="System.String"
+                          description="Specifies the column in the reference table that a column joins."
+                          name="JoinToReferenceColumn">stringmapid</property>
+                        <property
+                          dataType="System.Null"
+                          description="Specifies the column in the reference table from which a column is copied."
+                          name="CopyFromReferenceColumn" />
+                      </properties>
+                    </inputColumn>
+                  </inputColumns>
+                  <externalMetadataColumns />
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Match Output]"
+                  errorOrTruncationOperation="Lookup"
+                  exclusionGroup="1"
+                  name="Lookup Match Output"
+                  synchronousInputId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Match Output].Columns[stringmapid]"
+                      dataType="guid"
+                      errorOrTruncationOperation="Copy Column"
+                      lineageId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Match Output].Columns[stringmapid]"
+                      name="stringmapid"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          dataType="System.String"
+                          description="Specifies the column in the reference table from which a column is copied."
+                          name="CopyFromReferenceColumn">stringmapid</property>
+                      </properties>
+                    </outputColumn>
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup No Match Output]"
+                  description="The Lookup output that handles rows with no matching entries in the reference dataset. Use this output when the NoMatchBehavior property is set to &quot;Send rows with no matching entries to the no match output.&quot;"
+                  exclusionGroup="1"
+                  name="Lookup No Match Output"
+                  synchronousInputId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input]">
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="Lookup Error Output"
+                  synchronousInputId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\DFT - Load Table\OLE_DST Target"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="OLE_DST Target"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[StringMap]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">ROWS_PER_BATCH = 10000</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\DFT - Load Table\OLE_DST Target.Connections[OleDbConnection]"
+                  connectionManagerID="{003E6829-6930-489D-B71B-4A20BEEC6EF1}:external"
+                  connectionManagerRefId="Project.ConnectionManagers[Destination]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[versionnumber]"
+                      cachedDataType="i8"
+                      cachedName="versionnumber"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[versionnumber]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[versionnumber]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[attributename]"
+                      cachedDataType="wstr"
+                      cachedLength="100"
+                      cachedName="attributename"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[attributename]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributename]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[attributevalue]"
+                      cachedDataType="i4"
+                      cachedName="attributevalue"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[attributevalue]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributevalue]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[displayorder]"
+                      cachedDataType="i4"
+                      cachedName="displayorder"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[displayorder]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[displayorder]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[langid]"
+                      cachedDataType="i4"
+                      cachedName="langid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[langid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[langid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[objecttypecode]"
+                      cachedDataType="wstr"
+                      cachedLength="64"
+                      cachedName="objecttypecode"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecode]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecode]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[objecttypecodename]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="objecttypecodename"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecodename]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecodename]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[organizationid]"
+                      cachedDataType="guid"
+                      cachedName="organizationid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[organizationid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[organizationid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[stringmapid]"
+                      cachedDataType="guid"
+                      cachedName="stringmapid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[stringmapid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].Columns[value]"
+                      cachedDataType="wstr"
+                      cachedLength="4000"
+                      cachedName="value"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[value]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[value]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[versionnumber]"
+                      dataType="i8"
+                      name="versionnumber" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[attributename]"
+                      dataType="wstr"
+                      length="100"
+                      name="attributename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[attributevalue]"
+                      dataType="i4"
+                      name="attributevalue" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[displayorder]"
+                      dataType="i4"
+                      name="displayorder" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[langid]"
+                      dataType="i4"
+                      name="langid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecode]"
+                      dataType="wstr"
+                      length="64"
+                      name="objecttypecode" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecodename]"
+                      dataType="wstr"
+                      length="255"
+                      name="objecttypecodename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[organizationid]"
+                      dataType="guid"
+                      name="organizationid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[stringmapid]"
+                      dataType="guid"
+                      name="stringmapid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input].ExternalColumns[value]"
+                      dataType="wstr"
+                      length="4000"
+                      name="value" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\DFT - Load Table\OLE_DST Target.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\OLE_DST Target.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Target.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\OLE_DST Target.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\DFT - Load Table\OLE_DST Updates"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="OLE_DST Updates"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[dbo].[StringMap]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">3</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions">ROWS_PER_BATCH = 10000</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\DFT - Load Table\OLE_DST Updates.Connections[OleDbConnection]"
+                  connectionManagerID="{003E6829-6930-489D-B71B-4A20BEEC6EF1}:external"
+                  connectionManagerRefId="Project.ConnectionManagers[Destination]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[versionnumber]"
+                      cachedDataType="i8"
+                      cachedName="versionnumber"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[versionnumber]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[versionnumber]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[attributename]"
+                      cachedDataType="wstr"
+                      cachedLength="100"
+                      cachedName="attributename"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[attributename]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributename]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[attributevalue]"
+                      cachedDataType="i4"
+                      cachedName="attributevalue"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[attributevalue]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[attributevalue]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[displayorder]"
+                      cachedDataType="i4"
+                      cachedName="displayorder"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[displayorder]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[displayorder]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[langid]"
+                      cachedDataType="i4"
+                      cachedName="langid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[langid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[langid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[objecttypecode]"
+                      cachedDataType="wstr"
+                      cachedLength="64"
+                      cachedName="objecttypecode"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecode]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecode]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[objecttypecodename]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="objecttypecodename"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecodename]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[objecttypecodename]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[organizationid]"
+                      cachedDataType="guid"
+                      cachedName="organizationid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[organizationid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[organizationid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[stringmapid]"
+                      cachedDataType="guid"
+                      cachedName="stringmapid"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[stringmapid]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[stringmapid]" />
+                    <inputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].Columns[value]"
+                      cachedDataType="wstr"
+                      cachedLength="4000"
+                      cachedName="value"
+                      externalMetadataColumnId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[value]"
+                      lineageId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output].Columns[value]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[versionnumber]"
+                      dataType="i8"
+                      name="versionnumber" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[attributename]"
+                      dataType="wstr"
+                      length="100"
+                      name="attributename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[attributevalue]"
+                      dataType="i4"
+                      name="attributevalue" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[displayorder]"
+                      dataType="i4"
+                      name="displayorder" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[langid]"
+                      dataType="i4"
+                      name="langid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecode]"
+                      dataType="wstr"
+                      length="64"
+                      name="objecttypecode" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[objecttypecodename]"
+                      dataType="wstr"
+                      length="255"
+                      name="objecttypecodename" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[organizationid]"
+                      dataType="guid"
+                      name="organizationid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[stringmapid]"
+                      dataType="guid"
+                      name="stringmapid" />
+                    <externalMetadataColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input].ExternalColumns[value]"
+                      dataType="wstr"
+                      length="4000"
+                      name="value" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\DFT - Load Table\OLE_DST Updates.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\OLE_DST Updates.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\DFT - Load Table\OLE_DST Updates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\DFT - Load Table\OLE_DST Updates.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\DFT - Load Table\RC - Transfered"
+              componentClassID="Microsoft.RowCount"
+              contactInfo="Row Count;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
+              description="Counts rows as they pass through a data flow. For example, use the number of rows processed to determine whether or not to perform cleanup operations, or update text in an e-mail message to communicate processing status."
+              name="RC - Transfered">
+              <properties>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable to hold the row count."
+                  name="VariableName">User::intRowsTransfered</property>
+              </properties>
+              <inputs>
+                <input
+                  refId="Package\DFT - Load Table\RC - Transfered.Inputs[Row Count Input 1]"
+                  hasSideEffects="true"
+                  name="Row Count Input 1">
+                  <externalMetadataColumns />
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\DFT - Load Table\RC - Transfered.Outputs[Row Count Output 1]"
+                  name="Row Count Output 1"
+                  synchronousInputId="Package\DFT - Load Table\RC - Transfered.Inputs[Row Count Input 1]">
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\DFT - Load Table.Paths[Lookup Match Output]"
+              endId="Package\DFT - Load Table\OLE_DST Updates.Inputs[OLE DB Destination Input]"
+              name="Lookup Match Output"
+              startId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup Match Output]" />
+            <path
+              refId="Package\DFT - Load Table.Paths[Lookup No Match Output]"
+              endId="Package\DFT - Load Table\OLE_DST Target.Inputs[OLE DB Destination Input]"
+              name="Lookup No Match Output"
+              startId="Package\DFT - Load Table\LKP - Check If Record Exists.Outputs[Lookup No Match Output]" />
+            <path
+              refId="Package\DFT - Load Table.Paths[Primary Output]"
+              endId="Package\DFT - Load Table\RC - Transfered.Inputs[Row Count Input 1]"
+              name="Primary Output"
+              startId="Package\DFT - Load Table\D365_Source.Outputs[Primary Output]" />
+            <path
+              refId="Package\DFT - Load Table.Paths[Row Count Output 1]"
+              endId="Package\DFT - Load Table\LKP - Check If Record Exists.Inputs[Lookup Input]"
+              name="Row Count Output 1"
+              startId="Package\DFT - Load Table\RC - Transfered.Outputs[Row Count Output 1]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - Auditing"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
+      DTS:DTSID="{929C3835-51CF-4026-A365-3912321EE33A}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - Auditing"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{EB5752E6-0C5C-4425-8D9D-F04A065B6610}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLAudit" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - Get Completed Row Count"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
+      DTS:DTSID="{D2A9F4A7-D1EB-434B-9BD3-6D646BAE06B1}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - Get Completed Row Count"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{EB5752E6-0C5C-4425-8D9D-F04A065B6610}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLRowCount"
+          SQLTask:ResultType="ResultSetType_SingleRow" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ResultBinding
+            SQLTask:ResultName="0"
+            SQLTask:DtsVariableName="User::intCompletedRowCount" />
+        </SQLTask:SqlTaskData>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - Get Initial Row Count"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
+      DTS:DTSID="{F51325BF-38D2-4BEE-9117-0EAE1D6B34F8}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - Get Initial Row Count"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{EB5752E6-0C5C-4425-8D9D-F04A065B6610}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLRowCount"
+          SQLTask:ResultType="ResultSetType_SingleRow" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ResultBinding
+            SQLTask:ResultName="0"
+            SQLTask:DtsVariableName="User::intInitialRowCount" />
+        </SQLTask:SqlTaskData>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - Get Max DateTime"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{C240A540-9D19-469C-B386-07A56AA592E6}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - Get Max DateTime"
+      DTS:ThreadHint="1">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{003E6829-6930-489D-B71B-4A20BEEC6EF1}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLMaxDateTime"
+          SQLTask:ResultType="ResultSetType_SingleRow" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ResultBinding
+            SQLTask:ResultName="0"
+            SQLTask:DtsVariableName="User::dtMaxDateTime" />
+        </SQLTask:SqlTaskData>
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - Run Updates"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{C06202A5-D227-4293-8435-8AA7847D6D04}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - Run Updates"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{003E6829-6930-489D-B71B-4A20BEEC6EF1}"
+          SQLTask:SqlStatementSource="UPDATE dbo.bah_interactions&#xA;SET&#xA;&#x9; [ownerid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ownerid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owneridtype]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owneridtype]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[versionnumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[versionnumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_address_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_address_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_dob_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_dob_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_facilityid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_facilityid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_facilityidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_facilityidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_firstname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_firstname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactedwith_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactedwith_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactedwith_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactedwith_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactedwithother_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactedwithother_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactionsid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactionsid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactionsource_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactionsource_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_interactionsource_codename]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_interactionsource_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_lastname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_lastname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_mvisearchcomplete_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_mvisearchcomplete_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_mvisearchcomplete_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_mvisearchcomplete_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_name]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_name]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_otherrelationship_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_otherrelationship_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_phoneextension_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_phoneextension_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_phonenumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_phonenumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_programtypeid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_programtypeid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_programtypeidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_programtypeidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_recordsaved_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_recordsaved_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_recordsaved_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_recordsaved_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_relationshiptoveteran_code]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_relationshiptoveteran_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_relationshiptoveteran_codename]&#x9;&#x9;&#x9;&#x9;= u.[bah_relationshiptoveteran_codename]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_ssn_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_ssn_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_veteranid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_veteranid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_veteranidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_veteranidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_veteranidyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_veteranidyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_visnid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_visnid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_visnidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_visnidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[bah_vsooffice_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[bah_vsooffice_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_createadditionalrequest_bool]&#x9;&#x9;&#x9;&#x9;= u.[ccwf_createadditionalrequest_bool]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_createadditionalrequest_boolname]&#x9;&#x9;&#x9;= u.[ccwf_createadditionalrequest_boolname]&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_faxnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_faxnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_migrationfk]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_migrationfk]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_providerfacility_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_providerfacility_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_searchtype_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_searchtype_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_searchtype_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_searchtype_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[ccwf_tin_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[ccwf_tin_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdonbehalfby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdonbehalfby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdonbehalfbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdonbehalfbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[createdonbehalfbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[createdonbehalfbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[exchangerate]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[exchangerate]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_areadetail_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_areadetail_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_csr_supervisor]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_csr_supervisor]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_csr_supervisorname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_csr_supervisorname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_csr_supervisoryominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_csr_supervisoryominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_nonbenereason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_nonbenereason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_nonbenereason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_nonbenereason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_nonbenetemp_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_nonbenetemp_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_nonbenetemp_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_nonbenetemp_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_pdinumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_pdinumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_providerid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_providerid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_provideridname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_provideridname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_provideridyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_provideridyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_teamid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_teamid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_teamidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_teamidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_teamidyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_teamidyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_veteranname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_veteranname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hac_veteranssn_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hac_veteranssn_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_callbacknumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_callbacknumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_casenotes_memo]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_casenotes_memo]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_casenotetemplateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_casenotetemplateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_casenotetemplateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_casenotetemplateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_cpacid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_cpacid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_cpacidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_cpacidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_dayssincelastcontact_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_dayssincelastcontact_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_edipi_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_edipi_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_emailaddress_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_emailaddress_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_gender_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_gender_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_gender_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_gender_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_interactionno_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_interactionno_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_lobid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_lobid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_lobidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_lobidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_noemailaddress_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_noemailaddress_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_noemailaddress_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_noemailaddress_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[hrc_temp_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[hrc_temp_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[importsequencenumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[importsequencenumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_addressline2_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_addressline2_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_countryid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_countryid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_countryidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_countryidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_dateemailrecieved]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_dateemailrecieved]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_emailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_emailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_emailsubject]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_emailsubject]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_provideraddressline2_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_provideraddressline2_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_providercountryid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_providercountryid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_providercountryidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_providercountryidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_prrtreceiveremailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_prrtreceiveremailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_receiveremailaddress_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_receiveremailaddress_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_surveycustomer]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_surveycustomer]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_surveycustomername]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_surveycustomername]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_surveycustomeryominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_surveycustomeryominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[mcs_surveyemailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[mcs_surveyemailaddress]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedonbehalfby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedonbehalfby]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedonbehalfbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedonbehalfbyname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[modifiedonbehalfbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[modifiedonbehalfbyyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[overriddencreatedon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[overriddencreatedon]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owneridname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owneridname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owneridyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owneridyominame]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owningbusinessunit]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owningbusinessunit]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owningteam]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owningteam]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[owninguser]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[owninguser]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[processid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[processid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[stageid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[stageid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[statecode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[statecode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[statecodename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[statecodename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[statuscode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[statuscode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[statuscodename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[statuscodename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[timezoneruleversionnumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[timezoneruleversionnumber]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[transactioncurrencyid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[transactioncurrencyid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[transactioncurrencyidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[transactioncurrencyidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[traversedpath]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[traversedpath]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[utcconversiontimezonecode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[utcconversiontimezonecode]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_actionintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_actionintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_actionintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_actionintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_address1_city_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_address1_city_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_address1_line1_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_address1_line1_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_address1_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_address1_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_address1_stateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_address1_stateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_address1_zip_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_address1_zip_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_addressline1_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_addressline1_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_appointmentdatetime_date]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_appointmentdatetime_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_areaintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_areaintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_areaintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_areaintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_assist_casenotetemplateid]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_assist_casenotetemplateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_assist_casenotetemplateidname]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_assist_casenotetemplateidname]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_billedamount_currency]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_billedamount_currency]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_billedamount_currency_base]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_billedamount_currency_base]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_city_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_city_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_claimid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_claimid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_claimidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_claimidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_claimnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_claimnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_claimstatusreportcheck_bool]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_claimstatusreportcheck_bool]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_claimstatusreportcheck_boolname]&#x9;&#x9;&#x9;= u.[vhacrm_claimstatusreportcheck_boolname]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_closeinteraction]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_closeinteraction]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_closeinteractionname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_closeinteractionname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_correspondenceemailcheck_bool]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_correspondenceemailcheck_bool]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_correspondenceemailcheck_boolname]&#x9;&#x9;&#x9;= u.[vhacrm_correspondenceemailcheck_boolname]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_correspondencetype_code]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_correspondencetype_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_correspondencetype_codename]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_correspondencetype_codename]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctiani]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctiani]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctidnis]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctidnis]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctidob]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctidob]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctiedipi]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctiedipi]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctiidentifier]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctiidentifier]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctiinboundphone]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctiinboundphone]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctitin]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctitin]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctitriggered]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctitriggered]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_ctitriggeredname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_ctitriggeredname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_cvhdnotes]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_cvhdnotes]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_enddateofservice_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_enddateofservice_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_faxattentionline_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_faxattentionline_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_firstrequestcreated_bool]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_firstrequestcreated_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_firstrequestcreated_boolname]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_firstrequestcreated_boolname]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_fromdate_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_fromdate_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_homefacilitycvhdid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_homefacilitycvhdid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_homefacilitycvhdidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_homefacilitycvhdidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_incrementno_number]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_incrementno_number]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_inpatientoutpatient_code]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_inpatientoutpatient_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_inpatientoutpatient_codename]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_inpatientoutpatient_codename]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_interaction_request_notes]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_interaction_request_notes]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_interactionpurposeid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_interactionpurposeid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_interactionpurposeidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_interactionpurposeidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_interactionsubpurposeid]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_interactionsubpurposeid]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_interactionsubpurposeidname]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_interactionsubpurposeidname]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_internalnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_internalnumber_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_millbillrulingnotes]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_millbillrulingnotes]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncoredetail_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncoredetail_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncoredetail_codename]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncoredetail_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncoredetailrequest_code]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncoredetailrequest_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncoredetailrequest_codename]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncoredetailrequest_codename]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorenaveteranalert_bool]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorenaveteranalert_bool]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorenaveteranalert_boolname]&#x9;&#x9;&#x9;= u.[vhacrm_noncorenaveteranalert_boolname]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorereason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorereason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorereason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorereason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorereasonrequest_code]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorereasonrequest_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorereasonrequest_codename]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorereasonrequest_codename]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorevisndetailid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorevisndetailid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorevisndetailidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorevisndetailidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorevisndetailrequestid]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_noncorevisndetailrequestid]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_noncorevisndetailrequestidname]&#x9;&#x9;&#x9;= u.[vhacrm_noncorevisndetailrequestidname]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_otherreason_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_otherreason_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_providerfacilitycvhd_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_providerfacilitycvhd_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_recipient_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_recipient_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_recipient_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_recipient_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_attentionline_text]&#x9;&#x9;= u.[vhacrm_request_address1_attentionline_text]&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_city_text]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_address1_city_text]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_line1_text]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_address1_line1_text]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_postalcode_text]&#x9;&#x9;&#x9;= u.[vhacrm_request_address1_postalcode_text]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_address1_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_address1_stateidname]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_address1_stateidname]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_beginningdate_date]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_beginningdate_date]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_email_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_email_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_endingdate_date]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_endingdate_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_fax_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_fax_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_methodofdelivery_code]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_request_methodofdelivery_code]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_request_methodofdelivery_codename]&#x9;&#x9;&#x9;= u.[vhacrm_request_methodofdelivery_codename]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_requestid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_requestid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_requestidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_requestidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resetveteran_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resetveteran_bool]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resetveteran_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resetveteran_boolname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resolutionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resolutionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resolutionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resolutionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resolutionintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resolutionintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_resolutionintersectionidname]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_resolutionintersectionidname]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_routingreason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_routingreason_code]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_routingreason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_routingreason_codename]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_servicingfacilityreferralid]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_servicingfacilityreferralid]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_servicingfacilityreferralidname]&#x9;&#x9;&#x9;= u.[vhacrm_servicingfacilityreferralidname]&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_startdateofservice_date]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_startdateofservice_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stateid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stateidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stationtobeloadedtoid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stationtobeloadedtoid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stationtobeloadedtoidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stationtobeloadedtoidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stationwithactivityid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stationwithactivityid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_stationwithactivityidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_stationwithactivityidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_subareaintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_subareaintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_subareaintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_subareaintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_tinvendorization_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_tinvendorization_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_todate_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_todate_date]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_typeintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_typeintersectionid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_typeintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_typeintersectionidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_username_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_username_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_usernamecvhdid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_usernamecvhdid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_usernamecvhdidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_usernamecvhdidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_vendor_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_vendor_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_vetappidtempfield_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_vetappidtempfield_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_vetconsultidstempfield_text]&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_vetconsultidstempfield_text]&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_veteranfirstname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_veteranfirstname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_veteranlastname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_veteranlastname_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_vetnotesidtempfield_text]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_vetnotesidtempfield_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_visnvendorizationid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_visnvendorizationid]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_visnvendorizationidname]&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_visnvendorizationidname]&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;,[vhacrm_zip_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;= u.[vhacrm_zip_text]&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#xA;  FROM util.[bah_interactions] u&#xA;  INNER JOIN dbo.bah_interactions t&#xA;&#x9;ON u.bah_interactionsid = t.bah_interactionsid&#xA;&#x9;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - TRUNCATE Update table"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{50060A86-5A32-4CEF-B0CA-CF90CCD97EB0}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - TRUNCATE Update table"
+      DTS:ThreadHint="2">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{003E6829-6930-489D-B71B-4A20BEEC6EF1}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLTruncate" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\SQL - TRUNCATE Update Table Upon Completion"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{BBB41E47-D964-4D39-9EA8-249CCC237D69}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="SQL - TRUNCATE Update Table Upon Completion"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{003E6829-6930-489D-B71B-4A20BEEC6EF1}"
+          SQLTask:SqlStmtSourceType="Variable"
+          SQLTask:SqlStatementSource="User::strSQLTruncate" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint]"
+      DTS:CreationName=""
+      DTS:DTSID="{E9114800-E28F-4157-AFBD-BC32DA5921AA}"
+      DTS:From="Package\SQL - Get Initial Row Count"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint"
+      DTS:To="Package\DFT - Load Table" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 1]"
+      DTS:CreationName=""
+      DTS:DTSID="{302A84CC-BFB4-4C1B-9398-3094019C4995}"
+      DTS:From="Package\SQL - Get Max DateTime"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 1"
+      DTS:To="Package\DFT - Load Table" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 2]"
+      DTS:CreationName=""
+      DTS:DTSID="{23A5E5E1-7499-413F-9BFE-6396DFE656B0}"
+      DTS:From="Package\DFT - Load Table"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 2"
+      DTS:To="Package\SQL - Run Updates" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 3]"
+      DTS:CreationName=""
+      DTS:DTSID="{6825EEBC-92C6-4170-9529-569CB4C510B5}"
+      DTS:From="Package\SQL - Get Completed Row Count"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 3"
+      DTS:To="Package\SQL - Auditing" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 4]"
+      DTS:CreationName=""
+      DTS:DTSID="{968B0EC3-AD34-4779-888B-532D09132DBA}"
+      DTS:From="Package\SQL - TRUNCATE Update table"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 4"
+      DTS:To="Package\DFT - Load Table" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 5]"
+      DTS:CreationName=""
+      DTS:DTSID="{7E07E4A4-C98D-4692-BB54-83C75364AB30}"
+      DTS:From="Package\SQL - Run Updates"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 5"
+      DTS:To="Package\SQL - Get Completed Row Count" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 6]"
+      DTS:CreationName=""
+      DTS:DTSID="{2562E4EF-7D7E-41FB-A98F-94F800455DDD}"
+      DTS:From="Package\SQL - Auditing"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 6"
+      DTS:To="Package\SQL - TRUNCATE Update Table Upon Completion" />
+  </DTS:PrecedenceConstraints>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="160,42"
+          Id="Package\DFT - Load Table"
+          TopLeft="1242,162" />
+        <NodeLayout
+          Size="147,42"
+          Id="Package\SQL - Auditing"
+          TopLeft="1251,394" />
+        <NodeLayout
+          Size="233,42"
+          Id="Package\SQL - Get Completed Row Count"
+          TopLeft="1207,314" />
+        <NodeLayout
+          Size="209,42"
+          Id="Package\SQL - Get Initial Row Count"
+          TopLeft="983,65" />
+        <NodeLayout
+          Size="196,42"
+          Id="Package\SQL - Get Max DateTime"
+          TopLeft="1226,66" />
+        <NodeLayout
+          Size="169,42"
+          Id="Package\SQL - Run Updates"
+          TopLeft="1234,236" />
+        <NodeLayout
+          Size="224,42"
+          Id="Package\SQL - TRUNCATE Update table"
+          TopLeft="1460,66" />
+        <NodeLayout
+          Size="310,42"
+          Id="Package\SQL - TRUNCATE Update Table Upon Completion"
+          TopLeft="1164,477" />
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint]"
+          TopLeft="1087.5,107">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="196.5,55"
+              Start="0,0"
+              End="196.5,47.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,32.0655737704918" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,32.0655737704918"
+                    Point2="0,36.0655737704918"
+                    Point3="4,36.0655737704918" />
+                  <mssgle:LineSegment
+                    End="192.5,36.0655737704918" />
+                  <mssgle:CubicBezierSegment
+                    Point1="192.5,36.0655737704918"
+                    Point2="196.5,36.0655737704918"
+                    Point3="196.5,40.0655737704918" />
+                  <mssgle:LineSegment
+                    End="196.5,47.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 1]"
+          TopLeft="1323,108">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,54"
+              Start="0,0"
+              End="0,46.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,46.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 2]"
+          TopLeft="1320.25,204">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,32"
+              Start="0,0"
+              End="0,24.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,24.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 3]"
+          TopLeft="1324,356">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,38"
+              Start="0,0"
+              End="0,30.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,30.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 4]"
+          TopLeft="1572,108">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-212,54"
+              Start="0,0"
+              End="-212,46.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,31.4098360655738" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,31.4098360655738"
+                    Point2="0,35.4098360655738"
+                    Point3="-4,35.4098360655738" />
+                  <mssgle:LineSegment
+                    End="-208,35.4098360655738" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-208,35.4098360655738"
+                    Point2="-212,35.4098360655738"
+                    Point3="-212,39.4098360655738" />
+                  <mssgle:LineSegment
+                    End="-212,46.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 5]"
+          TopLeft="1321,278">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,36"
+              Start="0,0"
+              End="0,28.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,28.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 6]"
+          TopLeft="1321.75,436">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,41"
+              Start="0,0"
+              End="0,33.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,33.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <AnnotationLayout
+          Text="1. Replace Values in variables for strSchema and strEntityName&#xA;2. Update package parameter for strModifiedOn column if you need a different date column for incremental loads. You'll need to customize if an entity does not have a good date column to use&#xA;3. If data in target table is too large for memory, a Merge Join pattern needs to be used."
+          ParentId="Package"
+          FontInfo="{assembly:Null}"
+          Size="378,120"
+          Id="4c8a485f-e3ad-4a63-833f-0602aefeba6b"
+          TopLeft="744,171" />
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+  <TaskHost
+    design-time-name="Package\DFT - Load Table">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        <NodeLayout
+          Size="212,42"
+          Id="Package\DFT - Load Table\LKP - Check If Record Exists"
+          TopLeft="179,223" />
+        <NodeLayout
+          Size="153,42"
+          Id="Package\DFT - Load Table\RC - Transfered"
+          TopLeft="201,143" />
+        <NodeLayout
+          Size="157,42"
+          Id="Package\DFT - Load Table\OLE_DST Target"
+          TopLeft="106,334" />
+        <NodeLayout
+          Size="142,42"
+          Id="Package\DFT - Load Table\D365_Source"
+          TopLeft="201,59" />
+        <NodeLayout
+          Size="165,42"
+          Id="Package\DFT - Load Table\OLE_DST Updates"
+          TopLeft="312,333" />
+        <EdgeLayout
+          Id="Package\DFT - Load Table.Paths[Row Count Output 1]"
+          TopLeft="281.25,185">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,38"
+              Start="0,0"
+              End="0,30.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,30.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT - Load Table.Paths[Primary Output]"
+          TopLeft="274.75,101">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,42"
+              Start="0,0"
+              End="0,34.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,34.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT - Load Table.Paths[Lookup No Match Output]"
+          TopLeft="251,265">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-66.5,69"
+              Start="0,0"
+              End="-66.5,61.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,23.9101123595506" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,23.9101123595506"
+                    Point2="0,27.9101123595506"
+                    Point3="-4,27.9101123595506" />
+                  <mssgle:LineSegment
+                    End="-62.5,27.9101123595506" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-62.5,27.9101123595506"
+                    Point2="-66.5,27.9101123595506"
+                    Point3="-66.5,31.9101123595506" />
+                  <mssgle:LineSegment
+                    End="-66.5,61.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-89.05638671875,32.9101123595506,111.6127734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT - Load Table.Paths[Lookup Match Output]"
+          TopLeft="319,265">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="75.5,68"
+              Start="0,0"
+              End="75.5,60.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,23.5056179775281" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,23.5056179775281"
+                    Point2="0,27.5056179775281"
+                    Point3="4,27.5056179775281" />
+                  <mssgle:LineSegment
+                    End="71.5,27.5056179775281" />
+                  <mssgle:CubicBezierSegment
+                    Point1="71.5,27.5056179775281"
+                    Point2="75.5,27.5056179775281"
+                    Point3="75.5,31.5056179775281" />
+                  <mssgle:LineSegment
+                    End="75.5,60.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-10.44138671875,32.5056179775281,96.3827734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\DFT - Load Table\OLE_DST Target">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\DFT - Load Table\LKP - Check If Record Exists">
+    <Properties>
+      <Property>
+        <Name>OverwriteParamsSQLProp</Name>
+        <Value
+          type="q2:boolean">false</Value>
+      </Property>
+      <Property>
+        <Name>UsedTableName</Name>
+        <Value
+          type="q3:string">[dbo].[StringMap]</Value>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q4:int">0</Value>
+      </Property>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\DFT - Load Table\OLE_DST Updates">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>

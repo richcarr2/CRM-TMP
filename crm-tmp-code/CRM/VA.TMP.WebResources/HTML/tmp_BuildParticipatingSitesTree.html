@@ -1,0 +1,153 @@
+﻿<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simple jsTree with Select All checkbox</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/jstree.min.js"></script>
+    <script type="text/javascript">
+            debugger;
+        var jsondata
+        $(function () {
+            if (location.search.split("=")[1] != null) {
+                if (location.search.split("=")[1] == "FullLoad") {
+                    jsondata = JSON.parse(localStorage.getItem("packageData"));
+                    localStorage.clear();
+                } else {
+                    jsondata = JSON.parse(decodeURIComponent(location.search.split("=")[1]))
+                }
+            }
+
+
+            createJSTree(jsondata);
+
+            $('#chkSelectAll').change(function () {
+                if ($('#chkSelectAll').is(":checked")) {
+                    $("#SimpleJSTree").jstree().check_all(true);
+                }
+                else {
+                    $("#SimpleJSTree").jstree().uncheck_all(true);
+                }
+            });
+        });
+
+        function createJSTree(jsondata) {
+            $('#SimpleJSTree').jstree({
+                "core": {
+                    "check_callback": true,
+                    'data': jsondata.tree
+			},
+                "checkbox": {
+                    "keep_selected_style": false,
+                    "tie_selection": false
+                },
+                "plugins": ["checkbox"]
+            })
+                .on("check_node.jstree uncheck_node.jstree", function (e, data) {
+                    if (e.type == "uncheck_node") {
+                        $("#chkSelectAll").prop("checked", false);
+                    }
+                    else if (e.type == "check_node") {
+                        if ($(this).jstree().get_json('#', { flat: true }).length === $(this).jstree().get_checked(true).length)
+                            $("#chkSelectAll").prop("checked", true);
+						if(data.node.children.length > 0){
+							data.node.children.forEach(function(childNodeId, index){
+								let childNode = $('#SimpleJSTree').jstree().get_node(childNodeId);
+								if(childNode.children.length > 0){
+									childNode.children.forEach(function(descendantNodeId, index){
+										let descendantNode = $('#SimpleJSTree').jstree().get_node(descendantNodeId);
+										if(descendantNode.state.disabled) $('#SimpleJSTree').jstree().uncheck_node(descendantNode, true); //descendantNode.state.selected = !descendantNode.state.disabled;
+									});
+								}
+								else{
+									if(childNode.state.disabled) $('#SimpleJSTree').jstree().uncheck_node(childNode);//childNode.state.selected = !childNode.state.disabled;
+								}
+							});
+						}
+                    }
+                });
+        }
+
+        function createParticipatingSites() {
+            var deferred = jQuery.Deferred();
+            var selectedSites = $('#SimpleJSTree').jstree().get_checked();
+            console.log(selectedSites);
+			parent.Xrm.Utility.showProgressIndicator("Please wait...");
+            selectedSites.forEach(function (siteId, index) {
+				console.log($('#SimpleJSTree').jstree().get_node(siteId));
+				let selectedNode = $('#SimpleJSTree').jstree().get_node(siteId);
+				if(selectedNode.children.length === 0 && !selectedNode.state.disabled){
+					var facilityId = jsondata.facilityId.length === 0 ? selectedNode.parent : jsondata.facilityId;
+					var entity = {};
+					entity["cvt_resourcepackage@odata.bind"] = "/cvt_resourcepackages(" + jsondata.resourcePackageId + ")";
+					entity.cvt_locationtype = jsondata.locationType;
+					entity["cvt_site@odata.bind"] = "/mcs_sites(" + siteId + ")";
+					entity["cvt_facility@odata.bind"] = "/mcs_facilities(" + facilityId + ")";
+
+					parent.Xrm.WebApi.online.createRecord("cvt_participatingsite", entity).then(
+						function success(result) {
+							var newEntityId = result.id;
+							if (index = selectedSites.length){
+								parent.Xrm.Utility.closeProgressIndicator();
+								deferred.resolve();
+							}
+						},
+						function (error) {
+							parent.Xrm.Utility.closeProgressIndicator();
+							var alertStrings = { confirmButtonLabel: "Yes", text: error.message, title: "Add Participating Site Failed" };
+							var alertOptions = { height: 120, width: 260 };
+							parent.Xrm.Navigation.openAlertDialog(alertStrings, alertOptions).then(
+								function (success) {
+									deferred.reject();
+								},
+								function (error) {
+									console.log(error.message);
+								}
+							);
+						}
+					);
+				}
+				else{
+					if (index = selectedSites.length){
+						parent.Xrm.Utility.closeProgressIndicator();
+						deferred.resolve();
+					}
+				}
+            });
+            return deferred.promise();
+        }
+
+        function saveSites() {
+            createParticipatingSites()
+                .always(function () {
+                    window.close();
+                });
+        }
+    </script>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+    <meta>
+</head>
+<body onfocusout="parent.setEmailRange();" style="overflow-wrap: break-word;">
+    <input type="checkbox" name="chkSelectAll" id="chkSelectAll">Select All<br>
+    <br>
+    <div id="SimpleJSTree"></div>
+    <br>
+    <button id="btnSave" type="button" onclick="saveSites();">Save</button> &nbsp;
+    <button type="button" onclick="window.close();">Cancel</button>
+</body>
+</html>

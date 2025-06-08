@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "type": "string",
+            "defaultValue": "-prod"
+        },
+        "connections_name": {
+            "defaultValue": "[concat('va-eis-tmp-loganalytics-conn', parameters('Target-Env'))]",
+            "type": "String"
+        },
+        "username": {
+            "type": "string",
+            "defaultValue": "username"
+        },
+        "password": {
+            "type": "string",
+            "defaultValue": "password"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "kind": "V1",
+            "properties": {
+                "displayName": "[concat('va-eis-tmp-loganalytics', parameters('Target-Env'))]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location,'/managedApis/azureloganalyticsdatacollector')]"
+                },
+                "parameterValues": {
+                    "username": "[parameters('username')]",
+                    "password": "[parameters('password')]"
+                }
+            }
+        }
+    ]
+}

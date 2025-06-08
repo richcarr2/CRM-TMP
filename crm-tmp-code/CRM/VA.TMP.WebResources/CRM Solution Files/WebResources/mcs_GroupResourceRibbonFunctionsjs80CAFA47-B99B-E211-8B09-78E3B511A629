@@ -1,0 +1,46 @@
+﻿function openNewmcs_resource(mcs_type, mcs_relatedsiteid, mcs_relatedsiteidname, mcs_resourcegroupguid) {
+    //valid values for type align with resource type flobal option set
+    if ((typeof Xrm != "undefined") && (typeof Xrm.Utility != "undefined")) {
+        var p = {};
+        p.mcs_resourcegroupguid = mcs_resourcegroupguid;
+        if (mcs_type != 0)
+            p.mcs_type = mcs_type;
+        if (mcs_relatedsiteid != "")
+            p.mcs_relatedsiteid = mcs_relatedsiteid;
+        if (mcs_relatedsiteidname != "")
+            p.mcs_relatedsiteidname = mcs_relatedsiteidname;
+        Xrm.Utility.openEntityForm("mcs_resource", null, p);
+    }
+    else {
+        var features = "location=no,menubar=no,status=no,toolbar=no,resizable=yes";
+        var extraqs = ["mcs_resourcegroupguid=" + mcs_resourcegroupguid];
+        if (mcs_relatedsiteid != "")
+            extraqs.push("mcs_relatedsiteid=" + mcs_relatedsiteid);
+        if(mcs_relatedsiteidname != "")
+            extraqs.push("mcs_relatedsiteidname=" + mcs_relatedsiteidname);
+        if(mcs_type != 0)
+            extraqs.push("mcs_type=" + mcs_type);
+        var url = Xrm.Page.context.getServerUrl();
+        if (url.match(/\/$/)) {
+            url = url.substring(0, url.length - 1);
+        }
+        if (typeof Xrm.Page.context.getClientUrl != "undefined") {
+            url = Xrm.Page.context.getClientUrl();
+        }
+        window.open(url + "/main.aspx?etn=mcs_resource&pagetype=entityrecord&extraqs=" + encodeURIComponent(extraqs.join("&")), "_blank", features, false);
+    }
+
+}
+
+//Example:
+//openNewmcs_resource(251920001,"{9352b512-7686-e211-ba96-00155d010613}","boston",105,"wewer");function QuickCreateResource() {
+function QuickCreateResource() {
+    var relatedSite = Xrm.Page.getAttribute("mcs_relatedsiteid") != null ? Xrm.Page.getAttribute("mcs_relatedsiteid").getValue()[0] : {id:"",name:""}; //get the site object or set up an object will empty values
+    var resourceType = Xrm.Page.getAttribute("mcs_type") != null ? Xrm.Page.getAttribute("mcs_type").getValue() : 0;
+
+    if (resourceType == 99999999 || resourceType == 100000000) {
+        alert("To Create a Provider/Telepresenter, contact NTTHD at 866-651-3180 or email VHA_NTTHD@va.gov");
+        return;
+    }
+    openNewmcs_resource(resourceType, relatedSite.id, relatedSite.name, Xrm.Page.data.entity.getId());
+}

@@ -1,0 +1,519 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    <title>Person Search</title>
+    <link href="crme_style.css" rel="stylesheet">
+    <script src="ClientGlobalContext.js.aspx" type="text/javascript"></script>
+
+    <script src="crme_jquery1.4.1.min.js" type="text/javascript"></script>
+
+    <script src="crme_SDK.REST.js" type="text/javascript"></script>
+
+    <script src="crme_json2.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $("#SearchByNameButton").bind("click", function () {
+
+                $("#searchResultsMessageDiv").val("");
+
+                if (validateSearchByName() == true) {
+
+                    formatExecutingSearch();
+
+                    var dobday = $("#BirthDayTextBox").val();
+                    var dobyear = $("#BirthYearTextBox").val();
+                    var dobmonth = $("#BirthMonthTextBox").val();
+                    var dob = dobyear + formatDatePart(dobmonth) + formatDatePart(dobday);
+                    var filter = "$select=*&$filter=";
+
+                    filter += buildQueryFilter("crme_FirstName", $("#FirstNameTextBox").val(), false);
+                    filter += buildQueryFilter("crme_LastName", $("#LastNameTextBox").val(), true);
+                    filter += buildQueryFilter("crme_SearchType", 'SearchByFilter', true);
+                    filter += " and crme_IsAttended eq true";
+
+                    if ($("#MiddleNameTextBox").val() != "") {
+                        filter += buildQueryFilter("crme_MiddleName", $("#MiddleNameTextBox").val(), true);
+                    }
+
+                    if (dobyear != "") {
+                        filter += " and crme_DOBString eq '" + dob + "'";
+                    }
+
+                    if ($("#PhoneNoTextBox").val() != "") {
+                        filter += buildQueryFilter("crme_PrimaryPhone", $("#PhoneNoTextBox").val(), true);
+                    }
+
+                    if ($("#SocialSecurityTextBox").val() != "") {
+                        filter += buildQueryFilter("crme_SSN", $("#SocialSecurityTextBox").val(), true);
+                    }
+
+                    SDK.REST.retrieveMultipleRecords("crme_person", filter, personSearchCallBack, function (error) { alert(error.message); }, personSearchComplete);
+
+                } else {
+                    formatValidationFailed();
+                }
+
+            });
+
+            $("#SearchByIdentifierButton").bind("click", function () {
+
+                if (validateSearchByIdentifier() == true) {
+
+                    formatExecutingSearch();
+
+                    var filter = "$select=*&$filter=";
+
+                    if ($("#EdipiTextBox").val() != "") {
+                        filter += buildQueryFilter("crme_EDIPI", $("#EdipiTextBox").val(), false);
+                        filter += buildQueryFilter("crme_ClassCode", 'MIL', true);
+                    }
+
+                    filter += buildQueryFilter("crme_SearchType", 'SearchByIdentifier', true);
+                    filter += " and crme_IsAttended eq false";
+
+                    SDK.REST.retrieveMultipleRecords("crme_person", filter, personSearchCallBack, function (error) { alert(error.message); }, personSearchComplete);
+
+                } else {
+                    formatValidationFailed();
+                }
+            });
+
+            $('#clearIdentifierFieldsButton').bind("click", function () {
+
+                $("#EdipiTextBox").val("");
+                $("#validationFailedDiv").hide();
+                personSearchComplete();
+            });
+
+            $('#clearNameFieldsButton').bind("click", function () {
+
+                $("#FirstNameTextBox").val("");
+                $("#MiddleNameTextBox").val("");
+                $("#LastNameTextBox").val("");
+                $("#BirthMonthTextBox").val("");
+                $("#BirthDayTextBox").val("");
+                $("#BirthYearTextBox").val("");
+                $("#PhoneNoTextBox").val("");
+                $("#SocialSecurityTextBox").val("");
+                $("#validationFailedDiv").hide();
+                personSearchComplete();
+            });
+
+            function formatExecutingSearch() {
+                $('div#tmpDialog').show();
+                $("#validationFailedDiv").hide();
+                $("#resultsFieldSetDiv").hide();
+                $("#searchResultsMessageDiv").hide();
+                $("#SearchByNameButton").attr('disabled', true);
+                $("#SearchByIdentifierButton").attr('disabled', true);
+            }
+
+            function formatValidationFailed() {
+                $("#validationFailedDiv").show();
+                $("#resultsFieldSetDiv").hide();
+                $("#searchResultsMessageDiv").hide();
+                $("#personSearchResultsTable").find("thead, tr, th").remove();
+                $("#personSearchResultsTable").find("tr:gt(0)").remove();
+            }
+
+            function personSearchComplete() {
+                $('div#tmpDialog').hide();
+                $("#SearchByNameButton").attr('disabled', false);
+                $("#SearchByIdentifierButton").attr('disabled', false);
+            }
+
+            function buildQueryFilter(field, value, and) {
+                if (and) {
+                    return " and " + field + " eq '" + value + "'";
+                } else {
+                    return field + " eq '" + value + "'";
+                }
+            }
+
+            function openSelectedPerson(obj) {
+
+                $('div#tmpDialog').show();
+                var ssn = obj.getAttribute('ssn');
+                var edipi = obj.getAttribute('edipi');
+                var firstName = obj.getAttribute('firstName');
+                var lastName = obj.getAttribute('lastName');
+                var recordSource = obj.getAttribute('recordSource');
+                var patientMviIdentifier = obj.getAttribute('patientMviIdentifier');
+                var filter = "$select=*&$filter=";
+
+                filter += buildQueryFilter("crme_SSN", ssn, false);
+                filter += buildQueryFilter("crme_EDIPI", edipi, true);
+                filter += buildQueryFilter("crme_SearchType", 'SelectedPersonSearch', true);
+                filter += buildQueryFilter("crme_PatientMviIdentifier", patientMviIdentifier, true);
+                filter += buildQueryFilter("crme_FirstName", firstName, true);
+                filter += buildQueryFilter("crme_LastName", lastName, true);
+                filter += buildQueryFilter("crme_RecordSource", recordSource, true);
+
+                SDK.REST.retrieveMultipleRecords("crme_person", filter, selectedPersonCallBack, function (error) { alert(error.message); }, personSearchComplete);
+
+                return false;
+            }
+
+            function personSearchCallBack(data, textStatus, XmlHttpRequest) {
+
+                $('div#tmpDialog').show();
+                // get the table
+                var table = $("#personSearchResultsTable");
+
+                // reset the table by removing all data rows
+                $("#personSearchResultsTable").find("thead, tr, th").remove();
+                $("#personSearchResultsTable").find("tr:gt(0)").remove();
+                $("#resultsFieldSetDiv").hide();
+
+		debugger;
+                if (data != null && data.length > 0) {
+
+                    var thead = document.createElement('thead');
+                    var theadRow = document.createElement('tr');
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        var fullName = formatName(data[i]);
+
+                        if (fullName == "") {
+                            break;
+                        }
+
+                        var dateOfBirth = data[i].crme_DOBString == null ? "" : data[i].crme_DOBString;
+                        var address = formatAddress(data[i]);
+                        var phoneNumber = data[i].crme_PrimaryPhone == null ? "" : data[i].crme_PrimaryPhone;
+                        var patientMviIdentifier = data[i].crme_PatientMviIdentifier == null ? "" : data[i].crme_PatientMviIdentifier;
+                        var recordSource = data[i].crme_RecordSource == null ? "" : data[i].crme_RecordSource;
+                        var edipi = data[i].crme_EDIPI == null ? "" : data[i].crme_EDIPI;
+                        var ssn = data[i].crme_SSN == null ? "" : data[i].crme_SSN;
+                        var firstName = data[i].crme_FirstName == null ? "" : data[i].crme_FirstName;
+                        var lastName = data[i].crme_LastName == null ? "" : data[i].crme_LastName;
+                        var alias = data[i].crme_Alias == null ? "" : data[i].crme_Alias;
+                        var gender = data[i].crme_Gender == null ? "" : data[i].crme_Gender;
+                        var deceasedDate = data[i].crme_DeceasedDate == null ? "" : data[i].crme_DeceasedDate;
+                        var identityTheft = data[i].crme_IdentityTheft == null ? "" : data[i].crme_IdentityTheft;
+
+                        if (i == 0) {
+                            var th1 = document.createElement('th');
+                            var thAlias = document.createElement('th');
+                            var th2 = document.createElement('th');
+                            var th3 = document.createElement('th');
+                            var th4 = document.createElement('th');
+                            var th5 = document.createElement('th');
+                            var th6 = document.createElement('th');
+                            var th7 = document.createElement('th');
+                            var th8 = document.createElement('th');
+                            var th10 = document.createElement('th');
+                            var th11 = document.createElement('th');
+
+                            th1.appendChild(document.createTextNode('Name'));
+                            thAlias.appendChild(document.createTextNode('Alias'));
+                            th2.appendChild(document.createTextNode('Date of Birth'));
+                            th3.appendChild(document.createTextNode('Deceased Date'));
+                            th4.appendChild(document.createTextNode('Gender'));
+                            th5.appendChild(document.createTextNode('Address'));
+                            th6.appendChild(document.createTextNode('Phone No'));
+                            th7.appendChild(document.createTextNode('SSN'));
+                            th8.appendChild(document.createTextNode('EDIPI'));
+                            th10.appendChild(document.createTextNode('Identity Theft'));
+                            th11.appendChild(document.createTextNode('Source'));
+
+
+                            theadRow.appendChild(th1);
+                            if (alias != "") {
+                                theadRow.appendChild(thAlias);
+                            }
+                            theadRow.appendChild(th2);
+                            if (deceasedDate != "") {
+                                theadRow.appendChild(th3);
+                            }
+                            theadRow.appendChild(th4);
+                            theadRow.appendChild(th5);
+                            theadRow.appendChild(th6);
+                            theadRow.appendChild(th7);
+                            theadRow.appendChild(th8);
+                            if (identityTheft != "") {
+                                theadRow.appendChild(th10);
+                            }
+                            theadRow.appendChild(th11);
+                            thead.appendChild(theadRow);
+                        }
+
+                        // Table rows
+                        var row = document.createElement('tr');
+                        var col1 = document.createElement('td');
+                        var colAlias = document.createElement('td');
+                        var col2 = document.createElement('td');
+                        var col3 = document.createElement('td');
+                        var col4 = document.createElement('td');
+                        var col5 = document.createElement('td');
+                        var col6 = document.createElement('td');
+                        var col7 = document.createElement('td');
+                        var col8 = document.createElement('td');
+                        var col10 = document.createElement('td');
+                        var col11 = document.createElement('td');
+
+                        col1.appendChild(document.createTextNode(fullName));
+                        colAlias.appendChild(document.createTextNode(alias));
+                        col2.appendChild(document.createTextNode(dateOfBirth));
+                        col3.appendChild(document.createTextNode(deceasedDate));
+                        col4.appendChild(document.createTextNode(gender));
+                        col5.appendChild(document.createTextNode(address));
+                        col6.appendChild(document.createTextNode(phoneNumber));
+                        col7.appendChild(document.createTextNode(ssn));
+                        col8.appendChild(document.createTextNode(edipi));
+                        col10.appendChild(document.createTextNode(identityTheft));
+                        col11.appendChild(document.createTextNode(recordSource));
+
+                        row.appendChild(col1);
+
+                        if (alias != "") {
+                            row.appendChild(colAlias);
+                        }
+                        row.appendChild(col2);
+                        if (deceasedDate != "") {
+                            row.appendChild(col3);
+                        }
+                        row.appendChild(col4);
+                        row.appendChild(col5);
+                        row.appendChild(col6);
+                        row.appendChild(col7);
+                        row.appendChild(col8);
+                        if (identityTheft != "") {
+                            row.appendChild(col10);
+                        }
+                        row.appendChild(col11);
+
+                        row.setAttribute('ssn', ssn);
+                        row.setAttribute('edipi', edipi);
+                        row.setAttribute('recordSource', recordSource);
+                        row.setAttribute('firstName', firstName);
+                        row.setAttribute('lastName', lastName);
+                        row.setAttribute('patientMviIdentifier', patientMviIdentifier);
+                        row.className = (i % 2 == 0) ? "even" : "odd";
+                        row.ondblclick = function () { openSelectedPerson(this); };
+                        table.append(thead);
+                        table.append(row);
+
+                        $("#resultsFieldSetDiv").show();
+                    }
+                }
+
+                $("#searchResultsMessageDiv").show();
+                $("#searchResultsMessageDiv").text((data != null && data[0].crme_ReturnMessage != null) ? data[0].crme_ReturnMessage : "Your search in MVI did not find any records matching the search criteria.");
+            }
+
+            function formatDatePart(datepart) {
+                return datepart.length == 1 ? "0" + datepart : datepart;
+            }
+
+            function formatName(data) {
+
+                if (data.crme_FullName != null) {
+                    return data.crme_FullName;
+                }
+
+                var firstName = data.crme_FirstName != null ? data.crme_FirstName : "";
+                var lastName = data.crme_LastName != null ? data.crme_LastName : "";
+
+                return firstName + " " + lastName;
+            }
+
+            function formatAddress(data) {
+                if (data.crme_FullAddress != null) {
+                    return data.crme_FullAddress;
+                }
+
+                var street = data.crme_Address1 != null ? data.crme_Address1 : "";
+                var city = data.crme_City != null ? data.crme_City : "";
+                var state = data.crme_StateProvinceId.Name != null ? data.crme_StateProvinceId.Name : "";
+                var zip = data.crme_ZIPPostalCodeId.Name != null ? data.crme_ZIPPostalCodeId : "";
+
+                return street + " " + city + " " + state + " " + zip;
+            }
+
+            function selectedPersonCallBack(data) {
+                $("#SearchByIdentifierButton").enable = true;
+                $('div#tmpDialog').hide(100);
+                if (data != null) {
+                    var url = data[0].crme_url;
+                    window.open(url);
+                }
+            }
+
+            function validateSearchByIdentifier() {
+                var edipi = $("#EdipiTextBox").val();
+
+                if (edipi != "") {
+                    if ((edipi.length != 10 || isNumeric(edipi) == false)) {
+                        $("#validationFailedDiv").text("VALIDATION FAILED: EDIPI is invalid.");
+                        return false;
+                    }
+                    return true;
+                }
+                else {
+                    $("#validationFailedDiv").text("VALIDATION FAILED: The search requires an EDIPI.");
+                    return false;
+                }
+            }
+
+            function validateSearchByName() {
+                var fname = $("#FirstNameTextBox").val();
+                var lname = $("#LastNameTextBox").val();
+                var ssn = $("#SocialSecurityTextBox").val();
+                var phone = $("#PhoneNoTextBox").val();
+                var dobyear = $("#BirthYearTextBox").val();
+                var dobmonth = $("#BirthMonthTextBox").val();
+                var dobday = $("#BirthDayTextBox").val();
+
+                if (fname == "" || lname == "" || ssn == "") {
+                    $("#validationFailedDiv").text("VALIDATION FAILED: 'First Name', 'Last Name' and SSN are required.");
+                    return false;
+                }
+
+                if (validateDateOfBirth(dobyear, dobmonth, dobday) == false) {
+                    $("#validationFailedDiv").text("VALIDATION FAILED: 'DOB' is invalid or out of range.");
+                    return false;
+                }
+
+                if (ssn.trim() != "") {
+                    if (ssn.trim().length != 9 && isNumeric(ssn.trim()) == false) {
+                        $("#validationFailedDiv").text("VALIDATION FAILED: SSN is invalid.");
+                        return false;
+                    }
+                }
+
+                if (phone.trim() == "" && (dobyear.trim() == "" || dobyear.trim() == "YYYY")) {
+                    $("#validationFailedDiv").text("VALIDATION FAILED: The search also requires a Phone No or DOB.");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function validateDateOfBirth(dobyear, dobmonth, dobday) {
+
+                if (dobyear == "" && dobmonth == "" && dobday == "") {
+                    return true;
+                }
+
+                if (dobyear != "YYYY" || dobmonth != "MM" || dobday != "DD") {
+                    if (isNumeric(dobyear) == false || isNumeric(dobmonth) == false || isNumeric(dobday) == false) {
+                        return false;
+                    }
+                }
+
+                if (dobyear.length != 4) {
+                    return false;
+                }
+
+                if (dobyear >= (new Date).getFullYear() + 1) {
+                    return false;
+                }
+
+                if (dobyear < (new Date).getFullYear() - 200) {
+                    return false;
+                }
+
+                if (dobmonth < 1 || dobmonth > 12) {
+                    return false;
+                }
+
+                if (dobday < 1 || dobday > 31) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            function isNumeric(value) {
+
+                return !isNaN(parseFloat(value) && isFinite(value));
+            }
+        });
+
+        function clearField(obj) {
+            if (obj.defaultValue == obj.value) obj.value = '';
+        }
+
+    </script>
+
+    <meta charset="utf-8">
+</head>
+    <body>
+        <div id="tmpDialog">
+            <p>
+                Working on it. Please wait ...
+            </p>
+        </div>
+        <div style="font-family: sans-serif; font-size: 0.9em; font-weight: bold;">Search by EDIPI or Person Traits ('First Name', 'Last Name', 'SSN' and ('DOB' and/or 'Phone No')). </div>
+        <div style="clear: both;"></div>
+        <br>
+        <div>
+            <fieldset>
+                <legend>Search Criteria</legend>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="text-align: right;">Search by EDIPI:</td>
+                            <td colspan="3">EDIPI<br>
+                                <input name="edipi" tabindex="2" class="formInputText" id="EdipiTextBox" onfocus="clearField(this)" size="16" maxlength="16">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td colspan="3">
+                                <button tabindex="4" id="SearchByIdentifierButton">Search</button>
+                                <button tabindex="5" id="clearIdentifierFieldsButton">Reset</button>
+                                <br>
+                                <hr style="border: 1px solid gray;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: right;" rowspan="2">Search by Traits:</td>
+                            <td>First<br>
+                                <input name="firstName" tabindex="6" class="formInputText" id="FirstNameTextBox" onfocus="clearField(this)" size="16" maxlength="30"></td>
+                            <td>Middle<br>
+                                <input name="middlName" tabindex="7" class="formInputText" id="MiddleNameTextBox" onfocus="clearField(this)" size="16" maxlength="30"></td>
+                            <td>Last<br>
+                                <input name="lastName" tabindex="8" class="formInputText" id="LastNameTextBox" onfocus="clearField(this)" size="16" maxlength="30"></td>
+                        </tr>
+                        <tr>
+                            <td>SSN<br>
+                                <input name="ssn" tabindex="9" class="formInputText" id="SocialSecurityTextBox" onfocus="clearField(this)" size="16" maxlength="9">
+                            </td>
+                            <td>Phone<br>
+                                <input name="phoneNo" tabindex="10" class="formInputText" id="PhoneNoTextBox" onfocus="clearField(this)" size="16" maxlength="15">
+                            </td>
+                            <td>DOB<br>
+                                <input name="dateOfBirthMonth" tabindex="11" class="formInputText" id="BirthMonthTextBox" onfocus="clearField(this)" size="2" maxlength="2" value="MM">/
+                                <input name="dateOfBirthDay" tabindex="12" class="formInputText" id="BirthDayTextBox" onfocus="clearField(this)" size="2" maxlength="2" value="DD">/
+                                <input name="dateOfBirthYear" tabindex="13" class="formInputText" id="BirthYearTextBox" onfocus="clearField(this)" size="4" maxlength="4" value="YYYY">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td colspan="3">
+                                <button tabindex="14" id="SearchByNameButton">Search</button>
+                                <button tabindex="15" id="clearNameFieldsButton">Reset</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+        </div>
+        <br>
+        <div style="clear: both;"></div>
+        <div id="validationFailedDiv" style="color: red; font-family: sans-serif; font-size: 0.9em; display: none;">The search requires some additional information. Please follow the instructions above to execute your search.</div>
+        <div id="searchResultsMessageDiv" style="color: red; font-family: sans-serif; font-size: 0.9em; font-weight: bold; display: none;"></div>
+        <div style="clear: both;"></div>
+        <div id="resultsFieldSetDiv" style="width: 100%; float: left; display: none;">
+            <fieldset id="SearchResultFieldSet">
+                <legend>Search Results</legend>
+                <table id="personSearchResultsTable" style="width: 100%;">
+                </table>
+            </fieldset>
+        </div>
+    
+
+</body></html>

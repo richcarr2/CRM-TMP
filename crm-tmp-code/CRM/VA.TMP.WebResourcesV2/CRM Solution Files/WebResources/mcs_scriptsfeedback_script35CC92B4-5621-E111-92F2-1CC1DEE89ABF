@@ -1,0 +1,18 @@
+// JScript source code
+
+///// FEEDBACK ENTITY /////
+
+// Show the 'Passed Retest' field if the Feedback Status Reason = 'Retest'
+
+function showPassedRetest() {
+ 
+    var sStatusCode = Xrm.Page.getAttribute("statuscode").getSelectedOption().text;
+
+    if (sStatusCode != null) {
+
+        if (sStatusCode == "Retest") {
+            var sPassedRetest = Xrm.Page.ui.controls.get("dhs_passedretest");
+            sPassedRetest.setVisible(true);
+        }
+    }
+}

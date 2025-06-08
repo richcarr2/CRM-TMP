@@ -1,0 +1,400 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Target_Environment": {
+      "type": "String",
+      "metadata": {
+        "description": ""
+      },
+      "allowedValues": [
+        "dev",
+        "qa",
+        "nprod",
+        "east-prod",
+        "southwest-prod"
+      ]
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "defaultValue": "va-eis-tmp-integration-acct-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the target ISE for this environment"
+      }
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "ISE_ResourceGroup": "[resourceGroup().name]",
+    "LogicApp_Name": "[concat('va-eis-tmp-inbound-processing-S15-', parameters('Target_Environment'))]",
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[variables('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(variables('ISE_ResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Filter_array:_Filter_Errors": {
+              "inputs": {
+                "from": "@result('Scope:_Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Appointment_Cancel_Failed_Integration_Result": {
+              "inputs": {
+                "body": {
+                  "cvt_visibletouser": true,
+                  "mcs_error": "Cerner appointment cancel failed: The logic app action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "mcs_integrationrequest": "@{triggerBody()}",
+                  "mcs_name": "Inbound Cerner Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Cancel",
+                  "mcs_result": "Logic App error",
+                  "mcs_status": 803750003,
+                  "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                  "mcs_veisprocesssubtype": 799900003,
+                  "mcs_veisprocesstype": 803750000
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Filter_array:_Filter_Errors": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Parse_JSON": {
+              "inputs": {
+                "content": "@triggerBody()",
+                "schema": {
+                  "properties": {
+                    "cernerAppointmentId": {},
+                    "cernerBuildingId": {},
+                    "cernerClinicId": {},
+                    "cernerComments": {},
+                    "cernerFacilityId": {},
+                    "cernerProviders": {},
+                    "cernerResources": {},
+                    "cernerSchedulerUserEDIPI": {},
+                    "scheduledDurationMinutes": {},
+                    "scheduledEnd": {},
+                    "scheduledStart": {}
+                  },
+                  "type": "object"
+                }
+              },
+              "runAfter": {},
+              "type": "ParseJson"
+            },
+            "Response:_200": {
+              "inputs": {
+                "body": {
+                  "code": "Logic app ran successfully",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 200
+              },
+              "kind": "Http",
+              "runAfter": {
+                "Scope:_Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Response:_500": {
+              "inputs": {
+                "body": {
+                  "code": "@{first(body('Filter_array:_Filter_Errors'))['status']}",
+                  "message": "Reserve Resource with mcs_cernerappointmentid: @{body('Parse_JSON')?['cernerAppointmentId']} failed to cancel",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 500
+              },
+              "kind": "Http",
+              "runAfter": {
+                "HTTP:_Create_Appointment_Cancel_Failed_Integration_Result": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Scope:_Try": {
+              "actions": {
+                "Get_secret:_CDS_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {},
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Get_Reserve_Resource": {
+                  "inputs": {
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                    },
+                    "method": "GET",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments?$filter=mcs_cernerappointmentid eq '@{body('Parse_JSON')?['cernerAppointmentId']}'"
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "If_Reserve_Resource_Exists": {
+                  "actions": {
+                    "HTTP:_Cancel_Reserve_Resource": {
+                      "inputs": {
+                        "body": {
+                          "cvt_integrationbookingstatus": 917290000,
+                          "statecode": 2,
+                          "statuscode": 4
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "PATCH",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments(@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']})"
+                      },
+                      "runAfter": {},
+                      "type": "Http"
+                    },
+                    "HTTP:_Create_Appointment_Cancel_Success_Integration_Result": {
+                      "inputs": {
+                        "body": {
+                          "mcs_appointmentid@odata.bind": "/appointments(@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']})",
+                          "mcs_integrationrequest": "@{triggerBody()}",
+                          "mcs_name": "Cerner Inbound Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Cancel",
+                          "mcs_result": "Reserve Resource cancelled",
+                          "mcs_status": 803750002,
+                          "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                          "mcs_veisprocesssubtype": 799900003,
+                          "mcs_veisprocesstype": 803750000
+                        },
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                      },
+                      "runAfter": {
+                        "HTTP:_Cancel_Reserve_Resource": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "HTTP:_Create_Missing_Appointment_Integration_Result": {
+                        "inputs": {
+                          "body": {
+                            "cvt_visibletouser": true,
+                            "mcs_error": "Could not unblock resource because a Reserve Resource with Cerner Appointment Id @{body('Parse_JSON')?['cernerAppointmentId']} was not found.",
+                            "mcs_integrationrequest": "@{triggerBody()}",
+                            "mcs_name": "Cerner Inbound Appointment @{body('Parse_JSON')?['cernerAppointmentId']} Cancel",
+                            "mcs_result": "Reserve Resource not found",
+                            "mcs_status": 803750001,
+                            "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                            "mcs_veisprocesssubtype": 799900003,
+                            "mcs_veisprocesstype": 803750000
+                          },
+                          "headers": {
+                            "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                          },
+                          "method": "POST",
+                          "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                      }
+                    }
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('HTTP:_Get_Reserve_Resource')['value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "runAfter": {
+                    "HTTP:_Get_Reserve_Resource": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {
+                "Parse_JSON": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "inputs": {},
+              "kind": "Http",
+              "type": "Request"
+            }
+          }
+        },
+        "parameters": {
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

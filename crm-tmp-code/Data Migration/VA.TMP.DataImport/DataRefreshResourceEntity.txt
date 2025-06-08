@@ -1,0 +1,2 @@
+cvt_identifier;mcs_name;mcs_relatedsiteid;mcs_type;mcs_resourceid;mcs_room;cvt_capacity;CrmErrorMessage;ErrorCode;ErrorColumn
+620d6899-7f51-e911-80ea-000d3a007bf6;Room Test-Refresh @ 554GF;{C68FCDDB-1C9E-E311-8235-00155D5575E0};251920001;{620D6899-7F51-E911-80EA-000D3A007BF6};Test-Refresh;1;CRM service call returned an error: Attribute 'name' cannot be NULL;-2147220891;-1

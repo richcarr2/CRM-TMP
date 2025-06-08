@@ -1,0 +1,16 @@
+﻿//Library Name: cvt_KPI.OnChange.js
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.cvt_KPI_OnChange = {};
+
+//Map different field types to same field.
+MCS.cvt_KPI_OnChange.KPI_MapResponse = function (incomingfield) {
+    //Validate parameter & Validate field exists & Validate Value
+    if ((incomingfield != null) && (Xrm.Page.getAttribute(incomingfield) != null) && (Xrm.Page.getAttribute(incomingfield).getValue() != null)) {
+        //Map value to Response field
+        //Write condition for Date YYYY-MM-dd
+        Xrm.Page.getAttribute("cvt_response").setValue(Xrm.Page.getAttribute(incomingfield).getValue().toString());
+    }
+};

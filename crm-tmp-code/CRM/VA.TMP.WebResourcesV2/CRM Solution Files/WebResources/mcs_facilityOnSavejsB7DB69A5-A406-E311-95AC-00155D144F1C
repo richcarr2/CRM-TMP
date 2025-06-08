@@ -1,0 +1,44 @@
+//If the SDK namespace object is not defined, create it.
+if (typeof (MCS) == "undefined")
+{ MCS = {}; }
+// Create Namespace container for functions in this library;
+MCS.Facility = {};
+
+
+MCS.Facility.FORM_TYPE_CREATE = 1;
+MCS.Facility.FORM_TYPE_UPDATE = 2;
+MCS.Facility.FORM_TYPE_READ_ONLY = 3;
+MCS.Facility.FORM_TYPE_DISABLED = 4;
+
+MCS.Facility.CreateName = function () {
+    /***********************************************************************
+    /** 
+    /** Description: CreateName
+    /** 
+    /** 
+    ***********************************************************************/  
+    var mcs_usernameinput = Xrm.Page.getAttribute("mcs_facilitylocation").getValue();
+    var mcs_stationnumber = Xrm.Page.getAttribute("mcs_stationnumber").getValue();
+
+    var derivedResultField = "";
+
+    if (mcs_usernameinput != null) {
+        derivedResultField += mcs_usernameinput;
+        derivedResultField += " "
+    }
+
+  //  if (mcs_stationnumber != null) {
+  //      derivedResultField += "("
+  //      derivedResultField += mcs_stationnumber;
+  //      derivedResultField += ") "
+ //   }
+
+
+    // derivedResultField += " @ ";
+    //  if (mcs_facilityid != null) {
+    //      derivedResultField += mcs_facilityid[0].name;
+    //  }
+
+    Xrm.Page.getAttribute("mcs_name").setSubmitMode("always");
+    Xrm.Page.getAttribute("mcs_name").setValue(derivedResultField);
+};

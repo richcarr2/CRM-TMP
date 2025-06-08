@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "value": "-nprod"
+        },
+        "clientId": {
+            "value": "_cds-client-id_"
+        },
+        "clientSecret": {
+            "value": "_cds-client-secret_"
+        },
+        "tenantId": {
+            "value": "_cds-tenant-id_"
+        }
+    }
+}

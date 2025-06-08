@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIMT.VirtualMeetingRoom.Services", "VIMT.VirtualMeetingRoom.Services\VIMT.VirtualMeetingRoom.Services.csproj", "{43FFB4DF-BE94-47CC-B292-84043FF16BCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIMT.VirtualMeetingRoom", "VIMT.VirtualMeetingRoom\VIMT.VirtualMeetingRoom.csproj", "{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIMT.VirtualMeetingRoom.Messages", "VIMT.VirtualMeetingRoom.Messages\VIMT.VirtualMeetingRoom.Messages.csproj", "{34B5D573-4F84-48CF-86FD-AB49D701EF95}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43FFB4DF-BE94-47CC-B292-84043FF16BCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF1DBA6F-9585-446A-8DAD-2759A2BEE166}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34B5D573-4F84-48CF-86FD-AB49D701EF95}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://pssc-amalgam-tfs2012.solutiondevcenter.com/tfs/pssc01
+		SccProjectUniqueName0 = VIMT.VirtualMeetingRoom.Services\\VIMT.VirtualMeetingRoom.Services.csproj
+		SccProjectName0 = VIMT.VirtualMeetingRoom.Services
+		SccLocalPath0 = VIMT.VirtualMeetingRoom.Services
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = VIMT.VirtualMeetingRoom\\VIMT.VirtualMeetingRoom.csproj
+		SccProjectName2 = VIMT.VirtualMeetingRoom
+		SccLocalPath2 = VIMT.VirtualMeetingRoom
+		SccProjectUniqueName3 = VIMT.VirtualMeetingRoom.Messages\\VIMT.VirtualMeetingRoom.Messages.csproj
+		SccProjectName3 = VIMT.VirtualMeetingRoom.Messages
+		SccLocalPath3 = VIMT.VirtualMeetingRoom.Messages
+	EndGlobalSection
+EndGlobal

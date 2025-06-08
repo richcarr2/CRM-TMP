@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Target-Env": {
+            "value": "-east-prod"
+        },
+        "vaults_keyvault_name": {
+            "value": "va-eis-tmp-kv1-east-prod"
+        },
+        "DEVOPS_SPN_Id": {
+            "value": "a49fe4b1-7232-4efc-91ed-575d89d6a72f"
+        }
+    }
+}

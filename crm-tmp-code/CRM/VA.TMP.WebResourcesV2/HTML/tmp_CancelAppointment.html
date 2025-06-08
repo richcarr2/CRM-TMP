@@ -1,0 +1,294 @@
+<html><head>
+    <style>
+        td {
+            padding-left: 5px;
+            padding-right: 15px;
+            padding-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        body {
+            background-color: #FFD580;
+            font-family: sans-serif;
+        }
+
+        .button {
+          position: relative;
+          background-color: #4CAF50;
+          border: none;
+          font-size: 16px;
+          font-weight: bold;
+          color: #FFFFFF;
+          padding: 10px;
+          width: 100px;
+          text-align: center;
+          transition-duration: 0.4s;
+          text-decoration: none;
+          overflow: hidden;
+          cursor: pointer;
+        }
+    </style>
+    <!--<script type="text/javascript" src="../WebResources/cvt_jquery.1.7.1.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <script>
+        var dbDate;
+        var AppointmentId;
+        var appointmentSelected;
+        var cancelSelected;
+        var delimiter = " ";
+        var groupAppt = false;
+
+        PatientSelector = function (patientType) {
+           
+            appointmnetSelected = patientType;
+            if (patientType === "WA") {
+                $('#patientSelector').prop("disabled", true);
+            }
+            else {
+                $('#patientSelector').prop("disabled", false);
+            }
+        };
+
+        CancelOnChange = function (cancelType) {
+            cancelSelected = cancelType;
+            var optionValue;
+            if (cancelType === "CC") {
+                optionValue = 178970000;
+                $('#pid').prop("disabled", true);
+                $('#pid').val(dbDate);
+            }
+            else {
+                optionValue = 178970001;
+                $('#pid').prop("disabled", false);
+            }
+
+            parent.window.Xrm.WebApi.retrieveMultipleRecords("tmp_cancelationreason", "?$select=tmp_name&$filter=tmp_canceledby eq " + optionValue).then(
+                function success(results) {
+                    if (results.entities.length > 0) {
+                        $('#reasons').find('option').remove().end();
+                        for (var i = 0; i < results.entities.length; i++) {
+                            var optionValue1 = results.entities[i].tmp_name;
+                            var optionText = results.entities[i].tmp_name;
+                            $('#reasons').append("<option value='" + optionValue1 + "'>" + optionText + "</option>");
+                        }
+                    }
+                },
+                function (error) {
+                }
+            );
+        };
+
+        UpdateCancelComments = function () {
+            $('#cancelRemarks').val(($('#NationalComment').val() === "--Select--" ? "" : $('#NationalComment').val() + delimiter) + $('#remarks').val());
+            $('#cancelRemarksLabel').text((166 - $('#cancelRemarks').val().length) + " characters remaining.");
+        }
+
+
+        TextChange = function () {
+            var maxChars = 166;
+            maxChars = 166 - $('#NationalComment').val().length;
+            UpdateCancelComments();
+            if ($(this).val().length > maxChars) {
+                $(this).val($(this).val().substr(0, maxChars));
+
+                //Take action, alert or whatever suits
+                //alert("This field can take a maximum of " + maxChars + " characters.");
+                var alertStrings = { confirmButtonLabel: "Ok", text: "This field can take a maximum of " + maxChars + " characters.", title: "Warning." };
+                var alertOptions = { height: 120, width: 260 };
+                parent.Xrm.Navigation.openAlertDialog(alertStrings, alertOptions);
+            }
+        }
+
+        $(document).ready(function () {
+            CancelOnChange('CC');
+            PatientSelector('WA');
+            $("#remarks").keyup(TextChange).keydown(TextChange);
+
+            dbDate = JSON.parse(unescape(window.location.search.substring(1)).split('=')[1]).Date;
+            AppointmentId = JSON.parse(unescape(window.location.search.substring(1)).split('=')[1]).ID;
+            groupAppt = JSON.parse(unescape(window.location.search.substring(1)).split('=')[1]).GroupAppt;
+    
+            if(groupAppt) $("#IP").prop("disabled", false);
+            $("#pid").val(dbDate);
+
+            parent.window.Xrm.WebApi.online.retrieveMultipleRecords("cvt_vistaintegrationresult", "?$select=cvt_patientname,cvt_vistaintegrationresultid&$filter=_cvt_serviceactivity_value eq " + AppointmentId + " and  cvt_vistastatus ne 'CANCELLED' and cvt_vistastatus ne 'CANCELED' and  cvt_vistastatus ne 'FAILED_TO_BOOK'").then(
+                function success(results) {
+                    for (var i = 0; i < results.entities.length; i++) {
+                        var cvt_patientname = results.entities[i]["cvt_patientname"];
+                        var cvt_vistaintegrationresultid = results.entities[i]["cvt_vistaintegrationresultid"];
+                        $('#patientSelector').append("<option value=" + cvt_vistaintegrationresultid + ">" + cvt_patientname + "</option>");
+                    }
+                },
+                function (error) {
+                    parent.window.Xrm.Utility.alertDialog(error.message);
+                }
+            );
+            
+            window.addEventListener("beforeunload", function(e){
+               localStorage.removeItem(AppointmentId);
+            }, false);            
+            
+        });
+
+        UpdateAppointment = function () {
+            
+            if($("#reasons").val() === null) {
+                //alert("Reason for Cancelation is required. Please select one to proceed.");
+                var alertStrings = { confirmButtonLabel: "Ok", text: "Reason for Cancelation is required. Please select one to proceed.", title: "Warning." };
+                var alertOptions = { height: 120, width: 260 };
+                parent.Xrm.Navigation.openAlertDialog(alertStrings, alertOptions);
+                return;
+            }
+            
+            var data = {};
+            var entity = {};
+            if (appointmnetSelected === 'WA') {
+                
+                entity.cvt_cancelremarks = $('#cancelRemarks').val().trim();
+                entity.cvt_cancelreason = cancelSelected === 'CC'? "Clinic Canceled": "Patient Canceled";
+                entity.statuscode = cancelSelected === 'CC'? 917290000 : 9;
+                entity.tmp_reasonforcancelation = $("#reasons").val();
+                entity.statecode = 2;
+                
+
+                if($("#pid").val() !=="") entity.cvt_clinicallyindicateddate = $("#pid").val();
+                
+                parent.Xrm.WebApi.online.updateRecord("serviceappointment", AppointmentId, entity).then(
+                    function success(result) {
+                        window.close();
+                        parent.window.opener.location.reload(true);
+                    },
+                    function(error) {
+                        parent.Xrm.Utility.alertDialog(error.message);
+                    }
+                );
+            }
+            else {
+                if (cancelSelected === 'CC') {
+                   
+                    data.cvt_cancelremarks = $('#cancelRemarks').val().trim();
+                    data.cvt_cancelreason = "Clinic Canceled";
+                    data.cvt_clinicallyindicateddate = $("#pid").val();
+					data.tmp_reasonforcancelation= $('#reasons').val();
+                    
+                    entity =
+                    {
+                        "cvt_cancelreason": 917290000,
+						"tmp_reasonforcancelation": $('#reasons').val()
+                    };
+                }
+                else {
+                    data.cvt_cancelremarks = $('#cancelRemarks').val().trim();
+                    data.cvt_cancelreason = "Patient Canceled";
+                    data.cvt_clinicallyindicateddate = $("#pid").val();
+					data.tmp_reasonforcancelation= $('#reasons').val();
+                    
+                    entity =
+                    {
+                        "cvt_cancelreason": 9,
+						"tmp_reasonforcancelation": $('#reasons').val()
+                    };
+                }
+                parent.window.Xrm.WebApi.updateRecord("serviceappointment", AppointmentId, data).then(
+                    function success(result) {
+                        parent.window.Xrm.WebApi.online.updateRecord("cvt_vistaintegrationresult", $('#patientSelector').val(), entity).then(
+                            function success(result) {
+                                window.close();
+                            },
+                            function (error) {
+                                parent.window.Xrm.Utility.alertDialog(error.message);
+                            }
+                        );
+                    },
+                    function (error) {
+                        parent.window.Xrm.Utility.alertDialog(error.message);
+                    });
+
+
+            }
+            
+
+
+        }
+
+    </script>
+    <meta>
+<meta></head>
+<body style="overflow-wrap: break-word;">
+    <table width="100%">
+        <tbody>
+            <tr>
+                <td style="width: 50%">
+                    Would you like to close out/cancel the whole appointment or just cancel an individual patient? <label style="color: red;" title="Required">*</label> <br>
+                    <input type="radio" id="WA" name="AppointmentCancelation" checked="" value="WA" onchange="PatientSelector('WA')" "="">
+                    <label for="WA">Whole Appointment</label>
+                    <br>
+                    <input type="radio" id="IP" name="AppointmentCancelation" value="IP" onchange="PatientSelector('IP')" disabled>
+                    <label for="IP">Individual Patient</label>
+                </td>
+                <td>
+                    Select the Patient to Cancel <br>
+                    <select id="patientSelector" disabled style="width: 200px;">
+                        <option>--Select--</option>                        
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%">
+                    <p>Appointment Canceled By <label style="color: red;" title="Required">*</label></p>
+                    <input type="radio" id="CC" name="Cancelation" checked="" value="CC" onchange="CancelOnChange('CC')">
+                    <label for="CC">Canceled by Clinic</label>
+                    <br>
+                    <input type="radio" id="PC" name="Cancelation" value="PC" onchange="CancelOnChange('PC')">
+                    <label for="PC">Canceled by Patient</label>
+                </td>
+                <td>
+                    Select National Comment <label style="color: blue;" title="Recommended">+</label><br>
+                    <select id="NationalComment" onchange="UpdateCancelComments()" style="width: 200px;">
+                        <option>--Select--</option>
+                        <option>#TELE#</option>
+                        <option>#VVC#</option>
+                        <option>COVID 19</option>
+                        <option>COVID 19 #TELE#</option>
+                        <option>COVID 19 #VVC#</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%">
+                    Reason for Cancelation (Select One) <label style="color: red;" title="Required">*</label> <br>
+                    <select name="reasons" id="reasons" style="width:100%; align: left;" size="12">
+                    </select>
+                </td>
+                <td>
+                    Remarks <label style="color: blue;" title="Recommended">+</label> <br>
+                    <!--<input id="remarks" type="textbox" style="height:150px; width:100%">-->
+                    <textarea id="remarks" type="textbox" style="height:150px; width:100%; resize: none;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%">
+                    PID Date <br>
+                    <input id="pid" type="date">
+                </td>
+                <td>
+                    Cancel Remarks: <label id="cancelRemarksLabel"> 166 characters remaining</label><br>
+                    <textarea id="cancelRemarks" type="textbox" disabled style="height:150px; width:100%; resize: none;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input style="align:right; width:75px;margin-right: 20px;  float: right; display:none;" type="button" value="Cancel" onclick="window.close()">
+                    <input style="align:right; width:75px;margin-right: 10px; float: right;" class="button" type="button" value="OK" onclick="UpdateAppointment()">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body></html>

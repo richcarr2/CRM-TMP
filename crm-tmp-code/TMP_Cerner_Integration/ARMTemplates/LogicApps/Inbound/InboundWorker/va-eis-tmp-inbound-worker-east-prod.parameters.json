@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "value": "va-eis-tmp-inbound-worker-east-prod"
+    },
+    "ISE_Name": {
+      "value": "eis-prod-east-ise"
+    },
+    "IntegrationAccount_Name": {
+      "value": "va-eis-tmp-integration-acct-east-prod"
+    },
+    "ServiceBus_Connection_Name": {
+      "value": "va-eis-tmp-servicebus-conn-east-prod"
+    },
+    "KeyVault_Connection_Name": {
+      "value": "va-eis-tmp-keyvault-conn-east-prod"
+    },
+    "AzureAPIForFHIR_URL": {
+      "value": "https://va-eis-tmp-fhir-eastprod.azurehealthcareapis.us"
+    },
+    "AzureContainerRegistry_ArtifactReference": {
+      "value": "vaeistmpcontainerregeastprod.azurecr.us/fhir-converter:main"
+    },
+    "S12_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S12-east-prod"
+    },
+    "S13_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S13-east-prod"
+    },
+    "S15_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S15-east-prod"
+    },
+    "S23_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S23-east-prod"
+    },
+    "S24_Processing_Logic_App_Name": {
+      "value": "va-eis-tmp-inbound-processing-S24-east-prod"
+    }
+  }
+}

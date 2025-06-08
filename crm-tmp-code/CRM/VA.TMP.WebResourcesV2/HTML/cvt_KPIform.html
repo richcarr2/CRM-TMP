@@ -1,0 +1,862 @@
+<html><head>
+    <meta charset="utf-8">
+    <title>KPI</title>
+    <style type="text/css">
+        #Text1 {
+            width: 32px;
+        }
+
+        .auto-style1 {
+            text-align: left;
+        }
+
+        #txtDistance {
+            width: 48px;
+        }
+    </style>
+    <meta>
+    <meta>
+</head>
+<body style="overflow-wrap: break-word;" onfocusout="parent.setEmailRange();">
+    <table border="0">
+        <tbody>
+            <tr>
+                <td class="auto-style1" colspan="3">
+                    <button id="Add" onclick="chooseKPIs()" type="button">Add KPIs</button>
+                    <button id="Retrieve" onclick="retrieveKPI()" type="button">Refresh List</button>
+                    <button id="Save" onclick="saveResults()" type="button">Save Results</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <script src="cvt_CommonFunctions.js" type="text/javascript"></script>
+    <script src="ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="cvt_json2" type="text/javascript"></script>
+    <script src="cvt_jquery" type="text/javascript"></script>
+    <script src="cvt_CRMRestKit" type="text/javascript"></script>
+    <script type="text/javascript">
+
+        //Page variables
+        Xrm = parent.Xrm;
+
+        // CrmRestKit = parent.CrmRestKit;
+        MCS = this.MCS;
+        Mscrm = parent.Mscrm;
+        kpiData = null;
+        saveCount = 0;
+        isDisabled = false;
+
+        thisRecord = parent.Xrm.Page.data.entity.getId();
+
+        informUser = "";
+
+        //OnLoad Function
+        function LoadAll() {
+            var isCRM = verifyCRM();
+            if (isCRM) {
+                isDisabled = checkStatus();
+                retrieveKPI();
+            }
+        }
+
+        //Queries for KPIs
+        function retrieveKPI() {
+            isDisabled = checkStatus();
+
+            Xrm.WebApi.online.retrieveMultipleRecords("cvt_kpi", "?$select=cvt_indicator,cvt_indicatortype,cvt_kpiid&$filter=_cvt_qualitycheckid_value eq " + thisRecord.replace('{','').replace('}','')).then(
+                function success(results) {
+                    if (results.entities.length <= 0) {
+                        setDisplayElem("No KPIs associated.");
+                    }
+                    for (var i = 0; i < results.entities.length; i++) {
+                        var cvt_indicator = results.entities[i]["cvt_indicator"];
+                        var cvt_indicatortype = results.entities[i]["cvt_indicatortype"];
+                        var cvt_indicatortype_formatted = results.entities[i]["cvt_indicatortype@OData.Community.Display.V1.FormattedValue"];
+                        var cvt_kpiid = results.entities[i]["cvt_kpiid"];
+                        saveCount = 0;
+                        document.getElementById("Save").disabled = true;
+                        kpiData = results.entities;
+                        //Re-order the array
+                        //kpiData.sort(function (a, b) {
+                        //    return a.cvt_IndicatorType - b.cvt_IndicatorType;
+                        //})
+                        formatData(kpiData);
+                    }
+
+                },
+                function (error) {
+                    Xrm.Utility.alertDialog(error.message);
+                }
+            );
+
+            //var filter = "statuscode eq 0 and  _cvt_qualitycheckid_value eq " + thisRecord.replace('{', '').replace('}', '');
+            //var select = "cvt_indicator, cvt_kpiid, cvt_indicatortype, cvt_flag";
+
+            //try {
+            //    Xrm.WebApi.retrieveMultipleRecords("cvt_kpi", "?$select=" + select + "&$filter=" + filter).then(
+            //        (
+            //            function success(results) {
+            //                //debugger;
+
+            //                if (results && results.entities && results.entities.length > 0) {
+            //                    saveCount = 0;
+            //                    document.getElementById("Save").disabled = true;
+            //                    kpiData = results.entities;
+            //                    //Re-order the array
+            //                    //kpiData.sort(function (a, b) {
+            //                    //    return a.cvt_IndicatorType - b.cvt_IndicatorType;
+            //                    //})
+            //                    formatData(kpiData);
+            //                }
+            //                else {//No results, Clear grid
+            //                    setDisplayElem("No KPIs associated.");
+            //                }
+            //            },
+            //            function (error) {
+            //                //debugger;
+            //                console.log('Error in retrieveKPI: ' + error)
+            //                return;
+            //            }
+            //        ));
+            //}
+            //catch (e) {
+            //    searchErrorCallback(e);
+            //}
+
+            /*
+            calls = CrmRestKit.ByQuery("cvt_kpi", ['cvt_Indicator', 'cvt_kpiId', 'cvt_IndicatorType', 'cvt_Flag'], filter, false);
+            calls.fail(
+                    function (error) {
+                        return;
+                    })
+            calls.done(function (data) {
+                if (data && data.d.results && data.d.results.length > 0) {
+                    saveCount = 0;
+                    document.getElementById("Save").disabled = true;
+                    kpiData = data.d.results;
+                    //Re-order the array
+                    //kpiData.sort(function (a, b) {
+                    //    return a.cvt_IndicatorType - b.cvt_IndicatorType;
+                    //})
+                    formatData(kpiData);
+                }
+                else {//No results, Clear grid
+                    setDisplayElem("No KPIs associated.");
+                }
+            });
+            */
+        }
+
+        //Format Table to display
+        function formatData(dataset) {
+            var strForm = "<table border='1'> <tr>";
+            strForm += "<td><b>Indicator Type</b></td>";
+            strForm += "<td><b>Indicator</b></td>";
+            strForm += "<td><b>Flag</b></td>";
+            if (!isDisabled)
+                strForm += "<td><b></b></td><td><b>Delete</b></td>";//For messages and delete
+            strForm += "</tr>"; //End of row
+
+            for (var i = 0; i < dataset.length; i++) {
+                //Add new Save capture fields
+                //kpiData[i]._saveResponse = false;
+                //kpiData[i]._saveFlag = false;
+
+                //Params
+                var pDisable = (isDisabled == true) ? " disabled" : ""; //CRM record is submitted
+                var pOnChangeFlag = "inputFunction('" + i + "','Flag')";   //Function for Flag OnChange
+                //var pDeleteRow = "inputFunction('" + i + "','delete')";   //Function for row delete
+                var pDeleteRow = "inputFunction('" + dataset[i]["cvt_kpiid"] + "','delete')";   //Function for row delete
+
+                //Build Row
+                //strForm += "<tr><td>" + getIndType(dataset[i].cvt_IndicatorType) + "</td>";
+                strForm += "<tr><td>" + dataset[i]["cvt_indicatortype@OData.Community.Display.V1.FormattedValue"] + "</td>";
+                strForm += "<td>" + nullToStr(dataset[i]["cvt_indicator"]) + "</td>";
+                strForm += '<td><select id="flag' + i + '" onchange="' + pOnChangeFlag + '"' + pDisable + '>';
+                strForm += '<option value="0"></option><option value="917290000">Green</option><option value="917290001">Red</option></select>';
+
+                if (!isDisabled) {
+                    strForm += '<td><label id="lbl' + dataset[i]["cvt_kpiid"] + '"></label></td>'; //Build label for feedback to user
+                    strForm += '<td><button id="Delete" type="button" onclick="' + pDeleteRow + '">[x]</button></td></tr>'; //Build delete button
+                }
+                //staged <button id="Add" type="button" onclick="deleteKPI("' + var + '")">
+            }
+            strForm += "</table>"
+            setDisplayElem(strForm);
+            setFlags();  //Cycle through and set the Flags
+        }
+
+        //Delete the record
+        function deleteRow(i) {
+         //   alert("hi");
+            Xrm.WebApi.online.deleteRecord("cvt_kpi", i).then(
+                function success(result) {
+                    //Success - No Return Data - Do Something
+                    updateLabel(i, "delete");
+                },
+                function (error) {
+                    Xrm.Utility.alertDialog(error.message);
+                }
+            );
+            parent.Xrm.WebApi.deleteRecord("cvt_kpi", kpiData[i].cvt_kpiId).then(
+                function success(result) {
+                    updateLabel(i, "delete");
+                    // perform operations on record deletion
+                },
+                function (error) {
+                    console.log('Error Deleting Row: ' + error.message);
+                    updateLabel(i, "error");
+                }
+            );
+
+            //Rerun results in 2 seconds to clear table and reset values so compare is correct
+            setTimeout(function () { retrieveKPI(); }, 2000)
+        }
+
+        //Delete the record
+        /* function deleteRowOld(i) {
+
+            del = CrmRestKit.Delete('cvt_kpi', kpiData[i].cvt_kpiId);
+
+            del.fail(
+            function (error) {
+                updateLabel(i, "error");
+            })
+            del.done(function (data) {
+                updateLabel(i, "delete");
+            });
+
+            //Rerun results in 2 seconds to clear table and reset values so compare is correct
+            setTimeout(function () { retrieveKPI(); }, 2000);
+        }
+        */
+
+        //Validate Data Types and track Save counts
+        function inputFunction(i, type) {
+            if (type == "delete") {
+                //delete KPI record based off of i
+                //alert("should delete row " + i);
+                deleteRow(i);
+                return;
+            }
+            var inputResponse = document.getElementById("id" + i);
+            //Check "updated" value against original
+            var checkDirty = isDirty(i, type);
+            var err = "custom:";
+            if (checkDirty == true) {
+                //Validate data
+                var isValid = validateData(i, type);
+                if (isValid == false) {
+                    //Invalid - Show Error, Display Orig
+                    err += inputResponse.value;
+                    inputResponse.value = kpiData[i].cvt_Response;
+                }
+            }
+            //Set Correct Save flags and Count
+            if (err === "custom:")
+                isMarkedSave(i, type, checkDirty);
+            else {
+                isMarkedSave(i, type, false);
+                updateLabel(i, "invalid", err);
+            }
+        }
+
+        //Check if "new" value against original value
+        function isDirty(i, type) {
+            var newValue = "";
+            var oldValue = "";
+
+            //Set Values
+            if (type === "Flag") {
+                var selectFlag = document.getElementById("flag" + i);
+                newValue = selectFlag.value + "";
+                oldValue = (kpiData[i].cvt_Flag == null) ? "" : kpiData[i].cvt_Flag.Value;
+            }
+
+            //Check
+            if (newValue == oldValue)
+                return false;
+            else
+                return true;
+        }
+
+        //Data Validation: INT
+        function validateData(i, type) {
+            var inputResponse = document.getElementById("id" + i);
+            var inputFlag = document.getElementById("flag" + i);
+            switch (type) {
+                case "Whole Number":
+                    return /^(0|[1-9]\d*)$/.test(inputResponse.value);
+                    break;
+                case "Flag":
+                    if (inputFlag.value == undefined) {
+                        kpiData[i].Addflag = null;
+                    }
+                    kpiData[i].Addflag = inputFlag.value;
+                    return true;
+                    break;
+                default:
+                    return true;
+            }
+        }
+
+        //Check for Save flag, based on type, and opposite
+        function isMarkedSave(i, type, isDirty) {
+            var btnSave = document.getElementById("Save");
+            var btnRetrieve = document.getElementById("Retrieve");
+
+            //Determine main and secondary flags
+            var primaryFlag = "";
+            var secondaryFlag = "";
+
+            if (type == "Flag") {
+                primaryFlag = kpiData[i]._saveFlag;
+                secondaryFlag = kpiData[i]._saveResponse;
+            }
+            else {
+                primaryFlag = kpiData[i]._saveResponse;
+                secondaryFlag = kpiData[i]._saveFlag;
+            }
+
+            if (!isDirty) {                 //No Change
+                if (primaryFlag === true) {  //Previously Changed
+                    primaryFlag = false;    //Set to unchanged
+                    saveCount -= 1;         //Decrement
+                    if (secondaryFlag == false)
+                        updateLabel(i);     //regardless if already updated
+                }
+            }
+            else { //Changed
+                if (primaryFlag === false) {
+                    primaryFlag = true;
+                    saveCount += 1;
+                    updateLabel(i, "changed"); //regardless if already updated
+                }
+            }
+            //No fields to save
+            if (saveCount === 0) {
+                btnSave.disabled = true;
+                btnRetrieve.innerText = "Refresh List";
+            }
+            else {
+                btnSave.disabled = false;
+                btnRetrieve.innerText = "Discard Changes";
+            }
+
+            //Figure out how to update original variable through local variable
+            if (type === "Flag") {
+                kpiData[i]._saveFlag = primaryFlag;
+                kpiData[i]._saveResponse = secondaryFlag;
+            }
+            else {
+                kpiData[i]._saveResponse = primaryFlag;
+                kpiData[i]._saveFlag = secondaryFlag;
+            }
+
+            saveResults();
+        }
+
+        //Save function
+        function saveResults() {
+            //alert("Save Count is " + saveCount);
+            if (saveCount > 0) {
+                //loop through kpidataset
+                for (var i = 0; i < kpiData.length; i++) {
+                    //Get elements
+
+                    var inputResponse = document.getElementById("id" + i);
+
+                    //find records to submmit
+                    if ((kpiData[i]._saveResponse === true) || (kpiData[i]._saveFlag === true)) {
+
+                        var updateParam = {};
+
+                        if (kpiData[i]._saveFlag === true) {
+                            if (kpiData[i].Addflag == 0) {
+                                updateLabel(i, "blank");
+                                //kpiData[i].Addflag = null;
+
+                                //Rerun results in 2 seconds to clear table and reset values so compare is correct
+                                setTimeout(function () { retrieveKPI(); }, 2000);
+                                return;
+                            }
+                            updateParam["cvt_Flag"] = {
+                                Value: kpiData[i].Addflag
+                            };
+                        }
+                        //{ __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: kpiIndicatorType }
+
+                        // https://docs.microsoft.com/en-us/dynamics365/customer-engagement/developer/clientapi/reference/xrm-webapi/updaterecord
+                        // (example) define the data to update a record
+                        // var data =
+                        // {
+                        //    "primarycontactid@odata.bind": "/cvt_kpi(" + kpiData[i].cvt_kpiId + ")"
+                        // }
+
+                        // update the record
+                        parent.Xrm.WebApi.updateRecord("cvt_kpi", kpiData[i].cvt_kpiId, updateParam).then(
+                            function success(result) {
+                                updateLabel(i, "saved");
+                            },
+                            function (error) {
+                                console.log(error.message);
+                                updateLabel(i, "error");
+                            }
+                        );
+
+                        /*
+                        //saves = CrmRestKit.Update('cvt_kpi', kpiData[i].cvt_kpiId, { 'cvt_Response': newResponse }, false);
+                        saves = CrmRestKit.Update('cvt_kpi', kpiData[i].cvt_kpiId, updateParam, false);
+                        saves.fail(
+                        function (error) {
+                            updateLabel(i, "error");
+                        })
+                        saves.done(function (data) {
+                            updateLabel(i, "saved");
+                        });
+                        */
+                    }
+                }
+                //Reset Save obj
+                saveCount = 0;
+                var retrieve = document.getElementById("Retrieve").innerText;
+                if (retrieve !== "")
+                    document.getElementById("Retrieve").innerText = "Refresh List";
+                //Rerun results in 2 seconds to clear table and reset values so compare is correct
+                setTimeout(function () { retrieveKPI(); }, 2000);
+            }
+        }
+
+        //Lookup Select Functions
+        //Look up the OTC of the specificed entity.
+        function chooseKPIs() {
+            //debugger;
+
+            //Detect IE
+            //if (typeof (Mscrm.CrmDialog) !== 'function') {
+            //    alert("Please use a supported browser.");
+            //    return;
+            //}
+            //Unsaved Changes, prompt for save
+            if (saveCount > 0) {
+                var question = confirm("You have unsaved changes, would you like to SAVE them now?\nElse, unsaved changes will be discarded.");
+                if (question === true) {
+                    saveResults();
+                }
+            }
+            //Continue with Add
+            //Build Window Lookup
+            var URL = Xrm.Page.context.getClientUrl();
+            if (URL.match(/\/$/)) {
+                URL = URL.substring(0, URL.length - 1);
+            }
+
+            //var entityNumber = MCS.cvt_Common.getObjectTypeCode("cvt_kpi");
+            var entityNumber = "10036";
+            if (entityNumber === null) {
+                alert("Can't find KPI entity. Please see your system administrator.");
+                return;
+            }
+            //modified by Naveen Dubbaka
+            var lookupParameters = {};
+            lookupParameters.entityTypes = ["cvt_kpi"];
+            lookupParameters.defaultEntityType = "cvt_kpi";
+            lookupParameters.allowMultiSelect = true;
+            Xrm.Utility.lookupObjects(lookupParameters).then(setCallbackReference, null);
+           
+            //commented by Naveen Dubbaka
+            //Changed url to be dynamic based on function which looks up the OTC of the specificed entity.
+            //URL += "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&browse=0&objecttypes=" + entityNumber; //Set OTC as appropriate to relationship;
+
+            //var oUrl = Mscrm.CrmUri.create("/_controls/lookup/lookupinfo.aspx");
+            //oUrl.get_query()["LookupStyle"] = "multi";
+            //oUrl.get_query()["browse"] = "0";
+            //oUrl.get_query()["objecttypes"] = entityNumber;
+
+            //var lookupItems = new parent.window.Mscrm.CrmDialog(oUrl, '', '850', '700');
+            //lookupItems.setCallbackReference(function (retVal) {
+            /*
+            function setCallbackReference(retVal) {
+                if ((retVal !== null) && (retVal !== undefined)) {
+                    var returnedItems = retVal;
+                    //process the selections
+                    if (typeof (retVal) == "string") {
+                        returnedItems = JSON.parse(retVal);
+                    };
+                    for (i = 0; i < returnedItems.items.length; i++) {
+                        if (typeof (CrmRestKit) === "undefined") { CrmRestKit = window.parent.CrmRestKit; }
+                        //Retrieve CRM record: KPI Template
+                        var kpiId = returnedItems.items[i].id;
+
+                        var kpiIndicator;
+                        var kpiResponseType;
+                        var kpiIndicatorType;
+
+
+
+                        parent.Xrm.WebApi.retrieveRecord("cvt_kpi", kpiId, "?$select=cvt_indicator,cvt_indicatortype,cvt_responsetype").then
+                            (
+                                function success(result) {
+                                    debugger;
+
+                                    //Success getting Template
+                                    if (result && result.data) {
+
+                                        kpiIndicator = template.d.cvt_Indicator;
+                                        // kpiResponseType = template.d.cvt_ResponseType.Value;
+                                        kpiIndicatorType = template.d.cvt_IndicatorType.Value;
+
+                                        //Search existing associations to the QC to verify that you don't add the same indicator
+                                        //Active & related to this QC & KPI template selected is already associated to existing KPI
+                                        var filter = "statuscode eq 1 and _cvt_qualitycheckid_value eq " + thisRecord.replace('{', '').replace('}', '') + " and _cvt_kpitemplateusedid_value eq " + kpiId + "";
+                                        var select = "cvt_indicator, cvt_kpiid";
+
+                                        parent.Xrm.WebApi.retrieveMultipleRecords("cvt_kpi", "?$select=" + select + "&$filter=" + filter).then
+                                            (
+                                                // function success(results) {
+                                                function success(dataConflict) {
+
+                                                    //Successful query on conflict search
+                                                    if (dataConflict && dataConflict.d.results && dataConflict.d.results.length > 0) {
+                                                        //Results, therefore conflict
+                                                        informUser += "Indicator already associated, and therefore not re-added: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                                    }
+                                                    else {
+                                                        //No conflicts, so continue.
+                                                        //Setup datapoints: Name, Indicator, Ind Type, Resp Type, KPI Template lookup, Quality Check lookup
+                                                        var kpiParams = {
+                                                            'cvt_name': "KPI for FPPE/OPPE",
+                                                            'cvt_indicator': kpiIndicator,
+                                                            'cvt_indicatortype': kpiIndicatorType,
+                                                            'cvt_kpitemplateusedid': '/cvt_kpis(' + kpiId + ')',
+                                                            'cvt_qualitycheckid': '/cvt_qualitychecks(' + thisRecord + ')',
+                                                        };
+
+
+                                                        //Create copy of template
+                                                        parent.Xrm.WebApi.createRecord("cvt_kpi", kpiParams).then(
+                                                            function success(result) {
+                                                                //alert("Success at create.");
+                                                                retrieveKPI();
+                                                            },
+                                                            function (error) {
+                                                                informUser += "Failed at creating copy of template for: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                                            }
+                                                        );
+                                                    }
+                                                },
+                                                function (error) {
+                                                    //return;
+                                                }
+                                            );
+
+                                        if (informUser !== "") {
+                                            alert("Conflicts: \n\n" + informUser);
+                                            informUser = "";
+                                        }
+                                    }
+                                },
+                                function (error) {
+                                    //Failed to get Template
+                                }
+                            );
+
+
+
+
+                        /*
+
+                        CrmRestKit.Retrieve('cvt_kpi', kpiId, ['cvt_Indicator', 'cvt_ResponseType', 'cvt_IndicatorType'], false)
+                            .fail(function () {
+                                //Failed to get Template
+                            })
+                            .done(function (template) {
+                                //Success getting Template
+                                if (template && template.d) {
+                                    kpiIndicator = template.d.cvt_Indicator;
+                                    // kpiResponseType = template.d.cvt_ResponseType.Value;
+                                    kpiIndicatorType = template.d.cvt_IndicatorType.Value;
+
+                                    //Search existing associations to the QC to verify that you don't add the same indicator
+                                    //Active & related to this QC & KPI template selected is already associated to existing KPI
+                                    var filter = "statuscode/Value eq 1 and cvt_QualityCheckId/Id eq (Guid'" + thisRecord + "') and cvt_KPITemplateUsedId/Id eq (Guid'" + kpiId + "')";
+                                    CrmRestKit.ByQuery("cvt_kpi", ['cvt_Indicator', 'cvt_kpiId'], filter, false)
+                                        .fail(function (error) {
+                                            //return;
+                                        })
+                                        .done(function (dataConflict) {
+                                            //Successful query on conflict search
+                                            if (dataConflict && dataConflict.d.results && dataConflict.d.results.length > 0) {
+                                                //Results, therefore conflict
+                                                informUser += "Indicator already associated, and therefore not re-added: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                            }
+                                            else {
+                                                //No conflicts, so continue.
+                                                //Setup datapoints: Name, Indicator, Ind Type, Resp Type, KPI Template lookup, Quality Check lookup
+                                                var kpiParams = {
+                                                    'cvt_name': "KPI for FPPE/OPPE",
+                                                    'cvt_Indicator': kpiIndicator,
+                                                    'cvt_IndicatorType': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.OptionSetValue" }, Value: kpiIndicatorType },
+                                                    'cvt_KPITemplateUsedId': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: kpiId, LogicalName: "cvt_kpi" },
+                                                    'cvt_QualityCheckId': { __metadata: { type: "Microsoft.Crm.Sdk.Data.Services.EntityReference" }, Id: thisRecord, LogicalName: "cvt_qualitycheck" }
+                                                };
+
+                                                //Create copy of template
+                                                CrmRestKit.Create('cvt_kpi', kpiParams)
+                                                    .fail(function () {
+                                                        informUser += "Failed at creating copy of template for: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                                    }).done(function () {
+                                                        //alert("Success at create.");
+                                                        retrieveKPI();
+                                                    });
+                                            }
+                                        });
+                                }
+                            });
+
+                        */
+            
+            //            if (informUser !== "") {
+            //                alert("Conflicts: \n\n" + informUser);
+            //                informUser = "";
+            //            }
+            //        }
+            //    }
+            //});
+            //lookupItems.show();
+            //*/
+        }
+        //Added by Naveen Dubbaka
+        function setCallbackReference(retVal) {
+            if ((retVal !== null) && (retVal !== undefined)) {
+                var returnedItems = retVal;
+                //process the selections
+                if (typeof (retVal) == "string") {
+                    returnedItems = JSON.parse(retVal);
+                };
+                for (i = 0; i < returnedItems.length; i++) {
+                  //  if (typeof (CrmRestKit) === "undefined") { CrmRestKit = window.parent.CrmRestKit; }
+                    //Retrieve CRM record: KPI Template
+                    //var kpiId = returnedItems.items[i].id;
+                    var kpiId = returnedItems[i].id;
+
+                    var kpiIndicator;
+                    var kpiResponseType;
+                    var kpiIndicatorType;
+
+
+
+                    parent.Xrm.WebApi.retrieveRecord("cvt_kpi", kpiId, "?$select=cvt_indicator,cvt_indicatortype,cvt_responsetype").then
+                        (
+                            function success(result) {
+                                //debugger;
+
+                                //Success getting Template
+                                if (result && result.data) {
+
+                                    kpiIndicator = template.d.cvt_Indicator;
+                                    // kpiResponseType = template.d.cvt_ResponseType.Value;
+                                    kpiIndicatorType = template.d.cvt_IndicatorType.Value;
+
+                                    //Search existing associations to the QC to verify that you don't add the same indicator
+                                    //Active & related to this QC & KPI template selected is already associated to existing KPI
+                                    var filter = "statuscode eq 1 and _cvt_qualitycheckid_value eq " + thisRecord.replace('{', '').replace('}', '') + " and _cvt_kpitemplateusedid_value eq " + kpiId + "";
+                                    var select = "cvt_indicator, cvt_kpiid";
+
+                                    parent.Xrm.WebApi.retrieveMultipleRecords("cvt_kpi", "?$select=" + select + "&$filter=" + filter).then
+                                        (
+                                            // function success(results) {
+                                            function success(dataConflict) {
+
+                                                //Successful query on conflict search
+                                                if (dataConflict && dataConflict.d.results && dataConflict.d.results.length > 0) {
+                                                    //Results, therefore conflict
+                                                    informUser += "Indicator already associated, and therefore not re-added: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                                }
+                                                else {
+                                                    //No conflicts, so continue.
+                                                    //Setup datapoints: Name, Indicator, Ind Type, Resp Type, KPI Template lookup, Quality Check lookup
+                                                    var kpiParams = {
+                                                        'cvt_name': "KPI for FPPE/OPPE",
+                                                        'cvt_indicator': kpiIndicator,
+                                                        'cvt_indicatortype': kpiIndicatorType,
+                                                        'cvt_kpitemplateusedid': '/cvt_kpis(' + kpiId + ')',
+                                                        'cvt_qualitycheckid': '/cvt_qualitychecks(' + thisRecord + ')',
+                                                    };
+
+
+                                                    //Create copy of template
+                                                    parent.Xrm.WebApi.createRecord("cvt_kpi", kpiParams).then(
+                                                        function success(result) {
+                                                            //alert("Success at create.");
+                                                            retrieveKPI();
+                                                        },
+                                                        function (error) {
+                                                            informUser += "Failed at creating copy of template for: " + dataConflict.d.results[0].cvt_Indicator + "\n";
+                                                        }
+                                                    );
+                                                }
+                                            },
+                                            function (error) {
+                                                //return;
+                                            }
+                                        );
+
+                                    if (informUser !== "") {
+                                        alert("Conflicts: \n\n" + informUser);
+                                        informUser = "";
+                                    }
+                                }
+                            },
+                            function (error) {
+                                //Failed to get Template
+                            }
+                        );
+
+
+                    if (informUser !== "") {
+                        alert("Conflicts: \n\n" + informUser);
+                        informUser = "";
+                    }
+                }
+            }
+            
+          //  lookupItems.show();
+        }
+            
+        /*Helper Functions*/
+        //Sets the Indicator Type Names
+        function getIndType(IndType) {
+            var returnStr = ""
+            if (IndType !==null) {
+                switch (IndType.Value) {
+                    case 917290000:
+                        returnStr = "Patient Care";
+                        break;
+                    case 917290001:
+                        returnStr = "Medical/Clinical Knowledge";
+                        break;
+                    case 917290002:
+                        returnStr = "Practice Based Learning";
+                        break;
+                    case 917290003:
+                        returnStr = "Interpersonal and Communication";
+                        break;
+                    case 917290004:
+                        returnStr = "Professionalism";
+                        break;
+                    case 917290005:
+                        returnStr = "System Based Practice";
+                        break;
+                }
+                return returnStr;
+            }
+        }
+
+        //Set Flags throughout Rendered grid
+        function setFlags() {
+            for (var i = 0; i < kpiData.length; i++) {
+                if (kpiData[i].cvt_Flag !== null) {
+                    if (kpiData[i].cvt_Flag.Value !== null) {
+                        switch (kpiData[i].cvt_Flag.Value) {
+                            case 917290000://Green
+                                document.getElementById("flag" + i).selectedIndex = "1";
+                                break;
+                            case 917290001: //Red
+                                document.getElementById("flag" + i).selectedIndex = "2";
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //Update label
+        function updateLabel(i, str, invalid) {
+            var lblholder = document.getElementById("lbl" + i);
+            switch (str) {
+                case "changed":
+                    lblholder.outerHTML = '<label id="lbl' + i + '"><font color="green">Unsaved Changes.</font></label>';
+                    break;
+                case "saved":
+                    lblholder.outerHTML = '<label id="lbl' + i + '"><font color="blue">Saved.</font></label>';
+                    break;
+                case "error":
+                    lblholder.outerHTML = '<label id="lbl' + i + '"><font color="red">Error Saving.</font></label>';
+                    break;
+                case "blank":
+                    lblholder.outerHTML = '<label id="lbl' + i + '"><font color="red">Error: Do not remove the value.</font></label>';
+                    break;
+                case "delete":
+                    lblholder.outerHTML = '<label id="lbl' + i + '"><font color="blue">Record Deleted.</font></label>';
+                    break;
+                default:
+                    lblholder.outerHTML = '<label id="lbl' + i + '"></label>';
+            }
+        }
+
+        //Check Status of FPPE/OPPE
+        function checkStatus() {
+            //first if create, then no buttons and new message.
+            if (Xrm.Page.ui.getFormType() === 1) {
+                document.getElementById("Add").disabled = true;
+                document.getElementById("Retrieve").disabled = true;
+                document.getElementById("Save").disabled = true;
+                var elem = document.getElementById("displayList");
+                if (elem) { elem.innerHTML = "New Record: Please Save Record, then Add KPIs."; };
+                return true;
+            }
+            else {
+                var statusReason = null;
+
+                if (Xrm.Page.getAttribute('statuscode').getValue() !== null) {
+                    statusReason = Xrm.Page.getAttribute('statuscode').getSelectedOption().value;
+                }
+                if (statusReason === 917290000) {
+                    document.getElementById("Add").disabled = true;
+                    document.getElementById("Retrieve").disabled = true;
+                    document.getElementById("Save").disabled = true;
+                    return true;
+                }
+            }
+        }
+
+        //Capture enter
+        function verifyEnter() {
+            if (event.keyCode === '13') {
+                LoadRecords();
+            }
+        }
+
+        //Verify within CRM
+        function verifyCRM() {
+            if (!Xrm) {
+                alert("Please open in the context of CRM.");
+            }
+            else {
+                return true;
+            }
+        }
+
+        //Replace null with blank
+        function nullToStr(data) {
+            if (data === null)
+                return "";
+            else
+                return data;
+        }
+
+        //Set Display Element
+        function setDisplayElem(strMsg) {
+            var elem = document.getElementById("divDisplay");
+            if (elem) { elem.innerHTML = strMsg; };
+        }
+
+    </script>
+    <div id="divDisplay" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
+        Populate KPI
+    </div>
+
+
+</body></html>

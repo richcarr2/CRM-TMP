@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "value": "va-eis-tmp-DataLakeAPIWrapper-qa"
+        },
+        "ISE_Name": {
+            "value": "eis-nprod-southwest-ise"
+        },
+        "IntegrationAccount_Name": {
+            "value": "va-eis-tmp-integration-acct-nprod"
+        },
+        "KeyVault_Connection_Name": {
+            "value": "va-eis-tmp-keyvault-conn-nprod"
+        },
+        "DataLake_URL": {
+            "value": "https://vaeistmpdatalakenprod.dfs.core.usgovcloudapi.net"
+        }
+    }
+}

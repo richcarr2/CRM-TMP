@@ -1,0 +1,401 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "type": "String"
+        },
+        "ISE_Name": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+            }
+        },
+        "IntegrationAccount_Name": {
+            "type": "string"
+        },
+        "ServiceBus_Connection_Name": {
+            "type": "string"
+        },
+        "KeyVault_Connection_Name": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+            }
+        },
+        "AzureAPIForFHIR_URL": {
+            "type": "string"
+        },
+        "AzureContainerRegistry_ArtifactReference": {
+            "type": "string"
+        },
+        "Service_Bus_Topic_Name": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "VEIS_OAuth_URL": "[concat('https://login.microsoftonline.us/',subscription().tenantId,'/oauth2/v2.0/token')]",
+        "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+        "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+        "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+        "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]",
+        "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('LogicApp_Name')]",
+            "location": "[resourceGroup().location]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+          "properties": {
+            "state": "Enabled",
+            "integrationAccount": {
+              "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+            },
+            "integrationServiceEnvironment": {
+              "name": "[parameters('ISE_Name')]",
+              "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+              "type": "Microsoft.Logic/integrationServiceEnvironments"
+            },
+            "definition": {
+              "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+              "actions": {
+                "Complete_the_message_in_a_topic_subscription": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['servicebus']['connectionId']"
+                      }
+                    },
+                    "method": "delete",
+                    "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('FHIR')}/messages/complete",
+                    "queries": {
+                      "lockToken": "@triggerBody()?['LockToken']",
+                      "sessionId": "",
+                      "subscriptionType": "Main"
+                    }
+                  },
+                  "runAfter": {
+                    "Scope_-_Try_Block": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Initialize_variable:_Liquid_Template_Name": {
+                  "inputs": {
+                    "variables": [
+                      {
+                        "name": "Liquid Template Name",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "runAfter": {},
+                  "type": "InitializeVariable"
+                },
+                "Scope_-_Try_Block": {
+                  "actions": {
+                    "Compose:_Decode_Message_Content_and_Convert_to_JSON": {
+                      "description": "TODO",
+                      "inputs": "@json(decodeBase64(triggerBody()['ContentData']))",
+                      "runAfter": {
+                        "HTTP:_Fetch_OAuth_Token": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose:_Pre-Processing": {
+                      "inputs": {
+                        "parameter": [
+                          {
+                            "name": "inputData",
+                            "valueString": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['Msg']"
+                          },
+                          {
+                            "name": "inputDataType",
+                            "valueString": "Hl7v2"
+                          },
+                          {
+                            "name": "templateCollectionReference",
+                            "valueString": "@{parameters('Azure Container Registry Image Reference')}"
+                          },
+                          {
+                            "name": "rootTemplate",
+                            "valueString": "VEIS_SIU_@{variables('Liquid Template Name')}_FHIR"
+                          }
+                        ],
+                        "resourceType": "Parameters"
+                      },
+                      "runAfter": {
+                        "Switch:_Set_Liquid_Template_Name": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Get_secret_-_FHIR_Client_ID": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('fhir-api-client-id')}/value"
+                      },
+                      "runAfter": {},
+                      "type": "ApiConnection"
+                    },
+                    "Get_secret_-_FHIR_Client_Secret": {
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/secrets/@{encodeURIComponent('fhir-api-client-secret')}/value"
+                      },
+                      "runAfter": {
+                        "Get_secret_-_FHIR_Client_ID": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection"
+                    },
+                    "HTTP:_Convert_HL7_to_JSON": {
+                      "inputs": {
+                        "body": "@outputs('Compose:_Pre-Processing')",
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                          "Content-Type": "application/json"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('FHIRServer')}/$convert-data"
+                      },
+                      "runAfter": {
+                        "Compose:_Pre-Processing": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Fetch_OAuth_Token": {
+                      "inputs": {
+                        "body": "client_id=@{body('Get_secret_-_FHIR_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret_-_FHIR_Client_Secret')?['value']}&scope=@{parameters('FHIRServer')}/.default",
+                        "headers": {
+                          "content-type": "application/x-www-form-urlencoded"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('VEIS OAuth URL')}"
+                      },
+                      "runAfter": {
+                        "Get_secret_-_FHIR_Client_Secret": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "HTTP:_Post_FHIR_Bundle": {
+                      "inputs": {
+                        "body": "@body('HTTP:_Convert_HL7_to_JSON')",
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                          "Content-Type": "application/json"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('FHIRServer')}/"
+                      },
+                      "runAfter": {
+                        "HTTP:_Convert_HL7_to_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Switch:_Set_Liquid_Template_Name": {
+                      "cases": {
+                        "Case": {
+                          "actions": {
+                            "Set_variable": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S12"
+                        },
+                        "Case_2": {
+                          "actions": {
+                            "Set_variable_2": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S13"
+                        },
+                        "Case_3": {
+                          "actions": {
+                            "Set_variable_3": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S15"
+                        },
+                        "Case_4": {
+                          "actions": {
+                            "Set_variable_4": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S23,S24"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S23"
+                        },
+                        "Case_5": {
+                          "actions": {
+                            "Set_variable_5": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S23,S24"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S24"
+                        }
+                      },
+                      "default": {
+                        "actions": {}
+                      },
+                      "expression": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                      "runAfter": {
+                        "Compose:_Decode_Message_Content_and_Convert_to_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Switch"
+                    }
+                  },
+                  "runAfter": {
+                    "Initialize_variable:_Liquid_Template_Name": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Scope"
+                }
+              },
+              "contentVersion": "1.0.0.0",
+              "outputs": {},
+              "parameters": {
+                "$connections": {
+                  "defaultValue": {},
+                  "type": "Object"
+                },
+                "Azure Container Registry Image Reference": {
+                  "defaultValue": "vaeistmpcontainerregswprod.azurecr.us/fhir-converter:main",
+                  "type": "String"
+                },
+                "FHIRServer": {
+                  "defaultValue": "https://va-eis-tmp-fhir-swprod.azurehealthcareapis.us",
+                  "type": "String"
+                },
+                "Service Bus Topic Name": {
+                  "defaultValue": "hl7messagetopic",
+                  "type": "String"
+                },
+                "VEIS OAuth URL": {
+                  "defaultValue": "https://login.microsoftonline.us/f7c49e36-971b-42c7-b244-a88eed6c0bf6/oauth2/v2.0/token",
+                  "type": "String"
+                }
+              },
+              "triggers": {
+                "When_a_message_is_received_in_a_topic_subscription_(peek-lock)": {
+                  "evaluatedRecurrence": {
+                    "frequency": "Minute",
+                    "interval": 1
+                  },
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['servicebus']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('FHIR')}/messages/head/peek",
+                    "queries": {
+                      "sessionId": "None",
+                      "subscriptionType": "Main"
+                    }
+                  },
+                  "recurrence": {
+                    "frequency": "Minute",
+                    "interval": 1
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "runs": 25
+                    }
+                  },
+                  "type": "ApiConnection"
+                }
+              }
+            },
+            "parameters": {
+              "Azure Container Registry Image Reference": {
+                "value": "[parameters('AzureContainerRegistry_ArtifactReference')]"
+              },
+              "FHIRServer": {
+                "value": "[parameters('AzureAPIForFHIR_URL')]"
+              },
+              "VEIS OAuth URL": {
+                "value": "[variables('VEIS_OAuth_URL')]"
+              },
+              "Service Bus Topic Name": {
+                "value": "[parameters('Service_Bus_Topic_Name')]"
+              },
+              "$connections": {
+                "value": {
+                  "keyvault": {
+                    "connectionId": "[variables('connections_keyvault_externalid')]",
+                    "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                    "connectionProperties": {
+                      "authentication": {
+                        "type": "ManagedServiceIdentity"
+                      }
+                    },
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+                  },
+                  "servicebus": {
+                    "connectionId": "[variables('connections_servicebus_externalid')]",
+                    "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                    "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+    ]
+}

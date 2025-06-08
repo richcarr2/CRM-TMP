@@ -1,0 +1,2153 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicApp_Name": {
+      "type": "String"
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "type": "string"
+    },
+    "ServiceBus_Connection_Name": {
+      "type": "string"
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "AzureAPIForFHIR_URL": {
+      "type": "string"
+    },
+    "AzureContainerRegistry_ArtifactReference": {
+      "type": "string"
+    },
+    "S12_Processing_Logic_App_Name": {
+      "type": "string"
+    },
+    "S13_Processing_Logic_App_Name": {
+      "type": "string"
+    },
+    "S15_Processing_Logic_App_Name": {
+      "type": "string"
+    },
+    "S23_Processing_Logic_App_Name": {
+      "type": "string"
+    },
+    "S24_Processing_Logic_App_Name": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "Service_Bus_Topic_Name": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "VEIS_OAuth_URL": "[concat('https://login.microsoftonline.us/',subscription().tenantId,'/oauth2/v2.0/token')]",
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "integrationServiceEnvironments_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+    "connections_servicebus_externalid": "[concat(variables('connection_base'), '/providers/Microsoft.Web/connections/', parameters('ServiceBus_Connection_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "CKID": "195",
+        "Environment": "DEVTEST",
+        "ProjectName": "Veterans Experience Integration Solution",
+        "VAAzureProgram": "EIS",
+        "VAECID": "AZG20181226001",
+        "displayName": "LogicApp"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(resourceGroup().name,'Microsoft.Logic/integrationServiceEnvironments/', parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Complete_the_message_in_a_topic_subscription": {
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "delete",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('TMP')}/messages/complete",
+                "queries": {
+                  "lockToken": "@triggerBody()?['LockToken']",
+                  "sessionId": "",
+                  "subscriptionType": "Main"
+                }
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ApiConnection"
+            },
+            "Dead-letter_the_message_in_a_topic_subscription_2": {
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "post",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('TMP')}/messages/deadletter",
+                "queries": {
+                  "deadLetterErrorDescription": "@body('Parse_JSON')?['error']?['message']",
+                  "deadLetterReason": "@body('Parse_JSON')?['error']?['code']",
+                  "lockToken": "@triggerBody()?['LockToken']",
+                  "sessionId": ""
+                }
+              },
+              "runAfter": {
+                "Parse_JSON": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ApiConnection"
+            },
+            "Filter_array": {
+              "inputs": {
+                "from": "@result('Scope:_Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "TimedOut"
+                ]
+              },
+              "type": "Query"
+            },
+            "First": {
+              "inputs": "@first(body('Filter_array'))",
+              "runAfter": {
+                "Filter_array": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Initialize_variable": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Initialize variable: HL7 Message Description",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_childLogicAppResponse": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Activity_Party_List": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Activity Party List",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Site_Id": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_JSON_Payload": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "JSON Payload",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Resource_Conflict_Descriptions": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Liquid_Template_Name": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Liquid Template Name",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resource_Blocks": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resource Blocks",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Resources_in_TMP_Map": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resource_Conflict_Descriptions": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resource Conflict Descriptions",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Resource_Blocks": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resources_in_TMP": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resources in TMP",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Activity_Party_List": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resources_in_TMP_Map": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resources in TMP Map",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Resources_not_in_TMP": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Resources_not_in_TMP": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Resources not in TMP",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Resources_in_TMP": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Site_Id": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Site Id",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Liquid_Template_Name": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_childLogicAppResponse": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "childLogicAppResponse",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Parse_JSON": {
+              "inputs": {
+                "content": "@outputs('First')",
+                "schema": {
+                  "properties": {
+                    "clientTrackingId": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "endTime": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "startTime": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "trackedProperties": {
+                      "properties": {
+                        "Message": {
+                          "type": "string"
+                        },
+                        "MessageType": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "trackingId": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "runAfter": {
+                "First": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ParseJson"
+            },
+            "Scope:_Try": {
+              "actions": {
+                "Filter_array:_Filter_Errors": {
+                  "inputs": {
+                    "from": "@result('Scope:_Try_(Pre-processing)')",
+                    "where": "@equals(item()?['status'], 'Failed')"
+                  },
+                  "runAfter": {
+                    "Scope:_Try_(Pre-processing)": [
+                      "Failed"
+                    ]
+                  },
+                  "type": "Query"
+                },
+                "Get_secret:_CDS_Client_ID": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {},
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_ID": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_FHIR_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('fhir-api-client-id')}/value"
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_CDS_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret:_FHIR_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('fhir-api-client-secret')}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret:_FHIR_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Create_Failed_Integration_Result": {
+                  "inputs": {
+                    "body": {
+                      "mcs_error": "Cerner Integration failed The Logic App Action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                      "mcs_integrationrequest": "@{outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')}",
+                      "mcs_name": "Cerner Inbound Integration Failure",
+                      "mcs_result": "Logic App error",
+                      "mcs_status": 803750003,
+                      "mcs_veisintegrationresultorigin": "@{workflow()['name']}"
+                    },
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}",
+                      "Content-Type": "application/json"
+                    },
+                    "method": "POST",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+                  },
+                  "runAfter": {
+                    "Filter_array:_Filter_Errors": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Fetch_CDS_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_CDS_Client_ID')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret:_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret:_FHIR_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret:_FHIR_Client_Secret')?['value']}&scope=@{parameters('FHIRServer')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "@parameters('VEIS OAuth URL')"
+                  },
+                  "runAfter": {
+                    "Get_secret:_FHIR_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Scope:_Try_(Pre-processing)": {
+                  "actions": {
+                    "Compose:_Add_Property_RawHL7": {
+                      "inputs": "@addProperty(json(body('HTTP:_Convert_HL7_to_JSON')),'RawHL7',outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['Msg'])",
+                      "runAfter": {
+                        "HTTP:_Convert_HL7_to_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose:_Add_Property_WorkerLogicAppRunId": {
+                      "inputs": "@addProperty(outputs('Compose:_Add_Property_RawHL7'),'WorkerLogicAppRunId',workflow()['run']['name'])",
+                      "runAfter": {
+                        "Compose:_Add_Property_RawHL7": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose:_Add_Property_resourceConflicts": {
+                      "inputs": "@addProperty(outputs('Compose:_Add_Property_WorkerLogicAppRunId'),'resourceConflicts',variables('Resource Conflict Descriptions'))",
+                      "runAfter": {
+                        "Compose:_Add_Property_WorkerLogicAppRunId": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose:_Azure_API_for_FHIR_JSON_Payload": {
+                      "inputs": {
+                        "parameter": [
+                          {
+                            "name": "inputData",
+                            "valueString": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['Msg']"
+                          },
+                          {
+                            "name": "inputDataType",
+                            "valueString": "Hl7v2"
+                          },
+                          {
+                            "name": "templateCollectionReference",
+                            "valueString": "@{parameters('Azure Container Registry Image Reference')}"
+                          },
+                          {
+                            "name": "rootTemplate",
+                            "valueString": "VEIS_SIU_@{variables('Liquid Template Name')}_TMP"
+                          }
+                        ],
+                        "resourceType": "Parameters"
+                      },
+                      "runAfter": {
+                        "Switch:_Set_Liquid_Template_Name": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose"
+                    },
+                    "Compose:_Decode_Message_Content_and_Convert_to_JSON": {
+                      "description": "Tracking Message and MessageType Properties",
+                      "inputs": "@json(decodeBase64(triggerBody()['ContentData']))",
+                      "runAfter": {},
+                      "trackedProperties": {
+                        "Message": "@{body('Compose:_Decode_Message_Content_and_Convert_to_JSON')?['Msg']}",
+                        "MessageType": "@{body('Compose:_Decode_Message_Content_and_Convert_to_JSON')?['MsgType']}"
+                      },
+                      "type": "Compose"
+                    },
+                    "HTTP:_Convert_HL7_to_JSON": {
+                      "inputs": {
+                        "body": "@outputs('Compose:_Azure_API_for_FHIR_JSON_Payload')",
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                          "Content-Type": "application/json"
+                        },
+                        "method": "POST",
+                        "uri": "@{parameters('FHIRServer')}/$convert-data"
+                      },
+                      "runAfter": {
+                        "Compose:_Azure_API_for_FHIR_JSON_Payload": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Http"
+                    },
+                    "Switch:_Pre-Process": {
+                      "cases": {
+                        "Case_S12,_S13,_S15": {
+                          "actions": {
+                            "Compose_Data_(S12,_S13,_S15)": {
+                              "inputs": "@json(body('HTTP:_Convert_HL7_to_JSON'))",
+                              "runAfter": {},
+                              "type": "Compose"
+                            },
+                            "Condition:_Do_we_need_to_check_for_resource_conflicts": {
+                              "actions": {
+                                "Filter_Cerner_Encounter_Locations": {
+                                  "inputs": {
+                                    "from": "@variables('Resources in TMP')",
+                                    "where": "@not(equals(item()?['TMPResourceType'], 'Vista Clinic'))"
+                                  },
+                                  "runAfter": {},
+                                  "type": "Query"
+                                },
+                                "For_each_Resource_in_TMP": {
+                                  "actions": {
+                                    "Compose:_Conflicting_Resource_FetchXML": {
+                                      "inputs": "<fetch>\n  <entity name='activityparty'>\n    <attribute name='scheduledstart' />\n    <attribute name='scheduledend' />\n    <attribute name='partyid' />\n    <link-entity name='appointment' to='activityid' from='activityid' alias='appointment' link-type='outer'>\n      <attribute name='activitytypecodename' />\n<attribute name='activitytypecode' />\n<attribute name='subject' />\n    </link-entity>\n    <link-entity name='serviceappointment' to='activityid' from='activityid' alias='serviceappointment' link-type='outer'>\n<attribute name='activitytypecode' />\n      <attribute name='activitytypecodename' />\n<attribute name='subject' />\n    </link-entity>\n    <filter>\n      <filter>\n        <filter>\n          <filter>\n            <condition attribute='partyid' operator='eq' value='@{items('For_each_Resource_in_TMP')['TMPId']}' />\n            <condition attribute='activityid' operator='ne' value='' />\n          </filter>\n          <condition attribute='scheduledend' operator='gt' value='@{items('For_each_Resource_in_TMP')['scheduledStart']}' />\n        </filter>\n        <condition attribute='scheduledstart' operator='lt' value='@{items('For_each_Resource_in_TMP')['scheduledEnd']}' />\n      </filter>\n      <filter type='or'>\n        <filter>\n          <filter>\n            <condition attribute='statuscode' entityname='appointment' operator='eq' value='5' />\n            <condition attribute='statecode' entityname='appointment' operator='eq' value='3' />\n          </filter>\n          <condition attribute='participationtypemask' operator='eq' value='5' />\n        </filter>\n        <filter>\n          <filter>\n            <condition attribute='statuscode' entityname='serviceappointment' operator='eq' value='4' />\n            <condition attribute='statecode' entityname='serviceappointment' operator='eq' value='3' />\n          </filter>\n          <condition attribute='participationtypemask' operator='eq' value='10' />\n        </filter>\n      </filter>\n    </filter>\n  </entity>\n</fetch>",
+                                      "runAfter": {},
+                                      "type": "Compose"
+                                    },
+                                    "Compose:_Encode_FetchXML": {
+                                      "inputs": "@encodeUriComponent(outputs('Compose:_Conflicting_Resource_FetchXML'))",
+                                      "runAfter": {
+                                        "Compose:_Conflicting_Resource_FetchXML": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "Compose"
+                                    },
+                                    "Condition:_If_there_are_conflicts": {
+                                      "actions": {
+                                        "Append_to_Resource_Conflict_Descriptions": {
+                                          "inputs": {
+                                            "name": "Resource Conflict Descriptions",
+                                            "value": "\"@{items('For_each_Resource_in_TMP')['TMPTableName']} '@{items('For_each_Resource_in_TMP')['TMPName']}'\n@{body('Join:_Concatenate_Schedule_Conflict_Array')}\""
+                                          },
+                                          "runAfter": {
+                                            "Join:_Concatenate_Schedule_Conflict_Array": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "type": "AppendToArrayVariable"
+                                        },
+                                        "Join:_Concatenate_Schedule_Conflict_Array": {
+                                          "description": "Concatenates all elements of the array from the Concatenate Schedule Conflicts action with a line break.",
+                                          "inputs": {
+                                            "from": "@body('Select:_Concatenate_Schedule_Conflicts')",
+                                            "joinWith": "\n"
+                                          },
+                                          "runAfter": {
+                                            "Select:_Concatenate_Schedule_Conflicts": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "type": "Join"
+                                        },
+                                        "Select:_Concatenate_Schedule_Conflicts": {
+                                          "description": "For each element in the array from HTTP: Get Activity Party Conflicts, concatenate the attributes of the element into a single string. For example, ServiceAppointment with activity id '123' from <scheduledstart> (UTC) to <scheduledend> (UTC)",
+                                          "inputs": {
+                                            "from": "@body('HTTP:_Get_Activity_Party_Conflicts')['value']",
+                                            "select": "@concat(item()?['appointment.activitytypecode@OData.Community.Display.V1.FormattedValue'],item()?['serviceappointment.activitytypecode@OData.Community.Display.V1.FormattedValue'],' with name ',item()?['serviceappointment.subject'],item()?['appointment.subject'],' and id ',item()?['activitypartyid'],' from ',item()?['scheduledstart'],' (UTC) to ',item()?['scheduledend'], ' (UTC)')"
+                                          },
+                                          "runAfter": {},
+                                          "type": "Select"
+                                        }
+                                      },
+                                      "expression": {
+                                        "and": [
+                                          {
+                                            "greater": [
+                                              "@length(body('HTTP:_Get_Activity_Party_Conflicts')['value'])",
+                                              0
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "runAfter": {
+                                        "HTTP:_Get_Activity_Party_Conflicts": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "If"
+                                    },
+                                    "HTTP:_Get_Activity_Party_Conflicts": {
+                                      "inputs": {
+                                        "headers": {
+                                          "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}",
+                                          "Prefer": "odata.include-annotations=OData.Community.Display.V1.FormattedValue"
+                                        },
+                                        "method": "GET",
+                                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/activityparties?fetchXml=@{outputs('Compose:_Encode_FetchXML')}"
+                                      },
+                                      "runAfter": {
+                                        "Compose:_Encode_FetchXML": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "Http"
+                                    }
+                                  },
+                                  "description": "For each element in the Resources in TMP array, check for any schedule conflicts. If there is a conflict, add the details to the Resource Conflict Description array.",
+                                  "foreach": "@body('Filter_Cerner_Encounter_Locations')",
+                                  "runAfter": {
+                                    "Filter_Cerner_Encounter_Locations": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Foreach"
+                                }
+                              },
+                              "description": "If the message is a S12 (appointment create), S13 (appointment reschedule), or S23 (resource block), we need to check for potential resource conflicts",
+                              "expression": {
+                                "or": [
+                                  {
+                                    "equals": [
+                                      "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                                      "S12"
+                                    ]
+                                  },
+                                  {
+                                    "equals": [
+                                      "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                                      "S13"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "Filter_array:_Providers_in_TMP_Missing_Resources": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "Condition:_If_Cerner_Location_is_not_null": {
+                              "actions": {
+                                "Cerner_Encounter_Location_Exists": {
+                                  "actions": {
+                                    "Append_Cerner_Encounter_Location_to_Activity_Party_List": {
+                                      "inputs": {
+                                        "name": "Activity Party List",
+                                        "value": {
+                                          "participationtypemask": 5,
+                                          "partyid_equipment@odata.bind": "/equipments(@{body('HTTP:_Get_Cerner_Encounter_Location')?['value'][0]['_mcs_relatedresourceid_value']})"
+                                        }
+                                      },
+                                      "runAfter": {},
+                                      "type": "AppendToArrayVariable"
+                                    },
+                                    "Append_Cerner_Encounter_Location_to_Resources_in_TMP": {
+                                      "inputs": {
+                                        "name": "Resources in TMP",
+                                        "value": {
+                                          "TMPId": "@{body('HTTP:_Get_Cerner_Encounter_Location')?['value'][0]['_mcs_relatedresourceid_value']}",
+                                          "TMPName": "@{body('HTTP:_Get_Cerner_Encounter_Location')?['value'][0]['mcs_name']}",
+                                          "TMPResourceType": "Clinic",
+                                          "TMPTableName": "TMP Resource",
+                                          "cernerID": "@{outputs('Compose_Data_(S12,_S13,_S15)')['cernerLocationId']}",
+                                          "reserveResourceActivityPartyValue": {
+                                            "participationtypemask": 5,
+                                            "partyid_equipment@odata.bind": "/equipments(@{body('HTTP:_Get_Cerner_Encounter_Location')?['value'][0]['_mcs_relatedresourceid_value']})"
+                                          },
+                                          "scheduledEnd": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledEnd']}",
+                                          "scheduledStart": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledStart']}"
+                                        }
+                                      },
+                                      "runAfter": {
+                                        "Append_Cerner_Encounter_Location_to_Activity_Party_List": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "AppendToArrayVariable"
+                                    },
+                                    "Set_variable:_Site_Id": {
+                                      "inputs": {
+                                        "name": "Site Id",
+                                        "value": "@{body('HTTP:_Get_Cerner_Encounter_Location')?['value']?[0]?['_mcs_relatedsiteid_value']}"
+                                      },
+                                      "runAfter": {
+                                        "Append_Cerner_Encounter_Location_to_Resources_in_TMP": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "SetVariable"
+                                    }
+                                  },
+                                  "else": {
+                                    "actions": {
+                                      "Append_Cerner_Encounter_Location_to_Resources_not_in_TMP": {
+                                        "inputs": {
+                                          "name": "Resources not in TMP",
+                                          "value": {
+                                            "Description": "mcs_resource with Cerner ID '@{outputs('Compose_Data_(S12,_S13,_S15)')['cernerLocationId']}'",
+                                            "Id": "@{outputs('Compose_Data_(S12,_S13,_S15)')['cernerLocationId']}",
+                                            "ResourceType": "Equipment"
+                                          }
+                                        },
+                                        "runAfter": {},
+                                        "type": "AppendToArrayVariable"
+                                      }
+                                    }
+                                  },
+                                  "expression": {
+                                    "and": [
+                                      {
+                                        "greater": [
+                                          "@length(body('HTTP:_Get_Cerner_Encounter_Location')?['Value'])",
+                                          0
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "runAfter": {
+                                    "HTTP:_Get_Cerner_Encounter_Location": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "If"
+                                },
+                                "Compose": {
+                                  "inputs": "@encodeUriComponent(outputs('Compose_FetchXML'))",
+                                  "runAfter": {
+                                    "Compose_FetchXML": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Compose"
+                                },
+                                "Compose_FetchXML": {
+                                  "inputs": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n  <entity name=\"mcs_resource\">\n    <filter>\n      <condition attribute=\"mcs_cerneruniqueid\" operator=\"eq\" value=\"@{replace(outputs('Compose_Data_(S12,_S13,_S15)')['cernerLocationId'],'&','&amp;')}\" />\n    </filter>\n  </entity>\n</fetch>",
+                                  "runAfter": {},
+                                  "type": "Compose"
+                                },
+                                "HTTP:_Get_Cerner_Encounter_Location": {
+                                  "inputs": {
+                                    "headers": {
+                                      "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}",
+                                      "Prefer": "odata.include-annotations=OData.Community.Display.V1.FormattedValue"
+                                    },
+                                    "method": "GET",
+                                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_resources?fetchXml=@{outputs('Compose')}"
+                                  },
+                                  "runAfter": {
+                                    "Compose": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Http"
+                                }
+                              },
+                              "expression": {
+                                "and": [
+                                  {
+                                    "not": {
+                                      "equals": [
+                                        "@equals(outputs('Compose_Data_(S12,_S13,_S15)')?['cernerLocationId'],null)",
+                                        true
+                                      ]
+                                    }
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "Compose_Data_(S12,_S13,_S15)": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "Condition:_If_Cerner_Resource_is_not_null": {
+                              "actions": {
+                                "For_each:_Cerner_Resource": {
+                                  "actions": {
+                                    "Switch:_ResourceType_(S12,_S13,_S15)": {
+                                      "cases": {
+                                        "Case:_Equipment": {
+                                          "actions": {
+                                            "HTTP:_Get_TMP_Resource": {
+                                              "inputs": {
+                                                "headers": {
+                                                  "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}"
+                                                },
+                                                "method": "GET",
+                                                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_resources?$filter=mcs_cerneruniqueid eq '@{items('For_each:_Cerner_Resource')['id']}'"
+                                              },
+                                              "runAfter": {},
+                                              "type": "Http"
+                                            },
+                                            "TMP_Resource_Exists": {
+                                              "actions": {
+                                                "Append_TMP_Resource_to_Resources_in_TMP": {
+                                                  "inputs": {
+                                                    "name": "Resources in TMP",
+                                                    "value": {
+                                                      "TMPId": "@{body('HTTP:_Get_TMP_Resource')?['value'][0]['_mcs_relatedresourceid_value']}",
+                                                      "TMPName": "@{body('HTTP:_Get_TMP_Resource')?['value'][0]['mcs_name']}",
+                                                      "TMPTableName": "TMP Resource",
+                                                      "cernerID": "@{items('For_each:_Cerner_Resource')['id']}",
+                                                      "reserveResourceActivityPartyValue": {
+                                                        "participationtypemask": 5,
+                                                        "partyid_equipment@odata.bind": "/equipments(@{body('HTTP:_Get_TMP_Resource')?['value'][0]['_mcs_relatedresourceid_value']})"
+                                                      },
+                                                      "scheduledEnd": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledEnd']}",
+                                                      "scheduledStart": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledStart']}"
+                                                    }
+                                                  },
+                                                  "runAfter": {
+                                                    "Append__TMP_Resource_to_Activity_Party_List": [
+                                                      "Succeeded"
+                                                    ]
+                                                  },
+                                                  "type": "AppendToArrayVariable"
+                                                },
+                                                "Append__TMP_Resource_to_Activity_Party_List": {
+                                                  "inputs": {
+                                                    "name": "Activity Party List",
+                                                    "value": {
+                                                      "participationtypemask": 5,
+                                                      "partyid_equipment@odata.bind": "/equipments(@{body('HTTP:_Get_TMP_Resource')?['value'][0]['_mcs_relatedresourceid_value']})"
+                                                    }
+                                                  },
+                                                  "runAfter": {},
+                                                  "type": "AppendToArrayVariable"
+                                                }
+                                              },
+                                              "else": {
+                                                "actions": {
+                                                  "Append_TMP_Resource_to_Resources_not_in_TMP": {
+                                                    "inputs": {
+                                                      "name": "Resources not in TMP",
+                                                      "value": {
+                                                        "Description": "mcs_resource with Cerner ID '@{items('For_each:_Cerner_Resource')['id']}'",
+                                                        "Id": "@{items('For_each:_Cerner_Resource')['id']}",
+                                                        "ResourceType": "@{items('For_each:_Cerner_Resource')['resourceType']}"
+                                                      }
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "AppendToArrayVariable"
+                                                  }
+                                                }
+                                              },
+                                              "expression": {
+                                                "and": [
+                                                  {
+                                                    "greater": [
+                                                      "@length(body('HTTP:_Get_TMP_Resource')?['Value'])",
+                                                      0
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              "runAfter": {
+                                                "HTTP:_Get_TMP_Resource": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "type": "If"
+                                            }
+                                          },
+                                          "case": "Equipment"
+                                        },
+                                        "Case:_Provider": {
+                                          "actions": {
+                                            "Check_if_EDIPI_Exists": {
+                                              "actions": {
+                                                "HTTP:_Get_TMP_Provider": {
+                                                  "inputs": {
+                                                    "headers": {
+                                                      "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}"
+                                                    },
+                                                    "method": "GET",
+                                                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?$filter=mcs_edipi eq '@{items('For_each:_Cerner_Resource')['id']}'"
+                                                  },
+                                                  "runAfter": {},
+                                                  "type": "Http"
+                                                },
+                                                "TMP_Provider_Exists": {
+                                                  "actions": {
+                                                    "Append_TMP_Provider_to_Activity_Party_List": {
+                                                      "inputs": {
+                                                        "name": "Activity Party List",
+                                                        "value": {
+                                                          "participationtypemask": 5,
+                                                          "partyid_equipment@odata.bind": "/systemusers(@{body('HTTP:_Get_TMP_Provider')?['value'][0]['systemuserid']})"
+                                                        }
+                                                      },
+                                                      "runAfter": {},
+                                                      "type": "AppendToArrayVariable"
+                                                    },
+                                                    "Append_TMP_Provider_to_Resources_in_TMP": {
+                                                      "inputs": {
+                                                        "name": "Resources in TMP",
+                                                        "value": {
+                                                          "TMPId": "@{body('HTTP:_Get_TMP_Provider')?['value'][0]['systemuserid']}",
+                                                          "TMPName": "@{body('HTTP:_Get_TMP_Provider')?['value'][0]['fullname']}",
+                                                          "TMPTableName": "Provider",
+                                                          "cernerID": "@{items('For_each:_Cerner_Resource')['id']}",
+                                                          "reserveResourceActivityPartyValue": {
+                                                            "participationtypemask": 5,
+                                                            "partyid_equipment@odata.bind": "/systemusers(@{body('HTTP:_Get_TMP_Provider')?['value'][0]['systemuserid']})"
+                                                          },
+                                                          "scheduledEnd": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledEnd']}",
+                                                          "scheduledStart": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledStart']}"
+                                                        }
+                                                      },
+                                                      "runAfter": {
+                                                        "Append_TMP_Provider_to_Activity_Party_List": [
+                                                          "Succeeded"
+                                                        ]
+                                                      },
+                                                      "type": "AppendToArrayVariable"
+                                                    }
+                                                  },
+                                                  "else": {
+                                                    "actions": {
+                                                      "Append_TMP_Provider_to_Resources_not_in_TMP": {
+                                                        "inputs": {
+                                                          "name": "Resources not in TMP",
+                                                          "value": {
+                                                            "Description": "systemuser with EDIPI '@{items('For_each:_Cerner_Resource')['id']}'",
+                                                            "Id": "@{items('For_each:_Cerner_Resource')['id']}",
+                                                            "ResourceType": "@{items('For_each:_Cerner_Resource')['resourceType']}"
+                                                          }
+                                                        },
+                                                        "runAfter": {},
+                                                        "type": "AppendToArrayVariable"
+                                                      }
+                                                    }
+                                                  },
+                                                  "expression": {
+                                                    "and": [
+                                                      {
+                                                        "greater": [
+                                                          "@length(body('HTTP:_Get_TMP_Provider')?['Value'])",
+                                                          0
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  "runAfter": {
+                                                    "HTTP:_Get_TMP_Provider": [
+                                                      "Succeeded"
+                                                    ]
+                                                  },
+                                                  "type": "If"
+                                                }
+                                              },
+                                              "expression": {
+                                                "and": [
+                                                  {
+                                                    "not": {
+                                                      "equals": [
+                                                        "@equals(items('For_each:_Cerner_Resource')['id'],null)",
+                                                        true
+                                                      ]
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "runAfter": {},
+                                              "type": "If"
+                                            }
+                                          },
+                                          "case": "Provider"
+                                        }
+                                      },
+                                      "default": {
+                                        "actions": {}
+                                      },
+                                      "expression": "@items('For_each:_Cerner_Resource')['resourceType']",
+                                      "runAfter": {},
+                                      "type": "Switch"
+                                    }
+                                  },
+                                  "foreach": "@outputs('Compose_Data_(S12,_S13,_S15)')?['cernerResources']",
+                                  "runAfter": {},
+                                  "type": "Foreach"
+                                }
+                              },
+                              "expression": {
+                                "and": [
+                                  {
+                                    "equals": [
+                                      "@equals(outputs('Compose_Data_(S12,_S13,_S15)')?['cernerResources'],null)",
+                                      false
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "Compose_Data_(S12,_S13,_S15)": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "Condition:_If_Patient_is_not_null": {
+                              "actions": {
+                                "Compose:_Patient_FetchXML": {
+                                  "inputs": "<fetch>\n  <entity name=\"contact\" >\n    <attribute name=\"contactid\" />\n    <attribute name=\"fullname\" />\n    <link-entity name=\"mcs_personidentifiers\" to=\"contactid\" from=\"mcs_patient\" alias=\"pi\" link-type=\"inner\" >\n      <attribute name=\"mcs_identifier\" />\n    </link-entity>\n    <filter>\n      <filter>\n        <filter>\n          <condition attribute=\"mcs_identifiertype\" entityname=\"pi\" operator=\"eq\" value=\"125150000\" />\n        </filter>\n      </filter>\n      <condition attribute=\"mcs_identifier\" entityname=\"pi\" operator=\"eq\" value=\"@{outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN']}\" />\n    </filter>\n  </entity>\n</fetch>",
+                                  "runAfter": {},
+                                  "type": "Compose"
+                                },
+                                "Condition": {
+                                  "actions": {
+                                    "Append_Patient_to_Activity_Party_List_as_Optional_Attendee": {
+                                      "inputs": {
+                                        "name": "Activity Party List",
+                                        "value": {
+                                          "participationtypemask": 6,
+                                          "partyid_contact@odata.bind": "/contacts(@{body('HTTP:_Get_Patient')?['value'][0]['contactid']})"
+                                        }
+                                      },
+                                      "runAfter": {},
+                                      "type": "AppendToArrayVariable"
+                                    },
+                                    "Append_Patient_to_Resources_in_TMP": {
+                                      "inputs": {
+                                        "name": "Resources in TMP",
+                                        "value": {
+                                          "TMPId": "@{body('HTTP:_Get_Patient')?['value'][0]['contactid']}",
+                                          "TMPName": "",
+                                          "TMPTableName": "Patient",
+                                          "cernerID": "@{outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN']}",
+                                          "reserveResourceActivityPartyValue": {
+                                            "participationtypemask": 6,
+                                            "partyid_contact@odata.bind": "/contacts(@{body('HTTP:_Get_Patient')?['value'][0]['contactid']})"
+                                          },
+                                          "scheduledEnd": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledEnd']}",
+                                          "scheduledStart": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledStart']}"
+                                        }
+                                      },
+                                      "runAfter": {
+                                        "Append_Patient_to_Activity_Party_List_as_Optional_Attendee": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "AppendToArrayVariable"
+                                    }
+                                  },
+                                  "else": {
+                                    "actions": {
+                                      "Condition_2": {
+                                        "actions": {},
+                                        "else": {
+                                          "actions": {
+                                            "Append_Patient_to_Resources_not_in_TMP": {
+                                              "inputs": {
+                                                "name": "Resources not in TMP",
+                                                "value": {
+                                                  "Description": "patient with ICN '@{outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN']}'",
+                                                  "EDIPI": "@{outputs('Compose_Data_(S12,_S13,_S15)')?['patientEDIPI']}",
+                                                  "Id": "@{outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN']}",
+                                                  "ResourceType": "Patient"
+                                                }
+                                              },
+                                              "runAfter": {},
+                                              "type": "AppendToArrayVariable"
+                                            }
+                                          }
+                                        },
+                                        "expression": {
+                                          "and": [
+                                            {
+                                              "equals": [
+                                                "@outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN']",
+                                                ""
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "runAfter": {},
+                                        "type": "If"
+                                      }
+                                    }
+                                  },
+                                  "expression": {
+                                    "and": [
+                                      {
+                                        "greater": [
+                                          "@length(body('HTTP:_Get_Patient')?['Value'])",
+                                          0
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "runAfter": {
+                                    "HTTP:_Get_Patient": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "If"
+                                },
+                                "HTTP:_Get_Patient": {
+                                  "inputs": {
+                                    "headers": {
+                                      "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}"
+                                    },
+                                    "method": "GET",
+                                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/contacts?fetchXml=@{outputs('Compose:_Patient_FetchXML')}"
+                                  },
+                                  "runAfter": {
+                                    "Compose:_Patient_FetchXML": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Http"
+                                }
+                              },
+                              "expression": {
+                                "and": [
+                                  {
+                                    "not": {
+                                      "equals": [
+                                        "@equals(outputs('Compose_Data_(S12,_S13,_S15)')?['patientICN'],null)",
+                                        "@true"
+                                      ]
+                                    }
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "Compose_Data_(S12,_S13,_S15)": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "Condition:_If_no_resources_are_found": {
+                              "actions": {
+                                "Cancel_Logic_App_Run_(No_resources_found_in_TMP)": {
+                                  "inputs": {
+                                    "runStatus": "Cancelled"
+                                  },
+                                  "runAfter": {
+                                    "Complete_the_message_in_a_topic_subscription_(No_resources_found_in_TMP)": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Terminate"
+                                },
+                                "Complete_the_message_in_a_topic_subscription_(No_resources_found_in_TMP)": {
+                                  "inputs": {
+                                    "host": {
+                                      "connection": {
+                                        "name": "@parameters('$connections')['servicebus']['connectionId']"
+                                      }
+                                    },
+                                    "method": "delete",
+                                    "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('TMP')}/messages/complete",
+                                    "queries": {
+                                      "lockToken": "@triggerBody()?['LockToken']",
+                                      "sessionId": "",
+                                      "subscriptionType": "Main"
+                                    }
+                                  },
+                                  "runAfter": {},
+                                  "type": "ApiConnection"
+                                }
+                              },
+                              "description": "If no resources on the message are found in TMP, assume the message isn't telehealth related and cancel the Logic App run",
+                              "expression": {
+                                "and": [
+                                  {
+                                    "equals": [
+                                      "@length(body('Filter_array_for_Required_Attendees'))",
+                                      0
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "Filter_array_for_Required_Attendees": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "Filter_array:_Providers_in_TMP_Missing_Resources": {
+                              "inputs": {
+                                "from": "@variables('Resources not in TMP')",
+                                "where": "@equals(item()?['ResourceType'], 'Provider')"
+                              },
+                              "runAfter": {
+                                "Condition:_If_no_resources_are_found": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Query"
+                            },
+                            "Filter_array_for_Required_Attendees": {
+                              "inputs": {
+                                "from": "@variables('Activity Party List')",
+                                "where": "@equals(item()['participationtypemask'], 5)"
+                              },
+                              "runAfter": {
+                                "Condition:_If_Cerner_Location_is_not_null": [
+                                  "Succeeded"
+                                ],
+                                "Condition:_If_Cerner_Resource_is_not_null": [
+                                  "Succeeded"
+                                ],
+                                "Condition:_If_Patient_is_not_null": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Query"
+                            },
+                            "Set_JSON_Payload_(S12,_S13,_S15)": {
+                              "inputs": {
+                                "name": "JSON Payload",
+                                "value": {
+                                  "cernerAppointmentId": "@{outputs('Compose_Data_(S12,_S13,_S15)')['cernerAppointmentId']}",
+                                  "cernerComments": "@{outputs('Compose_Data_(S12,_S13,_S15)')['cernerComments']}",
+                                  "rawHL7": "@{outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['Msg']}",
+                                  "resourceConflicts": "@variables('Resource Conflict Descriptions')",
+                                  "resourcesInTMP": "@variables('Resources in TMP')",
+                                  "resourcesMissingInTMP": "@variables('Resources not in TMP')",
+                                  "scheduledDurationMinutes": "@outputs('Compose_Data_(S12,_S13,_S15)')['scheduledDurationMinutes']",
+                                  "scheduledEnd": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledEnd']}",
+                                  "scheduledStart": "@{outputs('Compose_Data_(S12,_S13,_S15)')['scheduledStart']}",
+                                  "siteId": "@{variables('Site Id')}",
+                                  "workerLogicAppRunId": "@{workflow()['run']['name']}"
+                                }
+                              },
+                              "runAfter": {
+                                "Condition:_Do_we_need_to_check_for_resource_conflicts": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S12,S13,S15"
+                        },
+                        "Case_S23,_S24": {
+                          "actions": {
+                            "Compose:_Get_Unique_Resources": {
+                              "inputs": "@union(body('Select_Cerner_Id_and_Resource_Type_Properties'),body('Select_Cerner_Id_and_Resource_Type_Properties'))",
+                              "runAfter": {
+                                "Select_Cerner_Id_and_Resource_Type_Properties": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Compose"
+                            },
+                            "Condition:_Missing_Resources_array_length_greater_than_0": {
+                              "actions": {
+                                "Complete_the_message_in_a_topic_subscription_(Cancel_S23,_S24)": {
+                                  "inputs": {
+                                    "host": {
+                                      "connection": {
+                                        "name": "@parameters('$connections')['servicebus']['connectionId']"
+                                      }
+                                    },
+                                    "method": "delete",
+                                    "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('TMP')}/messages/complete",
+                                    "queries": {
+                                      "lockToken": "@triggerBody()?['LockToken']",
+                                      "sessionId": "",
+                                      "subscriptionType": "Main"
+                                    }
+                                  },
+                                  "runAfter": {},
+                                  "type": "ApiConnection"
+                                },
+                                "Terminate": {
+                                  "inputs": {
+                                    "runStatus": "Cancelled"
+                                  },
+                                  "runAfter": {
+                                    "Complete_the_message_in_a_topic_subscription_(Cancel_S23,_S24)": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Terminate"
+                                }
+                              },
+                              "expression": {
+                                "and": [
+                                  {
+                                    "greater": [
+                                      "@length(variables('Resources not in TMP'))",
+                                      0
+                                    ]
+                                  }
+                                ]
+                              },
+                              "runAfter": {
+                                "For_each_Resource_Id": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "If"
+                            },
+                            "For_each_Resource_Block": {
+                              "actions": {
+                                "Append_Resource_Block_to_Resources_in_TMP": {
+                                  "inputs": {
+                                    "name": "Resources in TMP",
+                                    "value": {
+                                      "TMPId": "@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPId']}",
+                                      "TMPName": "@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPName']}",
+                                      "TMPTableName": "@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPTableName']}",
+                                      "cernerBlockId": "@items('For_each_Resource_Block')['blockId']",
+                                      "cernerID": "@{items('For_each_Resource_Block')['id']}",
+                                      "rawHL7": "@{items('For_each_Resource_Block')['rawHL7']}",
+                                      "reserveResourceActivityPartyValue": "@outputs('Compose:_Reserve_Resource_Activity_Party_List')",
+                                      "resourceConflicts": "@body('Select:_Concatenate_Schedule_Conflicts_(S23)')",
+                                      "scheduledDurationMinutes": "@{items('For_each_Resource_Block')['scheduledDurationMinutes']}",
+                                      "scheduledEnd": "@{items('For_each_Resource_Block')['scheduledEnd']}",
+                                      "scheduledStart": "@{items('For_each_Resource_Block')['scheduledStart']}"
+                                    }
+                                  },
+                                  "runAfter": {
+                                    "Compose:_Reserve_Resource_Activity_Party_List": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "AppendToArrayVariable"
+                                },
+                                "Compose:_Reserve_Resource_Activity_Party_List": {
+                                  "inputs": [
+                                    {
+                                      "participationtypemask": 5,
+                                      "partyid_equipment@odata.bind": "/@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPTableLogicalName']}(@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPId']})"
+                                    }
+                                  ],
+                                  "runAfter": {
+                                    "Condition:_If_Message_Type_is_S23": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Compose"
+                                },
+                                "Condition:_If_Message_Type_is_S23": {
+                                  "actions": {
+                                    "Compose:_Conflicting_Resource_FetchXML_(S23)": {
+                                      "inputs": "<fetch>\n  <entity name='activityparty'>\n    <attribute name='scheduledstart' />\n    <attribute name='scheduledend' />\n    <attribute name='partyid' />\n    <link-entity name='appointment' to='activityid' from='activityid' alias='appointment' link-type='outer'>\n      <attribute name='activitytypecodename' />\n<attribute name='activitytypecode' />\n<attribute name='subject' />\n    </link-entity>\n    <link-entity name='serviceappointment' to='activityid' from='activityid' alias='serviceappointment' link-type='outer'>\n<attribute name='activitytypecode' />\n      <attribute name='activitytypecodename' />\n<attribute name='subject' />\n    </link-entity>\n    <filter>\n      <filter>\n        <filter>\n          <filter>\n            <condition attribute='partyid' operator='eq' value='@{variables('Resources in TMP Map')[items('For_each_Resource_Block')['id']]['TMPId']}' />\n            <condition attribute='activityid' operator='ne' value='' />\n          </filter>\n          <condition attribute='scheduledend' operator='gt' value='@{items('For_each_Resource_Block')['scheduledStart']}' />\n        </filter>\n        <condition attribute='scheduledstart' operator='lt' value='@{items('For_each_Resource_Block')['scheduledEnd']}' />\n      </filter>\n      <filter type='or'>\n        <filter>\n          <filter>\n            <condition attribute='statuscode' entityname='appointment' operator='eq' value='5' />\n            <condition attribute='statecode' entityname='appointment' operator='eq' value='3' />\n          </filter>\n          <condition attribute='participationtypemask' operator='eq' value='5' />\n        </filter>\n        <filter>\n          <filter>\n            <condition attribute='statuscode' entityname='serviceappointment' operator='eq' value='4' />\n            <condition attribute='statecode' entityname='serviceappointment' operator='eq' value='3' />\n          </filter>\n          <condition attribute='participationtypemask' operator='eq' value='10' />\n        </filter>\n      </filter>\n    </filter>\n  </entity>\n</fetch>",
+                                      "runAfter": {},
+                                      "type": "Compose"
+                                    },
+                                    "Compose:_Encode_FetchXML_(S23)": {
+                                      "inputs": "@encodeUriComponent(outputs('Compose:_Conflicting_Resource_FetchXML_(S23)'))",
+                                      "runAfter": {
+                                        "Compose:_Conflicting_Resource_FetchXML_(S23)": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "Compose"
+                                    },
+                                    "Condition:_If_there_are_conflicts_(S23)": {
+                                      "actions": {
+                                        "Select:_Concatenate_Schedule_Conflicts_(S23)": {
+                                          "inputs": {
+                                            "from": "@body('HTTP:_Get_Activity_Party_Conflicts_(S23)')['value']",
+                                            "select": "@concat(item()?['appointment.activitytypecode@OData.Community.Display.V1.FormattedValue'],item()?['serviceappointment.activitytypecode@OData.Community.Display.V1.FormattedValue'],' with name ',item()?['serviceappointment.subject'],item()?['appointment.subject'],' and id ',item()?['activitypartyid'],' from ',item()?['scheduledstart'],' (UTC) to ',item()?['scheduledend'], ' (UTC)')"
+                                          },
+                                          "runAfter": {},
+                                          "type": "Select"
+                                        }
+                                      },
+                                      "expression": {
+                                        "and": [
+                                          {
+                                            "greater": [
+                                              "@length(body('HTTP:_Get_Activity_Party_Conflicts_(S23)')['value'])",
+                                              0
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "runAfter": {
+                                        "HTTP:_Get_Activity_Party_Conflicts_(S23)": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "If"
+                                    },
+                                    "HTTP:_Get_Activity_Party_Conflicts_(S23)": {
+                                      "inputs": {
+                                        "headers": {
+                                          "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}",
+                                          "Prefer": "odata.include-annotations=OData.Community.Display.V1.FormattedValue"
+                                        },
+                                        "method": "GET",
+                                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/activityparties?fetchXml=@{outputs('Compose:_Encode_FetchXML_(S23)')}"
+                                      },
+                                      "runAfter": {
+                                        "Compose:_Encode_FetchXML_(S23)": [
+                                          "Succeeded"
+                                        ]
+                                      },
+                                      "type": "Http"
+                                    }
+                                  },
+                                  "expression": {
+                                    "and": [
+                                      {
+                                        "equals": [
+                                          "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                                          "S23"
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "runAfter": {},
+                                  "type": "If"
+                                }
+                              },
+                              "foreach": "@json(body('HTTP:_Convert_HL7_to_JSON'))['cernerResources']",
+                              "runAfter": {
+                                "Condition:_Missing_Resources_array_length_greater_than_0": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "runtimeConfiguration": {
+                                "concurrency": {
+                                  "repetitions": 1
+                                }
+                              },
+                              "type": "Foreach"
+                            },
+                            "For_each_Resource_Id": {
+                              "actions": {
+                                "Switch:_ResourceType_(S23,_S24)": {
+                                  "cases": {
+                                    "Case:_Equipment": {
+                                      "actions": {
+                                        "HTTP:_Get_TMP_Resource_(S23,_S24)": {
+                                          "inputs": {
+                                            "headers": {
+                                              "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}"
+                                            },
+                                            "method": "GET",
+                                            "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_resources?$filter=mcs_cerneruniqueid eq '@{items('For_each_Resource_Id')['cernerId']}'"
+                                          },
+                                          "runAfter": {},
+                                          "type": "Http"
+                                        },
+                                        "TMP_Resource_Exists_(S23,_S24)": {
+                                          "actions": {
+                                            "Add_Cerner_Unique_Id_as_a_Key_in_Resources_Map_(TMP_Resource)_": {
+                                              "inputs": "@addProperty(variables('Resources in TMP Map'),items('For_each_Resource_Id')['cernerId'],outputs('Compose_Resource_Map_JSON_(TMP_Resource)'))",
+                                              "runAfter": {
+                                                "Compose_Resource_Map_JSON_(TMP_Resource)": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "type": "Compose"
+                                            },
+                                            "Compose_Resource_Map_JSON_(TMP_Resource)": {
+                                              "inputs": {
+                                                "TMPId": "@{body('HTTP:_Get_TMP_Resource_(S23,_S24)')?['value'][0]['_mcs_relatedresourceid_value']}",
+                                                "TMPName": "@{body('HTTP:_Get_TMP_Resource_(S23,_S24)')?['value'][0]['mcs_name']}",
+                                                "TMPTableLogicalName": "equipments",
+                                                "TMPTableName": "TMP Resource"
+                                              },
+                                              "runAfter": {},
+                                              "type": "Compose"
+                                            },
+                                            "Update_Resource_Map_(TMP_Resource)": {
+                                              "inputs": {
+                                                "name": "Resources in TMP Map",
+                                                "value": "@outputs('Add_Cerner_Unique_Id_as_a_Key_in_Resources_Map_(TMP_Resource)_')"
+                                              },
+                                              "runAfter": {
+                                                "Add_Cerner_Unique_Id_as_a_Key_in_Resources_Map_(TMP_Resource)_": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "type": "SetVariable"
+                                            }
+                                          },
+                                          "else": {
+                                            "actions": {
+                                              "Append_TMP_Resource_to_Resources_not_in_TMP_(S23,_S24)": {
+                                                "inputs": {
+                                                  "name": "Resources not in TMP",
+                                                  "value": {
+                                                    "Description": "mcs_resource with Cerner ID '@{items('For_each_Resource_Id')['cernerId']}'",
+                                                    "Id": "@{items('For_each_Resource_Id')['cernerId']}",
+                                                    "ResourceType": "@{items('For_each_Resource_Id')['resourceType']}"
+                                                  }
+                                                },
+                                                "runAfter": {},
+                                                "type": "AppendToArrayVariable"
+                                              }
+                                            }
+                                          },
+                                          "expression": {
+                                            "and": [
+                                              {
+                                                "greater": [
+                                                  "@length(body('HTTP:_Get_TMP_Resource_(S23,_S24)')?['value'])",
+                                                  0
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          "runAfter": {
+                                            "HTTP:_Get_TMP_Resource_(S23,_S24)": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "type": "If"
+                                        }
+                                      },
+                                      "case": "Equipment"
+                                    },
+                                    "Case:_Provider": {
+                                      "actions": {
+                                        "HTTP:_Get_TMP_Provider_(S23,_S24)": {
+                                          "inputs": {
+                                            "headers": {
+                                              "Authorization": "Bearer @{body('HTTP:_Fetch_CDS_Oauth_Token')['access_token']}"
+                                            },
+                                            "method": "GET",
+                                            "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/systemusers?$filter=mcs_edipi eq '@{items('For_each_Resource_Id')['cernerId']}'"
+                                          },
+                                          "runAfter": {},
+                                          "type": "Http"
+                                        },
+                                        "TMP_Provider_Exists_(S23,_S24)": {
+                                          "actions": {
+                                            "Add_EDIPI_as_a_Key_in_Resources_Map_(Provider)_": {
+                                              "inputs": "@addProperty(variables('Resources in TMP Map'),items('For_each_Resource_Id')['cernerId'],outputs('Compose_Resource_Map_JSON_(Provider)'))",
+                                              "runAfter": {
+                                                "Compose_Resource_Map_JSON_(Provider)": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "type": "Compose"
+                                            },
+                                            "Compose_Resource_Map_JSON_(Provider)": {
+                                              "inputs": {
+                                                "TMPId": "@{body('HTTP:_Get_TMP_Provider_(S23,_S24)')?['value'][0]['systemuserid']}",
+                                                "TMPName": "@{body('HTTP:_Get_TMP_Provider_(S23,_S24)')?['value'][0]['fullname']}",
+                                                "TMPTableLogicalName": "systemusers",
+                                                "TMPTableName": "Provider"
+                                              },
+                                              "runAfter": {},
+                                              "type": "Compose"
+                                            },
+                                            "Update_Resource_Map_(Provider)": {
+                                              "inputs": {
+                                                "name": "Resources in TMP Map",
+                                                "value": "@outputs('Add_EDIPI_as_a_Key_in_Resources_Map_(Provider)_')"
+                                              },
+                                              "runAfter": {
+                                                "Add_EDIPI_as_a_Key_in_Resources_Map_(Provider)_": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "type": "SetVariable"
+                                            }
+                                          },
+                                          "else": {
+                                            "actions": {
+                                              "Append_Provider_to_Resources_not_in_TMP_(S23,_S24)": {
+                                                "inputs": {
+                                                  "name": "Resources not in TMP",
+                                                  "value": {
+                                                    "Description": "mcs_resource with Cerner ID '@{items('For_each_Resource_Id')['cernerId']}'",
+                                                    "Id": "@{items('For_each_Resource_Id')['cernerId']}",
+                                                    "ResourceType": "@{items('For_each_Resource_Id')['resourceType']}"
+                                                  }
+                                                },
+                                                "runAfter": {},
+                                                "type": "AppendToArrayVariable"
+                                              }
+                                            }
+                                          },
+                                          "expression": {
+                                            "and": [
+                                              {
+                                                "greater": [
+                                                  "@length(body('HTTP:_Get_TMP_Provider_(S23,_S24)')?['value'])",
+                                                  0
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          "runAfter": {
+                                            "HTTP:_Get_TMP_Provider_(S23,_S24)": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "type": "If"
+                                        }
+                                      },
+                                      "case": "Provider"
+                                    }
+                                  },
+                                  "default": {
+                                    "actions": {}
+                                  },
+                                  "expression": "@items('For_each_Resource_Id')['resourceType']",
+                                  "runAfter": {},
+                                  "type": "Switch"
+                                }
+                              },
+                              "foreach": "@outputs('Compose:_Get_Unique_Resources')",
+                              "runAfter": {
+                                "Compose:_Get_Unique_Resources": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Foreach"
+                            },
+                            "Select_Cerner_Id_and_Resource_Type_Properties": {
+                              "inputs": {
+                                "from": "@json(body('HTTP:_Convert_HL7_to_JSON'))['cernerResources']",
+                                "select": {
+                                  "cernerId": "@item()?['id']",
+                                  "resourceType": "@item()?['resourceType']"
+                                }
+                              },
+                              "runAfter": {},
+                              "type": "Select"
+                            },
+                            "Set_JSON_Payload_(S23,_S24)": {
+                              "inputs": {
+                                "name": "JSON Payload",
+                                "value": {
+                                  "resourceBlocks": "@variables('Resources in TMP')",
+                                  "workerLogicAppRunId": "@{workflow()['run']['name']}"
+                                }
+                              },
+                              "runAfter": {
+                                "For_each_Resource_Block": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S23,S24"
+                        }
+                      },
+                      "default": {
+                        "actions": {}
+                      },
+                      "expression": "@variables('Liquid Template Name')",
+                      "runAfter": {
+                        "Compose:_Add_Property_resourceConflicts": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Switch"
+                    },
+                    "Switch:_Set_Liquid_Template_Name": {
+                      "cases": {
+                        "Case:_S12": {
+                          "actions": {
+                            "Set_variable": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S12"
+                        },
+                        "Case:_S13": {
+                          "actions": {
+                            "Set_variable_2": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S13"
+                        },
+                        "Case:_S15": {
+                          "actions": {
+                            "Set_variable_3": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S12,S13,S15"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S15"
+                        },
+                        "Case:_S23": {
+                          "actions": {
+                            "Set_variable_4": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S23,S24"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S23"
+                        },
+                        "Case:_S24": {
+                          "actions": {
+                            "Set_variable_5": {
+                              "inputs": {
+                                "name": "Liquid Template Name",
+                                "value": "S23,S24"
+                              },
+                              "runAfter": {},
+                              "type": "SetVariable"
+                            }
+                          },
+                          "case": "S24"
+                        }
+                      },
+                      "default": {
+                        "actions": {}
+                      },
+                      "expression": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                      "runAfter": {
+                        "Compose:_Decode_Message_Content_and_Convert_to_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Switch"
+                    }
+                  },
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Scope"
+                },
+                "Switch:_Process_JSON": {
+                  "cases": {
+                    "Case:_S12": {
+                      "actions": {
+                        "HTTP:_Run_S12_Processing_Logic_App": {
+                          "inputs": {
+                            "body": "@variables('JSON Payload')",
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('S12 Processing Logic App URL')"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "case": "S12"
+                    },
+                    "Case:_S13": {
+                      "actions": {
+                        "HTTP:_Run_S13_Processing_Logic_App": {
+                          "inputs": {
+                            "body": "@variables('JSON Payload')",
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('S13 Processing Logic App URL')"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "case": "S13"
+                    },
+                    "Case:_S15": {
+                      "actions": {
+                        "HTTP:_Run_S15_Processing_Logic_App": {
+                          "inputs": {
+                            "body": "@variables('JSON Payload')",
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('S15 Processing Logic App URL')"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "case": "S15"
+                    },
+                    "Case:_S23": {
+                      "actions": {
+                        "HTTP:_Run_S23_Processing_Logic_App": {
+                          "inputs": {
+                            "body": "@variables('JSON Payload')",
+                            "method": "POST",
+                            "retryPolicy": {
+                              "type": "none"
+                            },
+                            "uri": "@parameters('S23 Processing Logic App URL')"
+                          },
+                          "runAfter": {},
+                          "type": "Http"
+                        }
+                      },
+                      "case": "S23"
+                    },
+                    "Case:_S24": {
+                      "actions": {
+                        "For_each:_Unblock_Resources": {
+                          "actions": {
+                            "Compose:_Add_Property_WorkerLogicAppRunId_(S24)": {
+                              "inputs": "@addProperty(items('For_each:_Unblock_Resources'),'WorkerLogicAppRunId',workflow()['run']['name'])",
+                              "runAfter": {},
+                              "type": "Compose"
+                            },
+                            "HTTP:_Run_S24_Processing_Logic_App": {
+                              "inputs": {
+                                "body": "@outputs('Compose:_Add_Property_WorkerLogicAppRunId_(S24)')",
+                                "method": "POST",
+                                "retryPolicy": {
+                                  "type": "none"
+                                },
+                                "uri": "@parameters('S24 Processing Logic App URL')"
+                              },
+                              "runAfter": {
+                                "Compose:_Add_Property_WorkerLogicAppRunId_(S24)": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "type": "Http"
+                            }
+                          },
+                          "foreach": "@json(body('HTTP:_Convert_HL7_to_JSON'))['cernerResources']",
+                          "runAfter": {},
+                          "type": "Foreach"
+                        }
+                      },
+                      "case": "S24"
+                    }
+                  },
+                  "default": {
+                    "actions": {
+                      "Terminate:_Invalid_Message_Type_Value": {
+                        "inputs": {
+                          "runStatus": "Failed"
+                        },
+                        "runAfter": {},
+                        "type": "Terminate"
+                      }
+                    }
+                  },
+                  "expression": "@outputs('Compose:_Decode_Message_Content_and_Convert_to_JSON')['MsgType']",
+                  "runAfter": {
+                    "Scope:_Try_(Pre-processing)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Switch"
+                }
+              },
+              "runAfter": {
+                "Initialize_variable:_JSON_Payload": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "Azure Container Registry Image Reference": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "FHIRServer": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            },
+            "S12 Processing Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "S13 Processing Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "S15 Processing Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "S23 Processing Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "S24 Processing Logic App URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Service Bus Topic Name": {
+              "defaultValue": "hl7messagetopic",
+              "type": "String"
+            },
+            "VEIS OAuth URL": {
+              "defaultValue": "",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "When_a_message_is_received_in_a_topic_subscription_(peek-lock)": {
+              "evaluatedRecurrence": {
+                "frequency": "Second",
+                "interval": 30
+              },
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "get",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('Service Bus Topic Name')))}/subscriptions/@{encodeURIComponent('TMP')}/messages/head/peek"
+              },
+              "recurrence": {
+                "frequency": "Second",
+                "interval": 30
+              },
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "runs": 25
+                }
+              },
+              "type": "ApiConnection"
+            }
+          }
+        },
+        "parameters": {
+          "Azure Container Registry Image Reference": {
+            "value": "[parameters('AzureContainerRegistry_ArtifactReference')]"
+          },
+          "FHIRServer": {
+            "value": "[parameters('AzureAPIForFHIR_URL')]"
+          },
+          "S12 Processing Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('S12_Processing_Logic_App_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "S13 Processing Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('S13_Processing_Logic_App_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "S15 Processing Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('S15_Processing_Logic_App_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "S23 Processing Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('S23_Processing_Logic_App_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "S24 Processing Logic App URL": {
+            "value": "[listCallbackUrl(resourceId(resourceGroup().name,'Microsoft.Logic/workflows/triggers', parameters('S24_Processing_Logic_App_Name'), 'manual'), '2016-06-01').value]"
+          },
+          "VEIS OAuth URL": {
+            "value": "[variables('VEIS_OAuth_URL')]"
+          },
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "Service Bus Topic Name": {
+            "value": "[parameters('Service_Bus_Topic_Name')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              },
+              "servicebus": {
+                "connectionId": "[variables('connections_servicebus_externalid')]",
+                "connectionName": "[parameters('ServiceBus_Connection_Name')]",
+                "id": "[concat(variables('integrationServiceEnvironments_externalid'), '/managedApis/servicebus')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

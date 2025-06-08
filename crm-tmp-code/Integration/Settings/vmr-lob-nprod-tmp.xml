@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PREPROD-GOV-INTERNAL">
+  <AppService Name="vmr-lob-nprod-tmp" ResourceGroup="VEIS-PREPROD-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="Authority" Value="https://login.microsoftonline.us/vaazuregov.onmicrosoft.com" />
+        <AppSetting Key="Resource" Value="https://vaazuregov.onmicrosoft.com/932199cf-3a8c-4b0b-8f08-ffb9b55a866e" />
+        <AppSetting Key="ShouldSendToken" Value="true" />
+        <AppSetting Key="EcBaseUri" Value="https://va-veis-nprod-apim.nprod.veis.va.gov" />
+        <AppSetting Key="EcCreateUri" Value="/ec/vmr/api/VmrCreate" />
+        <AppSetting Key="EcDeleteUri" Value="/ec/vmr/api/VmrDelete" />
+        <AppSetting Key="EcVodUri" Value="/ec/vmr/api/VmrVod" />
+        <AppSetting Key="SubscriptionId" Value="4a61ad0eaea2445fbbad9d81dbbe1d98" />
+        <AppSetting Key="CrmAppId" Value="" />
+        <AppSetting Key="CrmSecret" Value="" />
+        <AppSetting Key="CrmBaseOrgUri" Value="dvagov-tmp-qa.crm9.dynamics.com" />
+        <AppSetting Key="CrmApiUri" Value="https://{0}/api/data/" />
+        <AppSetting Key="CrmXrmUri" Value="https://{0}/XRMServices/2011/Organization.svc/web" />
+        <AppSetting Key="IsProdApi" Value="false" />
+        <appSetting Key="SubscriptionIdEast" Value="" />
+        <appSetting Key="SubscriptionIdSouth" Value="" />
+        <AppSetting key="InstrumentationKey" Value="c15f2984-2c19-fdca-a0d4-d42ce3b6cf5f" />
+      </AppSettings>    
+  </AppService>
+</Azure>

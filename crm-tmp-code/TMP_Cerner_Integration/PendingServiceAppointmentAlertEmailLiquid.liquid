@@ -1,0 +1,102 @@
+
+{% assign facilityTypeCode_Vista = 917290001 %}
+{% assign facilityTypeCode_Cerner = 917290000 %}
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+<br />
+<p style="color:red;font-size:25px">The following Service Appointments have been in a Pending, Technology Failure, Interface Failure, VIMT Interface Failure, MVI Interface Failure, Partial Vista Failure, Cancel Failure, or Vista Failure status for 0 to {{content.MinutesToLookback}} minutes.
+A second alert *will not* be sent for these service appointments.
+Please investigate.</p>
+<br />
+<br />
+    <table>
+        <thead>
+            <tr>
+                <th><b>SA Name</b></th>
+                <th><b>SA Id</b></th>
+                <th><b>SA Status Code</b></th>
+                <th><b>Is Group Appt?</b></th>
+                <th><b>Pat Station #</b></th>
+                <th><b>Pat Type</b></th>
+                <th><b>Pro Station #</b></th>
+                <th><b>Pro Type</b></th>
+                <th><b>Cancel Remarks</b></th>
+                <th><b>Tech Failure Status</b></th>            
+                <th><b>Created (UTC)</b></th>
+                <th><b>Modified (UTC)</b></th>
+                <th><b>Created/Now Delta (dd:hh:mm:ss:tt)</b></th>
+            </tr>
+
+        </thead>
+        <tbody>
+            {% for serviceappt in content.ServiceAppointments[0].value %}
+            <tr>
+                <td>{{serviceappt.subject}}</td>
+
+                <td><a target="_blank" href = '{{content.CDSClientURL}}/main.aspx?pagetype=entityrecord&etn=serviceappointment&id={{serviceappt.activityid}}'>Link</a></td>
+                
+                {% for option in content.StatusCodeMetadata[0].GlobalOptionSet.Options %}
+                     
+                        {% if option.Value == serviceappt.statuscode %}
+                            <td>{{option.Label.LocalizedLabels[0].Label}}</td>
+                        {% endif %}
+
+                {% endfor %}
+
+               
+                {% if serviceappt.mcs_groupappointment %} <td>Yes</td>
+                {% else %} <td>No</td>
+                {% endif %}
+            
+                <td>{{serviceappt.["patFacility.mcs_stationnumber"]}}</td>
+
+                {% if serviceappt.["patFacility.cvt_facilitytype"] == facilityTypeCode_Vista %}<td>VistA</td>
+                    {% elsif serviceappt.["patFacility.cvt_facilitytype"] == facilityTypeCode_Cerner %}<td>Cerner</td>
+                    {% elsif serviceappt.["patFacility.cvt_facilitytype"] == null or serviceappt.["patFacility.cvt_facilitytype"] == ''%}<td>-</td>
+                    {% else %}<td>This Facility type {{serviceappt.["patFacility.cvt_facilitytype"]}} not been mapped in the Liquid template. Please update the Liquid template.</td>
+                {% endif %}
+
+                <td>{{serviceappt.["proFacility.mcs_stationnumber"]}}</td>
+
+                {% if serviceappt.["proFacility.cvt_facilitytype"] == facilityTypeCode_Vista %}<td>VistA</td>
+                    {% elsif serviceappt.["proFacility.cvt_facilitytype"] == facilityTypeCode_Cerner %}<td>Cerner</td>
+                    {% elsif serviceappt.["proFacility.cvt_facilitytype"] == null or serviceappt.["proFacility.cvt_facilitytype"] == ''%}<td>-</td>
+                    {% else %}<td>This Facility type {{serviceappt.["proFacility.cvt_facilitytype"]}} has not been mapped in the Liquid template. Please update the Liquid template.</td>
+                {% endif %}            
+            
+                <td>{{serviceappt.cvt_cancelremarks}}</td>
+                <td>{{serviceappt.cvt_technologyfailurestatus}}</td>     
+                <td>{{serviceappt.createdon}}</td>
+                <td>{{serviceappt.modifiedon}}</td>
+
+                {% assign modifiedMinusCreatedDelta = content.DateTimeNow | Minus: serviceappt.createdon %}
+              
+                <td>{{modifiedMinusCreatedDelta}}</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+</body>

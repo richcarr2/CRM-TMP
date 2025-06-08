@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "usgovarizona"
+        },
+        "subscriptionID": {
+            "value": "c0eb1fa5-dd86-490c-bd98-217a85aaa1c9"
+        },
+        "resourceGroupName": {
+            "value": "EIS-DEVTEST-INT-SOUTHWEST-EIS-RG"
+        },
+        "logicAppName": {
+            "value": "myDEVTESTCustomDevOpsLogicApp"
+        },
+       "workflows_test1_name": {
+            "value": "va-eis-tmp-worker-dev"
+        },           
+        "integrationAccounts_va_eis_tmp_ig_dev_name": {
+            "value": "va-eis-tmp-ig-dev"
+        },
+        "integrationServiceEnvironments_eis_devtest_southwest_ise_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-DEVTEST-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Logic/integrationServiceEnvironments/eis-dev-southwest-ise"
+        },
+        "workflows_va_eis_tmp_orchestrator_dev_name": {
+            "value": "va-eis-tmp-orchestrator-dev"
+        },
+        "integrationAccounts_va_eis_tmp_ig_dev_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-DEVTEST-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Logic/integrationAccounts/va-eis-tmp-ig-dev"
+        },
+        "connections_servicebus_externalid": {
+            "value": "/subscriptions/c0eb1fa5-dd86-490c-bd98-217a85aaa1c9/resourceGroups/EIS-DEVTEST-INT-SOUTHWEST-EIS-RG/providers/Microsoft.Web/connections/servicebus"
+        },                
+        "namespaces_vaeistmpservicebusdev_name": {
+            "value": "vaeistmpservicebusdev"
+        },
+        "environment_name" : {
+            "value": "DEVTEST"
+        },
+        "location_name" : {
+            "value": "USGov Arizona"
+        },
+        "topic_name" : {
+            "value": "servicetopictest"
+        },
+        "subscription_name" : {
+            "value": "demosub"
+        },
+        "iseName" : {
+            "value": "eis-dev-southwest-ise"
+        },
+        "iseResourceGroup" : {
+            "value": "EIS-DEVTEST-INT-SOUTHWEST-EIS-RG"
+        }                
+    }
+}

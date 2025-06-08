@@ -1,0 +1,23 @@
+{
+    "fullUrl":"urn:uuid:{{ GUID }}",
+    "resource":{
+        "resourceType": "Schedule",
+        "id":"{{ GUID }}",
+        "actor":
+        {
+            "reference":"Practitioner/{{ Actor_Reference }}",
+            "type": "Practitioner",
+        },
+        "planningHorizon": 
+        {
+            {% if AIP.6 and AIP.9 -%}
+            "start": "{{ AIP.6.Value | format_as_date_time}}",
+            {% include "Util/DateTimeAddMinutes" dateValue: AIP.6.Value, minutesDelta: AIP.9.Value, fieldName: "end" -%},
+            {% endif -%}
+        }
+    },
+    "request":{
+        "method":"PUT",
+        "url":"Schedule/{{ GUID }}",
+    }
+},

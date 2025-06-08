@@ -1,0 +1,632 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Target_Environment": {
+      "type": "String",
+      "metadata": {
+        "description": ""
+      },
+      "allowedValues": [
+        "dev",
+        "qa",
+        "nprod",
+        "east-prod",
+        "southwest-prod"
+      ]
+    },
+    "ISE_Name": {
+      "type": "String",
+      "metadata": {
+        "description": "Name of the target ISE for this environment. For example, 'eis-dev-southwest-ise'"
+      }
+    },
+    "KeyVault_Connection_Name": {
+      "defaultValue": "va-eis-tmp-keyvault-conn-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Connection resource used for Key Vault actions in Logic Apps"
+      }
+    },
+    "IntegrationAccount_Name": {
+      "defaultValue": "va-eis-tmp-integration-acct-dev",
+      "type": "string",
+      "metadata": {
+        "description": "Name of the target ISE for this environment"
+      }
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Id": {
+      "type": "string"
+    },
+    "Key_Vault_Secret_Name_CDS_Client_Secret": {
+      "type": "string"
+    },
+    "CDS_Client_URL": {
+      "type": "string"
+    },
+    "CDS_Tenant_Id": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "ISE_ResourceGroup": "[resourceGroup().name]",
+    "LogicApp_Name": "[concat('va-eis-tmp-inbound-processing-S23-', parameters('Target_Environment'))]",
+    "connection_base": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name)]",
+    "integrationAccounts_integration_acct_externalid": "[concat(variables('connection_base') ,'/providers/Microsoft.Logic/integrationAccounts/', parameters('IntegrationAccount_Name'))]",
+    "connections_keyvault_externalid": "[concat(variables('connection_base'),'/providers/Microsoft.Web/connections/', parameters('KeyVault_Connection_Name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[variables('LogicApp_Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "integrationServiceEnvironment": {
+          "name": "[parameters('ISE_Name')]",
+          "id": "[resourceId(variables('ISE_ResourceGroup'),'Microsoft.Logic/integrationServiceEnvironments/',parameters('ISE_Name'))]",
+          "type": "Microsoft.Logic/integrationServiceEnvironments"
+        },
+        "integrationAccount": {
+          "id": "[variables('integrationAccounts_integration_acct_externalid')]"
+        },
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "Compose:_Batch_Id": {
+              "inputs": "batch_@{guid()}",
+              "runAfter": {
+                "Initialize_variable:_Activity_Id": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose"
+            },
+            "Filter_array:_Filter_Errors": {
+              "inputs": {
+                "from": "@result('Scope:_Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              },
+              "runAfter": {
+                "Scope:_Try": [
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "Query"
+            },
+            "HTTP:_Create_Resource_Block_Failed_Integration_Result": {
+              "inputs": {
+                "body": {
+                  "cvt_visibletouser": true,
+                  "mcs_error": "Resource unblock failed: The logic app action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "mcs_integrationrequest": "@{triggerBody()}",
+                  "mcs_name": "Cerner Inbound Block Resource",
+                  "mcs_result": "Logic App error",
+                  "mcs_status": 803750003,
+                  "mcs_veisintegrationresultorigin": "@{workflow()['name']}",
+                  "mcs_veisprocesssubtype": 799900004,
+                  "mcs_veisprocesstype": 803750000
+                },
+                "headers": {
+                  "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                },
+                "method": "POST",
+                "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_integrationresults"
+              },
+              "runAfter": {
+                "Filter_array:_Filter_Errors": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Http"
+            },
+            "Initialize_variable:_Activity_Id": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Activity Id",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_PATCH_Request_Body": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Activity_Party_Value": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Activity Party Value",
+                    "type": "object",
+                    "value": null
+                  }
+                ]
+              },
+              "runAfter": {},
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Batch_String": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Batch String",
+                    "type": "string",
+                    "value": "--@{outputs('Compose:_Batch_Id')}\nContent-Type: multipart/mixed;boundary=changeset_CS1\n"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Compose:_Batch_Id": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Integration_Result_Detail": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Integration Result Detail",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_TMP_Resource": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_PATCH_Request_Body": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "PATCH Request Body",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Site_Id": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_Site_Id": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Site ID",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Integration_Result_Detail": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Initialize_variable:_TMP_Resource": {
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "TMP Resource",
+                    "type": "object",
+                    "value": {}
+                  }
+                ]
+              },
+              "runAfter": {
+                "Initialize_variable:_Activity_Party_Value": [
+                  "Succeeded"
+                ]
+              },
+              "type": "InitializeVariable"
+            },
+            "Response_200:_Logic_App_ran_successfully": {
+              "inputs": {
+                "body": {
+                  "code": "Logic App ran successfully",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 200
+              },
+              "kind": "Http",
+              "runAfter": {
+                "Scope:_Try": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Response_500:_Resource_Block_Failed": {
+              "inputs": {
+                "body": {
+                  "Detail": "Resource block failed: The logic app action '@{body('Filter_array:_Filter_Errors')[0]['name']}' failed with code '@{body('Filter_array:_Filter_Errors')[0]['code']}'",
+                  "Error": "Resource Block failed",
+                  "runid": "@{workflow()['run']['name']}"
+                },
+                "statusCode": 500
+              },
+              "kind": "Http",
+              "runAfter": {
+                "HTTP:_Create_Resource_Block_Failed_Integration_Result": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response"
+            },
+            "Scope:_Try": {
+              "actions": {
+                "Append_to_batch_string_(Closing_tags)": {
+                  "inputs": {
+                    "name": "Batch String",
+                    "value": "\n--changeset_CS1--\n--@{outputs('Compose:_Batch_Id')}--"
+                  },
+                  "runAfter": {
+                    "For_each": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "AppendToStringVariable"
+                },
+                "For_each": {
+                  "actions": {
+                    "Condition:_Check_for_existing_Reserve_Resource": {
+                      "actions": {
+                        "Append_to_batch_string_(PATCH_Reserve_Resource)": {
+                          "inputs": {
+                            "name": "Batch String",
+                            "value": "\n--changeset_CS1\nContent-Type: application/http\nContent-Transfer-Encoding:binary\nContent-ID: @{items('For_each')?['cernerBlockId']}\n\nPATCH @{parameters('CDS Client URL')}/api/data/v9.2/appointments(@{body('HTTP:_Get_Reserve_Resource')['value'][0]['activityid']}) HTTP/1.1\nContent-Type: application/json\n\n{\n  \"appointment_activity_parties\": @{items('For_each')?['reserveResourceActivityPartyValue']},\n  \"category\": \"Cerner\",\n  \"mcs_cernerappointmentid\": \"@{items('For_each')?['cernerBlockId']}\",\n  \"scheduleddurationminutes\": @{items('For_each')?['scheduledDurationMinutes']},\n  \"scheduledend\": \"@{items('For_each')?['scheduledEnd']}\",\n  \"scheduledstart\": \"@{items('For_each')?['scheduledStart']}\",\n  \"statecode\": 3,\n  \"statuscode\": 5,\n  \"subject\": \"Cerner Block @{items('For_each')?['cernerBlockId']}\",\n  \"description\": \"@{items('For_each')?['cernerComments']}\"\n}"
+                          },
+                          "runAfter": {},
+                          "type": "AppendToStringVariable"
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Append_to_batch_string_(POST_Reserve_Resource)": {
+                            "inputs": {
+                              "name": "Batch String",
+                              "value": "\n--changeset_CS1\nContent-Type: application/http\nContent-Transfer-Encoding:binary\nContent-ID: @{items('For_each')?['cernerBlockId']}\n\nPOST @{parameters('CDS Client URL')}/api/data/v9.2/appointments HTTP/1.1\nContent-Type: application/json\n\n{\n  \"appointment_activity_parties\": @{items('For_each')?['reserveResourceActivityPartyValue']},\n  \"category\": \"Cerner\",\n"
+                            },
+                            "runAfter": {
+                              "HTTP_Get_Site": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "AppendToStringVariable"
+                          },
+                          "Append_to_batch_string_complete": {
+                            "inputs": {
+                              "name": "Batch String",
+                              "value": "  \"mcs_cernerappointmentid\": \"@{items('For_each')?['cernerBlockId']}\",\n  \"scheduleddurationminutes\": @{items('For_each')?['scheduledDurationMinutes']},\n  \"scheduledend\": \"@{items('For_each')?['scheduledEnd']}\",\n  \"scheduledstart\": \"@{items('For_each')?['scheduledStart']}\",\n  \"statecode\": 3,\n  \"statuscode\": 5,\n  \"subject\": \"Cerner Block @{items('For_each')?['cernerBlockId']}\",\n  \"description\": \"@{items('For_each')?['cernerComments']}\"\n}"
+                            },
+                            "runAfter": {
+                              "Condition": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "AppendToStringVariable"
+                          },
+                          "Compose_Encode_FetchXML": {
+                            "inputs": "@encodeUriComponent(outputs('Compose_FetchXML'))",
+                            "runAfter": {
+                              "Compose_FetchXML": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose"
+                          },
+                          "Compose_FetchXML": {
+                            "inputs": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n  <entity name=\"mcs_resource\">\n    <filter>\n      <condition attribute=\"mcs_cerneruniqueid\" operator=\"eq\" value=\"@{replace(items('For_each')['cernerId'],'&','&amp;')}\" />\n    </filter>\n  </entity>\n</fetch>",
+                            "runAfter": {},
+                            "type": "Compose"
+                          },
+                          "Condition": {
+                            "actions": {
+                              "Append_to_batch_string_site_exists": {
+                                "inputs": {
+                                  "name": "Batch String",
+                                  "value": "  \"cvt_site_appointment@odata.bind\": \"/sites(@{body('HTTP_Get_Site')?['Value'][0]['_mcs_relatedsiteid_value']})\",\n"
+                                },
+                                "runAfter": {},
+                                "type": "AppendToStringVariable"
+                              }
+                            },
+                            "expression": {
+                              "and": [
+                                {
+                                  "greater": [
+                                    "@length(body('HTTP_Get_Site')?['Value'])",
+                                    0
+                                  ]
+                                }
+                              ]
+                            },
+                            "runAfter": {
+                              "Append_to_batch_string_(POST_Reserve_Resource)": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "If"
+                          },
+                          "HTTP_Get_Site": {
+                            "inputs": {
+                              "headers": {
+                                "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                                "Prefer": "odata.include-annotations=OData.Community.Display.V1.FormattedValue"
+                              },
+                              "method": "GET",
+                              "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/mcs_resources?fetchXml=@{outputs('Compose_Encode_FetchXML')}"
+                            },
+                            "runAfter": {
+                              "Compose_Encode_FetchXML": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Http"
+                          }
+                        }
+                      },
+                      "expression": {
+                        "and": [
+                          {
+                            "greater": [
+                              "@length(body('HTTP:_Get_Reserve_Resource')['value'])",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "runAfter": {
+                        "HTTP:_Get_Reserve_Resource": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If"
+                    },
+                    "HTTP:_Get_Reserve_Resource": {
+                      "inputs": {
+                        "headers": {
+                          "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}"
+                        },
+                        "method": "GET",
+                        "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/appointments?$filter=mcs_cernerappointmentid eq '@{items('For_each')?['cernerBlockId']}'"
+                      },
+                      "runAfter": {},
+                      "type": "Http"
+                    }
+                  },
+                  "foreach": "@body('Parse_JSON')?['resourceBlocks']",
+                  "runAfter": {
+                    "HTTP:_Fetch_OAuth_Token": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  },
+                  "type": "Foreach"
+                },
+                "Get_secret_-_CDS_Client_Id": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Id'))}/value"
+                  },
+                  "runAfter": {
+                    "Parse_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "Get_secret_-_CDS_Client_Secret": {
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['keyvault']['connectionId']"
+                      }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent(parameters('Key Vault Secret Name CDS Client Secret'))}/value"
+                  },
+                  "runAfter": {
+                    "Get_secret_-_CDS_Client_Id": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection"
+                },
+                "HTTP:_Fetch_OAuth_Token": {
+                  "inputs": {
+                    "body": "client_id=@{body('Get_secret_-_CDS_Client_Id')?['value']}&grant_type=client_credentials&client_secret=@{body('Get_secret_-_CDS_Client_Secret')?['value']}&scope=@{parameters('CDS Client URL')}/.default",
+                    "headers": {
+                      "content-type": "application/x-www-form-urlencoded"
+                    },
+                    "method": "POST",
+                    "uri": "https://login.microsoftonline.com/@{parameters('CDS Tenant Id')}/oauth2/v2.0/token"
+                  },
+                  "runAfter": {
+                    "Get_secret_-_CDS_Client_Secret": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "HTTP:_POST_batch_request_": {
+                  "inputs": {
+                    "body": "@variables('Batch String')",
+                    "headers": {
+                      "Authorization": "Bearer @{body('HTTP:_Fetch_Oauth_Token')['access_token']}",
+                      "Content-Type": "multipart/mixed;boundary=@{outputs('Compose:_Batch_Id')}"
+                    },
+                    "method": "POST",
+                    "uri": "@{parameters('CDS Client URL')}/api/data/v9.2/$batch"
+                  },
+                  "runAfter": {
+                    "Append_to_batch_string_(Closing_tags)": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Http"
+                },
+                "Parse_JSON": {
+                  "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                      "properties": {
+                        "resourceBlocks": {
+                          "items": {
+                            "properties": {
+                              "TMPId": {},
+                              "TMPName": {},
+                              "TMPTableName": {},
+                              "cernerBlockId": {},
+                              "cernerComments": {},
+                              "cernerID": {},
+                              "rawHL7": {},
+                              "reserveResourceActivityPartyValue": {},
+                              "resourceConflicts": {},
+                              "scheduledDurationMinutes": {},
+                              "scheduledEnd": {},
+                              "scheduledStart": {}
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "workerLogicAppRunId": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "runAfter": {},
+                  "type": "ParseJson"
+                }
+              },
+              "runAfter": {
+                "Initialize_variable:_Batch_String": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            },
+            "CDS Client URL": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "CDS Tenant Id": {
+              "defaultValue": "",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Id": {
+              "defaultValue": "cds-client-id",
+              "type": "String"
+            },
+            "Key Vault Secret Name CDS Client Secret": {
+              "defaultValue": "cds-client-secret",
+              "type": "String"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "inputs": {
+                "schema": {
+                  "properties": {
+                    "blockId": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "rawHL7": {
+                      "type": "string"
+                    },
+                    "resourceType": {
+                      "type": "string"
+                    },
+                    "scheduledDurationMinutes": {
+                      "type": "string"
+                    },
+                    "scheduledEnd": {
+                      "type": "string"
+                    },
+                    "scheduledStart": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "kind": "Http",
+              "type": "Request"
+            }
+          }
+        },
+        "parameters": {
+          "Key Vault Secret Name CDS Client Id": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Id')]"
+          },
+          "Key Vault Secret Name CDS Client Secret": {
+            "value": "[parameters('Key_Vault_Secret_Name_CDS_Client_Secret')]"
+          },
+          "CDS Client URL": {
+            "value": "[parameters('CDS_Client_URL')]"
+          },
+          "CDS Tenant Id": {
+            "value": "[parameters('CDS_Tenant_Id')]"
+          },
+          "$connections": {
+            "value": {
+              "keyvault": {
+                "connectionId": "[variables('connections_keyvault_externalid')]",
+                "connectionName": "[parameters('Keyvault_Connection_Name')]",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                },
+                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/keyvault')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

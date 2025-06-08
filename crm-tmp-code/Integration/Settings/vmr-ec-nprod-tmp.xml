@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Azure SubscriptionName="PREPROD-GOV-INTERNAL">
+  <AppService Name="vmr-ec-nprod-tmp" ResourceGroup="VEIS-PREPROD-GOV-INTERNAL-INT-EAST-API-RG">
+      <AppSettings>
+        <AppSetting Key="VmrUrl" Value="https://VASBYEVNAPPCVT1.VHA.MED.VA.GOV/UcManagerService" />
+        <AppSetting Key="RequiresClientCertificate" Value="true" />
+        <AppSetting Key="CertificateUrl" Value="https://vanprodeastveiskv1.vault.usgovcloudapi.net/secrets/vmr-ec-nprod-tmp-nprod-vaec-va-gov/4ea3f5d07c28486db11d8c7cf00ff33a" />
+        <AppSetting Key="AppId" Value="" />
+        <AppSetting Key="Secret" Value="" />
+        <AppSetting Key="InstrumentationKey" Value="c15f2984-2c19-fdca-a0d4-d42ce3b6cf5f" />
+        <AppSetting Key="WEBSITE_LOAD_CERTIFICATES" Value="7A9C5AE8CDF5A4864E863548559E47C0361EC36A" />
+      </AppSettings>    
+  </AppService>
+</Azure>

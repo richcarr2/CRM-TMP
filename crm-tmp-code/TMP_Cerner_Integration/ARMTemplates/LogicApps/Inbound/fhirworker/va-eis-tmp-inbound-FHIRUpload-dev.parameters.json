@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "LogicApp_Name": {
+            "value": "va-eis-tmp-inbound-FHIRUpload-dev"
+        },
+        "ISE_Name": {
+            "value": "eis-dev-southwest-ise"
+        },
+        "IntegrationAccount_Name": {
+            "value": "va-eis-tmp-integration-acct-dev"
+        },
+        "ServiceBus_Connection_Name": {
+            "value": "va-eis-tmp-servicebus-conn-dev"
+        },
+        "KeyVault_Connection_Name": {
+            "value": "va-eis-tmp-keyvault-conn-dev"
+        },
+        "AzureAPIForFHIR_URL": {
+            "value": "https://va-eis-tmp-fhir-dev.azurehealthcareapis.us"
+        },
+        "AzureContainerRegistry_ArtifactReference": {
+            "value": "vaeistmpcontainerregdev.azurecr.us/fhir-converter:main"
+        },
+        "Service_Bus_Topic_Name": {
+            "value": "hl7messagetopic"
+        }
+    }
+}
